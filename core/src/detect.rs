@@ -47,13 +47,31 @@ pub fn detect(reg: &Registry, bytes: &[u8], filename: Option<&str>) -> Detected 
         if f.signatures.is_empty() {
             continue;
         }
-        let all = f.signatures.iter().all(|s| hex_matches(bytes, s.offset, &s.magic));
+        // Group signatures: same group = OR, different groups = AND.
+        // Ungrouped signatures are each their own group (i.e. required).
+        let mut groups: std::collections::BTreeMap<i64, Vec<&crate::registry::Signature>> =
+            std::collections::BTreeMap::new();
+        for (idx, sig) in f.signatures.iter().enumerate() {
+            let key = match sig.group {
+                Some(g) => g as i64,
+                None => -(idx as i64 + 1),
+            };
+            groups.entry(key).or_default().push(sig);
+        }
+        let all = groups
+            .values()
+            .all(|alts| alts.iter().any(|s| hex_matches(bytes, s.offset, &s.magic)));
         if !all {
             continue;
         }
-        let weight = if f.signatures.iter().any(|s| s.weight == "decisive") {
+        let matched: Vec<&crate::registry::Signature> = f
+            .signatures
+            .iter()
+            .filter(|s| hex_matches(bytes, s.offset, &s.magic))
+            .collect();
+        let weight = if matched.iter().any(|s| s.weight == "decisive") {
             "decisive"
-        } else if f.signatures.iter().any(|s| s.weight == "strong") {
+        } else if matched.iter().any(|s| s.weight == "strong") {
             "strong"
         } else {
             "weak"

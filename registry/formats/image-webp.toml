@@ -1,0 +1,42 @@
+id         = "image/webp"
+name       = "WebP"
+kinds      = ["Raster"]
+extensions = ["webp"]
+mime_types = ["image/webp"]
+spec_url   = "https://developers.google.com/speed/webp/docs/riff_container"
+
+preserves = ["geometry", "color_depth", "color_profile", "alpha", "time", "metadata"]
+
+[[signatures]]
+offset = 0
+magic  = "52494646"      # "RIFF"
+weight = "weak"
+
+[[signatures]]
+offset = 8
+magic  = "57454250"      # "WEBP" — the form type is the discriminator
+weight = "decisive"
+
+[detection]
+priority_over = []
+container_of  = []
+
+[notes]
+text = """
+NO PUID RECORDED, and that absence is deliberate rather than an oversight — the
+schema requires justifying it here. PRONOM's search returned nothing for WebP
+on 2026-08-20, and rather than attach a plausible-looking wrong identifier (the
+exact failure mode the PUID audit was run to catch) the field is left empty.
+format-registry-curator should retry: WebP is widely deployed and a PUID very
+likely exists under a name the search did not surface.
+
+RIFF-based like AVI and WAV, so it needs the same two-signature AND treatment:
+`RIFF` at 0 is shared with those formats, and the form type at offset 8 is what
+actually discriminates.
+
+Measured and genuinely surprising: the image-rs WebP encoder produced a LOSSLESS
+result (SSIM 1.0000, alpha intact) at 218 bytes for the specimen PNG stores in
+993 — roughly 4.5x smaller with no measured loss at all. If that holds across
+more specimens, WebP is the better lossless target and the registry should say
+so. One specimen is not a finding; capability-cartographer should widen it.
+"""

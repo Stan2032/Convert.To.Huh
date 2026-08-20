@@ -1,0 +1,40 @@
+id         = "image/tiff"
+name       = "Tagged Image File Format"
+kinds      = ["Raster"]
+extensions = ["tif", "tiff"]
+mime_types = ["image/tiff"]
+puid       = "fmt/353"
+puid_verified = true
+puid_name  = "Tagged Image File Format"
+spec_url   = "https://www.loc.gov/preservation/digital/formats/fdd/fdd000022.shtml"
+
+preserves = ["geometry", "color_depth", "color_profile", "alpha", "layers", "metadata"]
+
+[[signatures]]
+offset = 0
+magic  = "49492A00"      # "II*\0" little-endian (Intel)
+weight = "decisive"
+group  = 0
+
+[[signatures]]
+offset = 0
+magic  = "4D4D002A"      # "MM\0*" big-endian (Motorola)
+weight = "decisive"
+group  = 0
+
+[detection]
+priority_over = []
+container_of  = []
+
+[notes]
+text = """
+The clearest possible case for signature groups: TIFF's two magic numbers encode
+BYTE ORDER and are mutually exclusive by construction. Requiring both — which
+the detector did before 2026-08-20 — makes every TIFF undetectable. The same
+latent bug was silently breaking ZIP; see application-zip.toml.
+
+TIFF is a container format with enormous internal variety (compression schemes,
+multi-page, tiled, floating-point samples). `preserves` reflects what the format
+CAN carry, not what image-rs writes. Do not assume an edge inherits that breadth
+— verify per direction against a specimen (docs/RESEARCH.md §3.5).
+"""

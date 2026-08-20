@@ -27,7 +27,8 @@ fn usage() -> ExitCode {
         "huh — a planner over a typed conversion graph\n\n\
          USAGE:\n  \
            huh detect <file>\n  \
-           huh plan <from> <to> [--allow-unverified] [--profile lgpl|gpl] [--runtime native|wasm]\n  \
+           huh plan <from> <to> [-k N] [--allow-unverified] [--profile lgpl|gpl] [--runtime native|wasm]\n  \
+           huh suggest <file> [--allow-unverified]   what can this become, and what does each cost?\n  \
            huh convert <in> <out> [--quality 1-100] [--allow-unverified] [--receipt out.json]\n  \
            huh graph\n\n\
          Formats are registry ids, e.g. image/png, image/jpeg."
@@ -94,6 +95,25 @@ fn main() -> ExitCode {
                 reg.version, p.eligible_count(), reg.edges.len(),
                 pol.build_profile, pol.runtime, pol.allow_unverified
             );
+            let k: usize = opt(&args, "-k").and_then(|v| v.parse().ok()).unwrap_or(1);
+            if k > 1 {
+                let plans = p.plan_ranked(from, to, k);
+                if plans.is_empty() {
+                    eprintln!("\nrefused: no route from {from} to {to}.");
+                    return ExitCode::from(3);
+                }
+                eprintln!("\n{} distinct route(s) — deduplicated by what they cost you,\n\
+                           not by which engines they use:\n", plans.len());
+                for (i, pl) in plans.iter().enumerate() {
+                    eprintln!("  [{}] {}", i + 1, pl.intent_label());
+                    eprintln!("      route: {}", pl.hops.iter()
+                        .map(|h| h.to.clone()).collect::<Vec<_>>().join(" -> "));
+                    eprintln!("      cost:  {:.2}", pl.totals.cost);
+                    eprintln!("      {}\n", pl.rationale);
+                }
+                println!("{}", serde_json::to_string_pretty(&plans).unwrap());
+                return ExitCode::SUCCESS;
+            }
             match p.plan(from, to) {
                 Some(plan) => {
                     println!("{}", serde_json::to_string_pretty(&plan).unwrap());
@@ -201,6 +221,41 @@ fn main() -> ExitCode {
                     ExitCode::FAILURE
                 }
             }
+        }
+
+        "suggest" => {
+            let Some(path) = args.get(1) else { return usage() };
+            let bytes = match std::fs::read(path) {
+                Ok(b) => b,
+                Err(e) => { eprintln!("{path}: {e}"); return ExitCode::FAILURE; }
+            };
+            let name = Path::new(path).file_name().map(|s| s.to_string_lossy().to_string());
+            let d = detect::detect(&reg, &bytes, name.as_deref());
+            let pol = policy_from(&args);
+            let p = planner::Planner::new(&reg, &pol);
+
+            eprintln!("{} is {} ({} bytes)\n", path, d.format, bytes.len());
+            eprintln!("It can become:\n");
+
+            // For raster, the meaningful user choice is the TARGET, not the
+            // route: "what should this become, and what will that cost me?"
+            let mut options: Vec<(String, planner::Plan)> = reg.formats.keys()
+                .filter(|t| **t != d.format)
+                .filter_map(|t| p.plan(&d.format, t).map(|pl| (t.clone(), pl)))
+                .collect();
+            options.sort_by(|a, b| a.1.totals.cost.partial_cmp(&b.1.totals.cost)
+                .unwrap_or(std::cmp::Ordering::Equal).then(a.0.cmp(&b.0)));
+
+            if options.is_empty() {
+                eprintln!("  nothing — no verified route leaves {} yet.", d.format);
+                eprintln!("  (try --allow-unverified to see claimed-but-unmeasured edges)");
+                return ExitCode::from(3);
+            }
+            for (target, pl) in &options {
+                eprintln!("  {:<14} cost {:>5.2}  {}", target, pl.totals.cost, pl.intent_label());
+                eprintln!("  {:<14}             {}\n", "", pl.rationale);
+            }
+            ExitCode::SUCCESS
         }
 
         "graph" => {

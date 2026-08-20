@@ -173,3 +173,222 @@ fn refusal_when_no_route_exists() {
     assert!(p.plan("image/png", "application/pdf").is_none(),
         "no verified PNG->PDF route exists yet; refusing is correct");
 }
+
+// ---------------------------------------------------------------------------
+// Phase 2: ranked alternatives.
+//
+// The real registry's raster section is nearly tree-shaped (everything pivots
+// through PNG), so genuine alternatives are rare there by construction. These
+// tests build a synthetic graph so Yen's algorithm is exercised on its own
+// terms rather than on whatever topology the registry happens to have.
+// ---------------------------------------------------------------------------
+
+use huh_core::loss::LossVector;
+use huh_core::registry::{Edge, Engine, Format, License, Resources, Runtimes, Security};
+use std::collections::BTreeMap;
+
+fn fmt(id: &str, preserves: &[&str]) -> Format {
+    Format {
+        id: id.into(),
+        name: id.into(),
+        kinds: vec!["Raster".into()],
+        extensions: vec![],
+        mime_types: vec![],
+        preserves: preserves.iter().map(|s| s.to_string()).collect(),
+        signatures: vec![],
+        detection: Default::default(),
+    }
+}
+
+fn engine(id: &str) -> Engine {
+    Engine {
+        id: id.into(),
+        name: id.into(),
+        version_pin: ">=1,<2".into(),
+        license: License { spdx: "MIT".into(), build_profiles: vec!["lgpl".into()] },
+        security: Security { hostility: "moderate".into(), isolation: "wasm".into() },
+        resources: Resources { memory_model: "streaming".into(), default_timeout_s: 30 },
+        runtimes: Runtimes { native: true, wasm: true },
+    }
+}
+
+fn edge(from: &str, to: &str, loss: &[(&str, LossValue)], ms: u64) -> Edge {
+    let mut v = LossVector::new();
+    for (k, val) in loss {
+        v.set(k, *val);
+    }
+    Edge {
+        engine: "e".into(),
+        op: "Transcode".into(),
+        from: from.into(),
+        to: to.into(),
+        from_kind: "Raster".into(),
+        to_kind: "Raster".into(),
+        loss: v,
+        generational: false,
+        base_ms: ms,
+        requires: vec![],
+        provides: vec![],
+        status: "verified".into(),
+    }
+}
+
+/// A → B two ways: a cheap route that destroys alpha, and a costlier route
+/// that keeps it. A user genuinely might want either.
+fn synthetic() -> Registry {
+    let mut formats = BTreeMap::new();
+    for f in [
+        fmt("a", &["alpha", "geometry"]),
+        fmt("b", &["alpha", "geometry"]),
+        fmt("cheap", &["geometry"]),
+        fmt("faithful", &["alpha", "geometry"]),
+    ] {
+        formats.insert(f.id.clone(), f);
+    }
+    let mut engines = BTreeMap::new();
+    engines.insert("e".to_string(), engine("e"));
+    Registry {
+        version: "test".into(),
+        formats,
+        engines,
+        edges: vec![
+            edge("a", "cheap", &[("alpha", LossValue::Lost), ("geometry", LossValue::Preserved)], 1),
+            edge("cheap", "b", &[("geometry", LossValue::Preserved)], 1),
+            edge("a", "faithful", &[("alpha", LossValue::Preserved), ("geometry", LossValue::Preserved)], 5),
+            edge("faithful", "b", &[("alpha", LossValue::Preserved), ("geometry", LossValue::Preserved)], 5),
+        ],
+    }
+}
+
+#[test]
+fn yens_finds_multiple_distinct_routes_and_ranks_fidelity_first() {
+    let r = synthetic();
+    let p = Planner::new(&r, &Policy::default());
+    let plans = p.plan_ranked("a", "b", 5);
+    assert_eq!(plans.len(), 2, "both routes differ in loss, so both must survive dedup");
+
+    // The route that PRESERVES alpha ranks first, even though its hops declare
+    // 5x the wall time. This test originally asserted the opposite, on the
+    // assumption that "cheap in milliseconds" means "cheap to the planner".
+    // It does not, and should not: the default policy is to preserve the most,
+    // subject to reaching the target. Time is only a tie-breaker.
+    assert_eq!(plans[0].totals.loss.get("alpha"), Some(LossValue::Preserved));
+    assert_eq!(plans[1].totals.loss.get("alpha"), Some(LossValue::Lost));
+    assert!(plans[0].totals.cost < plans[1].totals.cost);
+}
+
+#[test]
+fn time_breaks_ties_but_never_outweighs_fidelity() {
+    let mut r = synthetic();
+    // Make both routes loss-equivalent so only time separates them...
+    r.edges[2].loss.set("alpha", LossValue::Lost);
+    r.edges[3].loss.set("alpha", LossValue::Lost);
+    let p = Planner::new(&r, &Policy::default());
+    let plans = p.plan_ranked("a", "b", 5);
+    assert_eq!(plans.len(), 1, "loss-equivalent routes collapse");
+    // ...and the surviving route is the fast one (1ms hops, not 5ms).
+    assert!(plans[0].hops.iter().all(|h| h.estimated_ms == 1),
+        "among equal-loss routes the faster must win: {:?}",
+        plans[0].hops.iter().map(|h| h.estimated_ms).collect::<Vec<_>>());
+
+    // And the tie-break must be too small to flip a fidelity decision: a
+    // 10s hop is worth 0.1, a single degraded property is worth 0.4.
+    let mut slow = synthetic();
+    slow.edges[2].base_ms = 10_000;
+    slow.edges[3].base_ms = 10_000;
+    let p2 = Planner::new(&slow, &Policy::default());
+    let plans2 = p2.plan_ranked("a", "b", 5);
+    assert_eq!(plans2[0].totals.loss.get("alpha"), Some(LossValue::Preserved),
+        "a very slow faithful route must still beat a fast lossy one");
+}
+
+#[test]
+fn alternatives_are_labelled_by_what_they_cost_not_by_engine() {
+    let r = synthetic();
+    let p = Planner::new(&r, &Policy::default());
+    let plans = p.plan_ranked("a", "b", 5);
+    let labels: Vec<String> = plans.iter().map(|p| p.intent_label()).collect();
+    assert!(labels.iter().any(|l| l.contains("flattened")), "{labels:?}");
+    assert!(labels.iter().any(|l| l.contains("faithful")), "{labels:?}");
+    // The label must describe the trade-off, not the pipeline.
+    assert!(!labels.iter().any(|l| l.contains("image-rs") || l.contains("Transcode")));
+}
+
+#[test]
+fn loss_equivalent_routes_collapse_to_one_choice() {
+    // Two routes that cost the user exactly the same thing are ONE choice.
+    // Offering both is decision fatigue with no information.
+    let mut r = synthetic();
+    // Make the faithful route lossy in exactly the same way as the cheap one.
+    r.edges[2].loss.set("alpha", LossValue::Lost);
+    r.edges[3].loss.set("alpha", LossValue::Lost);
+    let p = Planner::new(&r, &Policy::default());
+    let plans = p.plan_ranked("a", "b", 5);
+    assert_eq!(plans.len(), 1, "identical loss signatures must deduplicate");
+}
+
+#[test]
+fn ranked_planning_is_deterministic() {
+    // Users bookmark conversions; a silently changed route is a silently
+    // changed output (RESEARCH §10.3). Same inputs must give the same plans.
+    let r = reg();
+    let p = Planner::new(&r, &Policy::default());
+    let a = p.plan_ranked("image/png", "image/jpeg", 4);
+    for _ in 0..8 {
+        let b = p.plan_ranked("image/png", "image/jpeg", 4);
+        assert_eq!(a.len(), b.len());
+        for (x, y) in a.iter().zip(b.iter()) {
+            assert_eq!(x.loss_signature(), y.loss_signature());
+            assert_eq!(x.totals.cost, y.totals.cost);
+            assert_eq!(
+                x.hops.iter().map(|h| h.to.clone()).collect::<Vec<_>>(),
+                y.hops.iter().map(|h| h.to.clone()).collect::<Vec<_>>()
+            );
+        }
+    }
+}
+
+#[test]
+fn yens_never_returns_a_looping_route() {
+    let r = reg();
+    let p = Planner::new(&r, &Policy::default());
+    for plan in p.plan_ranked("image/gif", "image/jpeg", 6) {
+        let mut seen = vec![plan.source.clone()];
+        for h in &plan.hops {
+            assert!(!seen.contains(&h.to), "route revisits {}: {:?}", h.to, seen);
+            seen.push(h.to.clone());
+        }
+    }
+}
+
+#[test]
+fn tiff_is_the_only_target_preserving_sixteen_bit_depth() {
+    // A measured claim from the registry, asserted so it cannot silently
+    // regress: TIFF was the only probe target that kept gray16 at 16-bit.
+    let r = reg();
+    let p = Planner::new(&r, &Policy::default());
+    let tiff = p.plan("image/png", "image/tiff").expect("tiff route");
+    assert_eq!(tiff.totals.loss.get("color_depth"), Some(LossValue::Preserved));
+    for lossy in ["image/webp", "image/bmp"] {
+        let pl = p.plan("image/png", lossy).expect(lossy);
+        assert_eq!(pl.totals.loss.get("color_depth"), Some(LossValue::Degraded), "{lossy}");
+    }
+    let gif = p.plan("image/png", "image/gif").expect("gif route");
+    assert_eq!(gif.totals.loss.get("color_depth"), Some(LossValue::Lost));
+}
+
+#[test]
+fn gif_and_jpeg_lose_opposite_things() {
+    // The first genuine intent choice in the registry, backed by measurement.
+    let r = reg();
+    let p = Planner::new(&r, &Policy::default());
+    let gif = p.plan("image/png", "image/gif").unwrap();
+    let jpeg = p.plan("image/png", "image/jpeg").unwrap();
+
+    // JPEG keeps colour, destroys transparency.
+    assert_eq!(jpeg.totals.loss.get("alpha"), Some(LossValue::Lost));
+    assert_eq!(jpeg.totals.loss.get("color_profile"), Some(LossValue::Preserved));
+    // GIF keeps (some) transparency, destroys colour depth.
+    assert_eq!(gif.totals.loss.get("color_depth"), Some(LossValue::Lost));
+    assert_eq!(gif.totals.loss.get("alpha"), Some(LossValue::Degraded));
+}

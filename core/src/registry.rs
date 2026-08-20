@@ -11,6 +11,16 @@ pub struct Signature {
     pub offset: u64,
     pub magic: String,
     pub weight: String,
+    /// Signatures sharing a group are ALTERNATIVES (any one matching is
+    /// enough); distinct groups are all required. Ungrouped signatures each
+    /// form their own group, i.e. they are required.
+    ///
+    /// Needed because the two shapes look identical in TOML but mean opposite
+    /// things: AVI is `RIFF` at 0 AND `AVI ` at 8, while ZIP is
+    /// `504B0304` at 0 OR `504B0506` at 0. Treating the second as AND made
+    /// every ZIP undetectable by signature.
+    #[serde(default)]
+    pub group: Option<u32>,
 }
 
 #[derive(Debug, Clone, Default, Deserialize)]

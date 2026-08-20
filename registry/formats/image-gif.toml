@@ -1,0 +1,47 @@
+id         = "image/gif"
+name       = "Graphics Interchange Format"
+kinds      = ["Raster"]
+extensions = ["gif"]
+mime_types = ["image/gif"]
+puid       = "fmt/4"
+puid_verified = true
+puid_name  = "Graphics Interchange Format 89a"
+spec_url   = "https://www.w3.org/Graphics/GIF/spec-gif89a.txt"
+
+preserves = ["geometry", "alpha", "time", "metadata"]
+
+[[signatures]]
+offset = 0
+magic  = "474946383961"   # GIF89a
+weight = "decisive"
+group  = 0
+
+[[signatures]]
+offset = 0
+magic  = "474946383761"   # GIF87a — an alternative, not an additional requirement
+weight = "decisive"
+group  = 0
+
+[detection]
+priority_over = []
+container_of  = []
+
+[notes]
+text = """
+`preserves` deliberately OMITS `color_depth`: GIF is palettised at a hard limit
+of 256 colours per frame, so colour depth is not something it can carry at
+source fidelity. It DOES preserve `alpha`, but only 1-bit — a pixel is fully
+transparent or fully opaque, with no partial transparency.
+
+That combination is why GIF matters to the planner beyond being another format:
+GIF and JPEG lose OPPOSITE things. JPEG keeps colour and destroys transparency;
+GIF keeps transparency and destroys colour. Two routes to "make this shareable"
+with genuinely different costs, which is the first real intent choice in the
+registry rather than a hypothetical one.
+
+Measured, not assumed: round-tripping the rgba-gradient specimen through GIF
+scores SSIM 0.8105. A smooth 128x128 gradient contains far more than 256
+distinct colours, so palettisation is severe. `time` is listed because GIF
+carries animation, though image-rs writes a single frame today — that gap is
+recorded rather than papered over.
+"""

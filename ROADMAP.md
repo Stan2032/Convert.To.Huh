@@ -58,18 +58,67 @@ coverage) and is still `claimed`, unverified, ignored by the planner.
 - gray16 → JPEG produced a file **197.9% the size of its PNG input**. Nothing in
   the cost model knows that "convert to JPEG" can make a file bigger.
 
-## Phase 2 — Multi-hop and the cost model
+## Phase 2 — Ranked alternatives and the cost model ✅ (partly)
 
-- [ ] Loss vector composition — join semantics, `lost` absorbing (`fidelity-analyst`)
-- [ ] Multi-objective ranking, k-shortest paths (`route-planner-engineer`)
-- [ ] Generated explanations from loss vectors
-- [ ] Determinism property tests
-- [ ] FFmpeg integration, LGPL profile (`engine-integrator`, `license-compliance-officer`)
-- [ ] Build-profile pruning before search (`license-compliance-officer`)
+- [x] Loss vector composition — join semantics, `lost` absorbing
+- [x] **Yen's k-shortest loopless paths**, deduplicated by loss signature
+- [x] Generated explanations and intent labels from loss vectors
+- [x] Determinism property tests (8 repeats, identical plans)
+- [x] Build-profile pruning before search
+- [x] Time as a **bounded tie-breaker**, never an objective
+- [x] Five more raster formats, all measured: GIF, BMP, TIFF, WebP
+- [ ] FFmpeg integration — **blocked**, no ffmpeg in this environment
 
-**Falsifies:** whether a chained route beats a direct one on any real pair, and
-whether generated explanations are actually readable. If explanations read like
-machine output, the ranking is unaccountable and invariant 8 fails.
+### What got measured, and what it changed
+
+Probing every format pair across the corpus produced the first genuine intent
+choice in the registry, and it was not the one anticipated:
+
+| Target | SSIM (mean) | alpha | 16-bit depth | Size (128×128 RGBA) |
+|---|---|---|---|---|
+| TIFF | 1.0000 | preserved | **preserved** | 110,802 |
+| WebP | 1.0000 | preserved | degraded | **218** |
+| BMP | 1.0000 | preserved | degraded | 65,658 |
+| JPEG | 0.9966 | **lost** | degraded | 2,833 |
+| GIF | 0.8800 | degraded (1-bit) | **lost** | 6,761 |
+
+- **TIFF is the only target that preserved 16-bit depth.** That is the archival
+  route, and it costs ~500× the bytes of WebP for the same visual result.
+- **GIF and JPEG lose opposite things** — GIF keeps transparency and destroys
+  colour, JPEG keeps colour and destroys transparency. A real user choice,
+  backed by measurement rather than intuition.
+- **WebP is losslessly ~4.5× smaller than PNG** on these specimens, which is
+  surprising enough to deserve a wider corpus before it becomes policy.
+
+`huh suggest <file>` exists because of this: for raster, the meaningful choice
+is which *target* to pick, and the planner can now rank them by what each costs.
+
+### Two bugs the phase surfaced
+
+1. **Every ZIP was undetectable by signature.** The detector required *all*
+   declared signatures to match, but ZIP's two are alternatives (local file
+   header *or* empty-archive record). Real ZIPs were falling through to
+   extension-based detection at confidence 0.3 — exactly the unsafe path
+   ADR-0005 exists to close. Fixed with signature `group`s: same group = OR,
+   distinct groups = AND. TIFF's two byte-order magics have the same shape.
+2. **`base_ms` was declared but never used.** A test asserting the "cheap" route
+   would rank first failed, because the cost function weighs only fidelity. The
+   test premise was wrong, not the planner — but the field being dead was real.
+   Time is now a tie-break scaled so a 10-second hop (0.1) cannot outweigh
+   degrading one property (0.4).
+
+### What Phase 2 did NOT deliver, and why
+
+**Genuinely different alternatives to the *same* target are rare here.** The
+raster registry is nearly tree-shaped — everything pivots through PNG — so
+between two spokes there is usually exactly one loopless route. Yen's is
+implemented and tested against a synthetic multi-route graph, but the real
+registry cannot yet exercise it meaningfully.
+
+That is not a defect in the algorithm; it is a fact about `Transcode`-only
+graphs. **The four-way `AVI → PDF` choice needs `Extract` / `Assemble` /
+`Synthesize` edges**, which need engines this environment does not have. That is
+Phase 3, and it is where the intent machinery earns its place.
 
 ## Phase 3 — The "Huh" conversions
 

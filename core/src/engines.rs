@@ -58,6 +58,10 @@ fn fmt_of(id: &str) -> Option<ImageFormat> {
     match id {
         "image/png" => Some(ImageFormat::Png),
         "image/jpeg" => Some(ImageFormat::Jpeg),
+        "image/gif" => Some(ImageFormat::Gif),
+        "image/bmp" => Some(ImageFormat::Bmp),
+        "image/tiff" => Some(ImageFormat::Tiff),
+        "image/webp" => Some(ImageFormat::WebP),
         _ => None,
     }
 }
@@ -111,8 +115,18 @@ pub fn encode(img: &DynamicImage, format_id: &str, quality: u8) -> Result<Vec<u8
             enc.encode(rgb.as_raw(), rgb.width(), rgb.height(), image::ExtendedColorType::Rgb8)
                 .map_err(|e| ConvertError::EngineCrash(e.to_string()))?;
         }
-        "image/png" => {
-            img.write_to(&mut Cursor::new(&mut out), ImageFormat::Png)
+        "image/gif" => {
+            // GIF is palettised: at most 256 colours, and alpha is 1-bit.
+            // The registry says `color_depth = degraded` for this reason, and
+            // the fidelity harness confirms it against real pixels.
+            let rgba = img.to_rgba8();
+            let mut enc = image::codecs::gif::GifEncoder::new(&mut out);
+            enc.encode(rgba.as_raw(), rgba.width(), rgba.height(), image::ExtendedColorType::Rgba8)
+                .map_err(|e| ConvertError::EngineCrash(e.to_string()))?;
+        }
+        "image/png" | "image/bmp" | "image/tiff" | "image/webp" => {
+            let f = fmt_of(format_id).unwrap();
+            img.write_to(&mut Cursor::new(&mut out), f)
                 .map_err(|e| ConvertError::EngineCrash(e.to_string()))?;
         }
         other => {

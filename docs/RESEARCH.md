@@ -235,6 +235,58 @@ or an FL Studio project is exactly the "how far does any go?" question — and t
 answer in the field is "very far, and it is the reason people share the tool."
 That is evidence, not proof, but it shifts the prior.
 
+### 1.8 Empirical check of this project's thesis
+
+The thesis — *cross-domain conversions are underspecified, not absurd, and the
+user should choose the interpretation* — was asserted before it was tested.
+Tested against the reference implementation at commit `2fc7143`, four findings.
+
+**Confirmed: interpretation mismatch is a real, recognised bug class.** Not
+inferred — it is written into their contributor policy:
+
+> "converting X to Y doesn't work" is **not** a bug report. However,
+> "converting X to Y works **but not how I expected**" likely **is** a bug report.
+
+A project only writes that rule after enough people hit it. Their front page
+concedes the same thing: you are "almost guaranteed to get an output — perhaps
+not always the one you expected."
+
+**Confirmed: one interpretation is chosen silently.** Their own graph test is
+titled *"should find the optimal path from image to audio"* — a cross-domain
+conversion — and asserts on `extractedPaths[0]`, the single best path. There is
+no interpretation picker in the UI.
+
+**Correction to an earlier claim of mine.** I wrote that they "pick one path
+rather than presenting alternatives," which understated their design. They *do*
+generate ranked alternatives — `searchPath` is an `AsyncGenerator` yielding
+successive paths. But the only consumer is the **failure-retry loop** in
+`main.ts`: alternatives exist to route around a hop that just crashed, never to
+offer the user a different reading of their request. The machinery is there; it
+is pointed at reliability rather than intent. That is a meaningfully different
+statement, and the distinction matters because it means our Phase 2 work is
+*re-purposing* proven machinery, not inventing it.
+
+**Convergent evidence for the content model.** Their contributor guide arrives
+independently at the distinction this project builds on:
+
+> "treat the file as the **media that it represents**, not the data that it
+> contains. For example, if you were making an SVG handler, you should treat the
+> file as an *image*, not as XML. In other words, avoid simple 'binary
+> waterfalls', as they're not semantically meaningful."
+
+That is `docs/specs/content-model.md §1` — formats are containers, content kinds
+are what travels inside — reached by a different route. Two independent
+derivations is the strongest support the content model has.
+
+**What remains genuinely contested.** They treat "not how I expected" as a bug
+to be fixed *by improving the single default*. This project treats it as
+evidence the request was underspecified and the user should pick. Both are
+coherent strategies, and theirs is cheaper and has less decision fatigue. Ours
+is only better if users actually want the choice — which is §10.4's open
+question, still unanswered, and the thing Phase 3 has to test with real users
+rather than argument. Offering four options where one good default would do is a
+real failure mode, not a hypothetical one.
+
 ### 1.7 Distribution is part of the threat model
 
 Their `fail.html` — served from the vanity domain when the GitHub Pages app

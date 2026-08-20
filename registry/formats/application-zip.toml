@@ -14,11 +14,13 @@ preserves = ["metadata", "structure"]
 offset = 0
 magic  = "504B0304"
 weight = "strong"
+group  = 0
 
 [[signatures]]
 offset = 0
-magic  = "504B0506"
+magic  = "504B0506"   # empty archive
 weight = "strong"
+group  = 0
 
 [detection]
 priority_over = []
@@ -30,6 +32,16 @@ The base of a large family — DOCX, XLSX, PPTX, ODF, EPUB, JAR and APK are all
 ZIPs. Each must declare priority_over = ["application/zip"] or every Office
 document detects as a plain archive (docs/RESEARCH.md §2.2). Priority must form
 a DAG; CI rejects cycles.
+
+DETECTOR BUG FOUND HERE 2026-08-20. These two signatures are ALTERNATIVES —
+a ZIP starts with either a local file header or, if empty, an
+end-of-central-directory record. The detector originally required ALL declared
+signatures to match, so no real ZIP could ever match both and every ZIP fell
+through to EXTENSION-based detection at confidence 0.3. That is precisely the
+unsafe path ADR-0005 exists to close. Fixed by adding `group`: same group means
+alternatives, distinct groups mean all required. AVI and WAV rely on the AND
+behaviour (RIFF at 0 AND the form type at 8), which is why the distinction has
+to be explicit rather than inferred.
 
 SECURITY: the archetypal decompression bomb. 281 TB from 10 MB, ~4.5 PB with
 Zip64, ratios past 28,000,000:1 via overlapping entries (§4.3). Budgets — entry
