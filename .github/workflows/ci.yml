@@ -6,12 +6,11 @@ on:
   pull_request:
 
 jobs:
-  validate:
-    name: Validate registry and agents
+  registry:
+    name: Validate registry, agents and docs
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"   # tomllib is stdlib from 3.11
@@ -26,7 +25,52 @@ jobs:
       - name: Validate agent definitions
         run: python3 tools/validate_agents.py
 
-      # Cross-references are load-bearing here: ADRs are binding and the specs
-      # cite the research dossier by section.
+      # ADRs are binding and specs cite the dossier by section, so a dangling
+      # reference turns a binding rule into a rumour.
       - name: Check documentation cross-references
         run: python3 tools/check_links.py
+
+  core:
+    name: Build and test huh-core
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: core
+
+      - name: Regenerate the corpus
+        # Specimens are generated, not committed, so this also proves the
+        # generator still produces what the tests expect.
+        run: python3 corpus/generate.py
+
+      - name: Clippy
+        run: cargo clippy --manifest-path core/Cargo.toml --all-targets -- -D warnings
+
+      - name: Test
+        run: cargo test --manifest-path core/Cargo.toml --release
+
+      - name: Verify capability edges against the corpus
+        # The measurement that earns an edge `status = "verified"`. Exits 4 if a
+        # measurement contradicts the registry.
+        run: |
+          cargo build --manifest-path core/Cargo.toml --release
+          ./tools/verify_edges.sh 85
+
+  wasm:
+    name: Core compiles to wasm32 (ADR-0002)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: core
+      # One planner, two runtimes. If this breaks, browser and server can drift.
+      - name: Build for wasm32
+        run: cargo build --manifest-path core/Cargo.toml --lib --target wasm32-unknown-unknown --release

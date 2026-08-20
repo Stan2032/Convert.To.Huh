@@ -1,7 +1,7 @@
-# Rust
-/target/
+# Rust — unanchored so it matches core/target/ too, not just a root-level target/
+target/
 **/*.rs.bk
-Cargo.lock
+# Cargo.lock is committed: this ships a binary, so builds must be reproducible
 
 # Python
 __pycache__/

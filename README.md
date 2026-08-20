@@ -3,12 +3,30 @@
 > A universal file converter that treats "convert this AVI to a PDF" as a
 > question worth answering properly, rather than a joke or an error.
 
-**Status: design and scaffolding.** There is no working converter yet. What
-exists is a researched architecture, five enforced specifications, a seeded and
-machine-checked registry, and fifteen agent definitions covering the work.
-See [ROADMAP.md](ROADMAP.md) for what happens next and
-[`registry/README.md`](registry/README.md) for an honest account of what
-currently converts (nothing, deliberately).
+**Status: Phase 1 works.** `PNG → JPEG` converts end to end — detected from
+content, planned over the graph, executed, and measured against the fidelity the
+registry claimed. Everything else is still design.
+
+```console
+$ huh convert corpus/raster/rgba-gradient.png out.jpg
+detected image/png (by signature, confidence 1.00)
+route:   image/png --image-rs[Transcode]--> image/jpeg
+cost:    3.70
+effect:  Loses transparency and metadata. Reduces colour depth.
+         Keeps colour accuracy and resolution.
+
+wrote out.jpg (2833 bytes, 8.0% of input) in 1 ms
+SSIM vs original: 0.9950
+  alpha        declared=lost         measured=lost
+  geometry     declared=preserved    measured=preserved
+  color_depth  declared=degraded     measured=not-exercised
+```
+
+That last block is the point of the project. The registry *claimed* those
+losses; the run *measured* them. When they disagree, it exits non-zero and says
+so — a registry bug, not a conversion failure.
+
+See [ROADMAP.md](ROADMAP.md) for what Phase 1 falsified and what is next.
 
 ## The idea
 
@@ -76,12 +94,28 @@ outcome rather than an error.
 | [`tools/`](tools/) | Dependency-free validators, run in CI. |
 | [`.claude/agents/`](.claude/agents/) | Fifteen specialist agents covering the work. |
 
-## Try the checks
+## Try it
 
 ```bash
-python3 tools/validate_registry.py --self-test   # check the checker
+python3 corpus/generate.py                       # specimens are generated, not committed
+cargo build --manifest-path core/Cargo.toml --release
+export PATH="$PWD/core/target/release:$PATH"
+
+huh graph                                        # what the registry knows
+huh detect corpus/raster/rgba-gradient.png       # content-first identification
+huh plan image/png image/jpeg                    # a plan, as inspectable JSON
+huh convert corpus/raster/rgb-photo.png out.jpg --receipt r.json
+./tools/verify_edges.sh                          # measure every edge on every specimen
+```
+
+And the checks:
+
+```bash
+python3 tools/validate_registry.py --self-test   # check the checker (11 fixtures)
 python3 tools/validate_registry.py               # check the registry
 python3 tools/validate_agents.py                 # check the agent definitions
+python3 tools/check_links.py                     # check the cross-references
+cargo test --manifest-path core/Cargo.toml --release
 ```
 
 The registry validator caught two genuine modelling errors in its own seed data

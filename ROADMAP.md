@@ -11,23 +11,52 @@ dependency-free validators, fifteen agent definitions.
 Done. The validators are green and the registry is honest about converting
 nothing.
 
-## Phase 1 — Make one route real, end to end
+## Phase 1 — Make one route real, end to end ✅
 
-The narrowest possible vertical slice: **PNG → JPEG through libvips**, planned
-and executed, with a receipt.
+**PNG → JPEG, planned and executed, with a measured receipt.**
 
-- [ ] `huh-core` Rust crate: registry loader, graph builder
-- [ ] Detector: structural signatures with priority rules (`format-registry-curator`)
-- [ ] Planner: Dijkstra over the graph, single-objective to start (`route-planner-engineer`)
-- [ ] Plan serialization per `docs/specs/conversion-plan.md` (`api-contract-designer`)
-- [ ] libvips adapter, argument vectors only (`engine-integrator`)
-- [ ] Corpus: PNG specimens with alpha, 16-bit, ICC (`corpus-keeper`)
-- [ ] First `verified` edge, with a measurement (`capability-cartographer`)
-- [ ] Receipt with declared vs measured fidelity (`fidelity-analyst`)
+- [x] `huh-core` Rust crate: registry loader, graph builder
+- [x] Detector: structural signatures with priority rules
+- [x] Planner: Dijkstra with a multi-term cost function, profile/runtime pruning
+- [x] Plan serialization, generated rationales
+- [x] Engine adapter + budget enforcement
+- [x] Corpus: 4 generated PNG specimens (alpha, opaque-alpha control, 16-bit, photo)
+- [x] First `verified` edges, with measurements
+- [x] Receipt with declared vs measured fidelity, SSIM
+- [x] 15 tests; wasm32 build in CI
 
-**Falsifies:** whether the registry schema survives contact with a real
-implementation. Expect the schema to change here; that is the point of doing it
-before there are 500 edges.
+**Engine substitution.** The plan said libvips. Nothing is installed in this
+environment — no vips, no ImageMagick, no ffmpeg — so the first engine is
+`image-rs`, the pure-Rust `image` crate, linked directly into `huh-core`. That
+turned out better than the original plan: it compiles to native *and* wasm32,
+so it is the concrete proof of ADR-0002 rather than a stand-in for it. libvips
+remains the right production raster engine (~4–8× faster, streaming, far wider
+coverage) and is still `claimed`, unverified, ignored by the planner.
+
+**What it falsified.** The schema mostly held. Three things changed:
+
+1. `[edge.verification.measured]` needed to be a real structured block, not a
+   loose key — CI rule 5 refused `verified` without it, which is what forced the
+   measurement to happen at all.
+2. The bootstrap circularity is real: the planner ignores unverified edges, but
+   verifying one requires running it. Resolved with a `--allow-unverified`
+   policy flag, which is the `capability-cartographer` probe path.
+3. Measurement has to distinguish **"the property was lost"** from **"the input
+   never exercised the property."** An RGBA file that is entirely opaque loses
+   nothing observable when alpha is dropped. Without that distinction the
+   harness manufactures agreement with itself.
+
+### Known gaps left by Phase 1
+
+- The planner returns **one** plan, not ranked alternatives. Yen's k-shortest
+  paths is Phase 2, and intent selection needs it.
+- Cost is computed but never compared against reality — `estimated_ms` is a
+  registry constant, not a measurement (`perf-profiler`).
+- No hop-level caching or resume yet (ADR-0008); execution is a straight loop.
+- `image-rs` decodes and re-encodes at every hop rather than passing a decoded
+  image along, which will matter for multi-hop raster routes.
+- gray16 → JPEG produced a file **197.9% the size of its PNG input**. Nothing in
+  the cost model knows that "convert to JPEG" can make a file bigger.
 
 ## Phase 2 — Multi-hop and the cost model
 

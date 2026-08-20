@@ -1,0 +1,51 @@
+id          = "image-rs"
+name        = "image-rs (Rust `image` crate)"
+version_pin = ">=0.25,<0.26"
+homepage    = "https://github.com/image-rs/image"
+
+[license]
+spdx            = "MIT"
+build_profiles  = ["lgpl", "gpl"]
+patent_exposure = "none"
+verified        = true
+checked         = "2026-08-20"
+source          = "https://raw.githubusercontent.com/image-rs/image/main/LICENSE-MIT"
+
+[security]
+hostility   = "moderate"
+isolation   = "wasm"
+network     = false
+delegates   = false
+
+[resources]
+memory_model      = "whole-file"
+concurrency       = "thread-safe"
+crash_expected    = false
+default_timeout_s = 60
+
+[runtimes]
+native = true
+wasm   = true
+
+[notes]
+text = """
+The first engine actually wired up, and chosen for a reason that is not
+"it was easiest": it is pure Rust, links into huh-core directly, and compiles to
+both native and wasm32. That makes it the concrete proof of ADR-0002 — the same
+planner AND the same engine in the browser and on the server, with no
+possibility of drift.
+
+`hostility: moderate` and `isolation: wasm`. It parses hostile input like any
+decoder, but it is memory-safe and in-process with no subprocess, no delegates
+and no filesystem access, so the sandbox obligations that bite FFmpeg and
+Ghostscript do not apply in the same way. It is NOT `trusted`: a decoder bug is
+still a decoder bug, and the pixel-bomb guard in engines.rs exists because
+`memory_model = "whole-file"` means a declared-huge image would otherwise be
+allocated before anyone noticed.
+
+Scope is deliberately small — PNG and JPEG only. It is not a replacement for
+libvips (~4-8x faster, streaming, far wider format coverage per
+docs/RESEARCH.md §3.1); it is the engine that let the first edge get verified
+without a system dependency. When libvips is available natively, the planner
+should choose between them on measured input size.
+"""

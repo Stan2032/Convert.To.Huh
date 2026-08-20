@@ -1,0 +1,106 @@
+# Capabilities of image-rs. Owner: capability-cartographer.
+# The project's first VERIFIED edges — measured, not claimed.
+
+[[edge]]
+engine    = "image-rs"
+op        = "Transcode"
+from      = "image/png"
+to        = "image/jpeg"
+from_kind = "Raster"
+to_kind   = "Raster"
+
+[edge.loss]
+alpha         = "lost"
+color_depth   = { value = "degraded", from = 16, to = 8 }
+geometry      = "preserved"
+color_profile = "preserved"
+metadata      = "lost"
+generational  = true
+
+[edge.cost]
+time_model   = "linear_pixels"
+memory_model = "whole-file"
+base_ms      = 12
+
+[edge.constraints]
+max_input_bytes = 536870912
+requires        = []
+
+[edge.verification]
+status      = "verified"
+specimens   = [
+  "corpus/raster/rgba-gradient.png",
+  "corpus/raster/rgb-photo.png",
+  "corpus/raster/gray16.png",
+  "corpus/raster/rgba-opaque.png",
+]
+verified_at = "2026-08-20"
+verified_by = "capability-cartographer"
+
+[edge.verification.measured]
+tool          = "tools/verify_edges.sh 85"
+specimens     = 4
+ssim_mean     = 0.9966
+ssim_min      = 0.9950
+alpha         = "lost on rgba-gradient; not exercised by the other three"
+color_depth   = "degraded 16->8 on gray16; not exercised by the 8-bit specimens"
+geometry      = "preserved on all four"
+note = """
+Every measurement agrees with the declared vector, which is what earns the
+`verified` status — CI rule 5 refuses it without this block.
+
+Two results worth keeping. `rgba-opaque` is the control: it HAS an alpha channel
+but every pixel is opaque, so dropping alpha is not an observable loss and the
+harness reports `not-present-in-input` rather than `lost`. Distinguishing "the
+format supports it" from "this file uses it" is what stops the harness
+manufacturing agreement.
+
+And gray16.jpg came out at 197.9% of its PNG input — the JPEG is LARGER. A
+16-bit greyscale gradient is close to the best case for PNG's filters and close
+to the worst case for JPEG's DCT. "Convert to JPEG to save space" is not a law
+of nature, and the planner has no cost term that knows this yet."""
+
+
+[[edge]]
+engine    = "image-rs"
+op        = "Transcode"
+from      = "image/jpeg"
+to        = "image/png"
+from_kind = "Raster"
+to_kind   = "Raster"
+
+[edge.loss]
+geometry      = "preserved"
+color_depth   = "preserved"
+color_profile = "preserved"
+metadata      = "lost"
+generational  = false
+
+[edge.cost]
+time_model   = "linear_pixels"
+memory_model = "whole-file"
+base_ms      = 14
+
+[edge.constraints]
+max_input_bytes = 536870912
+requires        = []
+
+[edge.verification]
+status      = "verified"
+specimens   = ["corpus/raster/rgb-photo.png"]
+verified_at = "2026-08-20"
+verified_by = "capability-cartographer"
+
+[edge.verification.measured]
+tool      = "round-trip via tools/verify_edges.sh"
+specimens = 1
+ssim_mean = 1.0
+note = """
+Lossless in the only sense that applies: PNG re-encodes the already-decoded
+JPEG pixels exactly, so SSIM against the JPEG it decoded is 1.0. It does NOT
+recover what the original JPEG encode destroyed.
+
+That distinction is exactly what the composition rules protect. On a
+PNG -> JPEG -> PNG round trip the total still reports alpha as `lost`, because
+`lost` is absorbing: arriving back at a format that supports transparency does
+not bring the transparency back."""
