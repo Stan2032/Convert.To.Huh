@@ -4,21 +4,33 @@ Status: **accepted** · 2026-08-20
 
 ## Context
 
-The entire field ships a lookup table from (source, target) to a command line.
-That works until you want breadth: a thousand formats is a million pairs
-(R§1.5). It also cannot answer "AVI → PDF," because there is no single correct
-entry to put in the cell — there are at least four defensible answers (R§5.2).
+The **commercial** services ship a lookup table from (source, target) to a
+command line. That works until you want breadth: a thousand formats is a million
+pairs (R§1.5). It also cannot answer "AVI → PDF," because there is no single
+correct entry to put in the cell — there are at least four defensible answers
+(R§5.2).
 
-NCSA's Polyglot work established the alternative fifteen years ago: an
-I/O-Graph of what each tool reads and writes, searched by shortest path, with
-edge weights encoding information retained (R§1.3). It was never executed as a
-polished product with a real loss model.
+NCSA's Polyglot established the alternative fifteen years ago: an I/O-Graph of
+what each tool reads and writes, searched by shortest path, with edge weights
+encoding information retained (R§1.3).
+
+**An earlier draft of this ADR claimed the entire field ships lookup tables.
+That was wrong**, and reading `p2r3/convert` from source disproved it (R§1.6):
+convert.to.it already runs Dijkstra over a format graph, with category-change
+costs, a lossy multiplier, path-dependent penalties for nonsense category
+sequences, and runtime dead-end learning. The graph approach is not our
+differentiator — it is the state of the art, and it is already shipping.
 
 ## Decision
 
 Formats and content kinds are nodes; engine capabilities are typed, weighted
 edges. A conversion request is a pathfinding problem. The planner returns
 **ranked plans with generated explanations**, not a single command.
+
+Given R§1.6, the defensible part of this decision is not "use a graph" — that is
+settled — but three things layered on top: **typed** edges carrying an operation
+class, **per-property loss** instead of a scalar cost, and **explanations and
+intent alternatives** surfaced to the user rather than a single yielded path.
 
 Pivot formats emerge as high-degree nodes, but they are not mandated: a direct
 edge beats a pivot route when it is better, and the planner decides per request.

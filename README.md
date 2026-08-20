@@ -12,10 +12,16 @@ currently converts (nothing, deliberately).
 
 ## The idea
 
-Every file converter in the field is a **lookup table**: a map from
-(source format, target format) to a command line. That approach works until you
-want breadth — a thousand formats is a million pairs — and it has no answer at
-all for conversions that cross domains.
+The commercial converters are **lookup tables**: a map from (source format,
+target format) to a command line. That works until you want breadth — a thousand
+formats is a million pairs — and it has no answer at all for conversions that
+cross domains.
+
+The best open-source converter, [convert.to.it](https://convert.to.it/), already
+went further and runs Dijkstra over a format graph. So pathfinding is not the
+novel part here; it is the baseline. What is missing from every one of them is
+any account of **what a conversion costs you** — see
+[`docs/RESEARCH.md §1.6`](docs/RESEARCH.md) for a source-level comparison.
 
 Convert.To.Huh is a **planner over a typed graph**. Formats and the content
 kinds they carry are nodes. Engine capabilities are typed, weighted edges. A
@@ -92,7 +98,14 @@ with a real loss model. This project adopts that structure and extends it with
 typed content kinds, loss as a vector, measured verification of every capability
 claim, and inference edges the original did not contemplate.
 
-The immediate inspiration is [convert.to.it](https://converttoit.com/), which
-does browser-local WebAssembly conversion and makes the striking claim that it
-converts between *any* formats — "even unusual combinations like AVI video to
-PDF." That claim is the gap this project is built around.
+The immediate inspiration is [convert.to.it](https://convert.to.it/)
+(`p2r3/convert`, GPL-2.0), which does browser-local WebAssembly conversion and
+makes the striking claim that it converts between *any* formats — "What if you
+_really_ need to convert an AVI video to a PDF document?"
+
+Having read its source, three of its ideas are adopted here directly:
+path-dependent penalties that suppress nonsense category sequences, runtime
+dead-end learning that reroutes around a hop that just failed, and a penalized
+"accepts anything" escape hatch so the system returns *something*. What it does
+not do — and what this project is actually for — is tell you what the conversion
+cost you.

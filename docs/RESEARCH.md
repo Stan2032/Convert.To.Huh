@@ -26,9 +26,15 @@ The line that matters most, and the reason this repository exists:
 > combinations like AVI video to PDF.
 
 **Implication.** The interesting product claim is not "we wrap FFmpeg." It is
-"the set of legal conversions is not block-diagonal." Everyone can do
-JPEG→PNG. Almost nobody has a principled answer for AVI→PDF. That gap is the
-whole thesis of this project (§5).
+"the set of legal conversions is not block-diagonal." Everyone can do JPEG→PNG;
+almost nobody has a principled answer for AVI→PDF.
+
+**Correction, after reading their source (§1.6): convert.to.it is not a lookup
+table.** It already implements Dijkstra pathfinding over a format graph with a
+tuned cost model. An earlier draft of this dossier asserted that the whole field
+ships lookup tables; that was true of the commercial services and false of the
+one product this project was named after. The real gap is narrower and is stated
+honestly in §1.6.
 
 ### 1.2 The field, honestly assessed
 
@@ -37,7 +43,7 @@ whole thesis of this project (§5).
 | CloudConvert | Server | Job/Task graph, per-engine version pinning, arbitrary FFmpeg/ImageMagick commands | Operational maturity; explicit multi-step jobs; engine choice (`office` vs `libreoffice`) | Route is caller-specified, not planned. No cross-domain semantics. |
 | Convertio / FreeConvert / Online-Convert | Server | Format-pair lookup | Breadth, SEO surface area | Opaque quality; upload-everything privacy model |
 | VERT.sh | Browser (WASM) + optional server for video | FFmpeg / libvips / Pandoc compiled to WASM, Svelte UI | Local-first, open source, ~250 formats | Video punted to a server; pair-wise conversion only |
-| Convert To It | Browser (WASM) | FFmpeg + ImageMagick WASM + custom Office parsers | Local-first **and** claims any→any | Semantics of any→any undocumented/unranked |
+| **convert.to.it** | Browser (WASM), fully static | ~50 WASM/JS engines; **Dijkstra pathfinding over a format graph** | Local-first, any→any, genuinely ships, offline build | Scalar cost model; no fidelity measurement; no intent selection |
 | ConvertX | Self-hosted server | Orchestrates ~20+ CLI tools (FFmpeg, ImageMagick, GraphicsMagick, Vips, libheif, resvg, Potrace, VTracer, LibreOffice, Pandoc, XeLaTeX, Calibre, Inkscape, Assimp) | Enormous breadth from Docker; honest self-hosting | A dispatch table over binaries; no fidelity model |
 | Stirling-PDF / BentoPDF | Self-hosted server | PDF-only toolkit | Depth in one format family | Deliberately narrow |
 
@@ -145,6 +151,112 @@ structure. But pure hub-and-spoke forces every conversion through a hub even
 when a direct edge exists and is better (JPEG→PNG should not route through a
 pivot). So: **a graph with pivots as high-degree nodes**, and a planner that
 prefers direct edges when they exist. Not a hub-and-spoke mandate.
+
+### 1.6 The reference implementation, read from source
+
+`github.com/p2r3/convert`, GPL-2.0, ~50 contributors, a fully static site on
+GitHub Pages with an Electron offline build. Read at commit `2fc7143`. This is
+the closest existing thing to what this project proposes, and it is further
+along than the earlier competitive summary implied.
+
+**It is a planner.** `src/TraversionGraph.ts` builds a graph whose nodes are
+formats (keyed `mime(format)`) and whose edges are handler-specific conversions,
+then runs **Dijkstra's algorithm** over it via `src/PriorityQueue.ts`.
+`searchPath` is an `AsyncGenerator` that **yields successive paths**, so the
+caller can try the next-best route when one fails.
+
+**Its cost function** (all constants theirs):
+
+| Term | Value | Meaning |
+|---|---|---|
+| `DEPTH_COST` | 1 | per hop — prefers short paths |
+| category change | table | `image→video` 0.2, `video→image` 0.4, `text→image` 0.5, `audio→image` 1.0, `document→text` 1.0, `image→audio` 1.4; 100 to encode "FFmpeg *can't* do this" |
+| `LOSSY_COST_MULTIPLIER` | ×1.4 | applied when the target format is not `lossless` |
+| `HANDLER_PRIORITY_COST` | 0.02×index | tie-break toward preferred engines |
+| `FORMAT_PRIORITY_COST` | 0.05×index | tie-break toward preferred formats |
+| `ANY_INPUT_COST` | +2 | penalty on `supportAnyInput` edges |
+
+**Three ideas worth stealing outright.**
+
+1. **Path-dependent adaptive costs.** `categoryAdaptiveCosts` penalizes category
+   *sequences*, not individual edges: `text→image→audio` costs +15,
+   `image→video→audio` and `audio→video→image` cost +10,000. This is how they
+   suppress technically-valid nonsense routes. Note it makes edge cost depend on
+   the path, which formally breaks Dijkstra's optimality precondition — they add
+   it at enqueue time and accept the approximation. Pragmatic, and worth copying
+   *with* that caveat recorded.
+2. **Runtime dead-end learning.** When a hop fails during execution,
+   `main.ts` records the failing path *prefix* via `addDeadEndPath`, which
+   `calculateAdaptiveCost` then scores at `Infinity`. The generator's next path
+   therefore routes around the observed failure. Plan → execute → learn →
+   replan, within a single user request.
+3. **A guaranteed-output escape hatch.** Handlers with `supportAnyInput` get
+   edges from *every* node, penalized by `ANY_INPUT_COST` so they are chosen
+   last. This is what backs their promise that you are "almost guaranteed to get
+   an output."
+
+**Where this project still differs — narrower than claimed, but real.**
+
+- **Loss is `lossless?: boolean` plus hand-tuned scalars.** The system cannot say
+  *what* a route costs you, only that it costs 3.47. Those constants (0.2, 1.4,
+  10000) are unexplainable to a user and uncalibratable against measurement.
+  Our per-property vector exists to make exactly that explicable (ADR-0004).
+- **No fidelity measurement anywhere.** Capabilities are discovered at runtime by
+  probing handlers and cached to `cache.json`; nothing ever checks that a
+  conversion *preserved* anything. There is no SSIM/VMAF loop (§5.4).
+- **No intent selection.** The generator's yield order decides; the user is not
+  offered the contact-sheet-vs-transcript choice. Their README concedes the
+  consequence: "perhaps not always the one you expected."
+- **No synthesis marking.** eSpeak text→audio is just another edge at cost 0.6.
+  Nothing distinguishes inferred content from converted content (ADR-0009).
+
+**Two philosophies, both defensible.** Theirs is *optimistic*: claim broadly, try
+it, fall back, always return something. Ours is *pessimistic*: verify before
+trusting, refuse rather than surprise, explain the cost. Theirs ships and
+delights; ours is auditable. The synthesis worth building is to let runtime
+dead-end evidence feed the verification loop — a hop that dead-ends repeatedly in
+production is exactly the evidence needed to mark an edge `refuted`.
+
+**Engine list worth noting**, because it is the practical answer to "what is
+actually available as WASM in 2026": `@ffmpeg/core`, `@imagemagick/magick-wasm`,
+`7z-wasm`, `@bokuweb/zstd-wasm`, `@sqlite.org/sqlite-wasm`, `typst.ts`
+(compiler + renderer), `@yowasp/clang`, `wabt`, `@bjorn3/browser_wasi_shim`,
+plus `pdf-parse`, `pdftoimg-js`, `opentype.js`, `woff2-encoder`, `three`,
+`imagetracer`, `verovio`/`vexflow`/`js-synthesizer` for music, and a long tail of
+deliberately niche parsers (`chess.js`, `nbtify` for Minecraft, `ts-flp` for FL
+Studio, `turbowarp-packager` for Scratch, `pe-library` for Windows binaries).
+
+**Typst is the find here.** It compiles *and* renders in WASM, which makes it a
+better browser answer for `DocTree → PageLayout` than the LaTeX toolchain this
+project had assumed (§3.3).
+
+**And their niche long tail answers §10.5 empirically.** Converting Minecraft NBT
+or an FL Studio project is exactly the "how far does any go?" question — and the
+answer in the field is "very far, and it is the reason people share the tool."
+That is evidence, not proof, but it shifts the prior.
+
+### 1.7 Distribution is part of the threat model
+
+Their `fail.html` — served from the vanity domain when the GitHub Pages app
+cannot be reached — reports that **ISPs have begun blanket-blocking file
+converter sites**, and asks users to request manual review, enable DNS-over-HTTPS,
+use a VPN, or download the offline build.
+
+We hit this ourselves: `convert.to.it` and `p2r3.github.io` are both blocked by
+this environment's egress proxy (§11).
+
+**Implication.** A local-first converter that cannot be *loaded* is as useless as
+a server-side one that is down, so reachability belongs in the design, not in
+marketing. Concretely: ship an installable/offline build (they use Electron;
+a PWA with a service worker is the lighter option), do not depend on a single
+domain, and expect category-based blocking rather than reputation-based — being
+open source and privacy-preserving does not exempt you, and may not even be
+legible to whoever maintains the blocklist.
+
+This also *sharpens* the local-first argument in an unexpected direction: an
+offline-capable converter survives an ISP block, and a hosted one does not.
+
+---
 
 ---
 
@@ -622,6 +734,14 @@ is the alternative. Needs user testing, not argument.
 Is `XLSX → MP3` (sonify the numbers) a legitimate route, or a joke that damages
 trust in everything else the product claims? There is a line between delightful
 and absurd and we do not know where it is. Owned by `semantic-bridge-designer`.
+
+**Evidence has arrived, and it points one way** (§1.6). convert.to.it ships
+parsers for Minecraft NBT, FL Studio projects, Scratch, chess positions and
+Windows PE binaries, and that long tail is a large part of why people share it.
+The prior should shift toward "further than you think." What remains genuinely
+open is whether the *presentation* can distinguish a delightful novelty from a
+result the user might mistake for authoritative — which is ADR-0009's problem,
+not a reason to withhold the route.
 
 ---
 

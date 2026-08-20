@@ -57,6 +57,15 @@ is not a regression test.
   `claimed` rather than `verified`, and the planner ignores unverified edges by
   design.
 
+## Dead-end evidence is data, not noise
+
+If the planner learns a dead end at runtime (`docs/RESEARCH.md §1.6`), that is a
+recorded observation that a specific hop failed on a specific input. A hop that
+dead-ends *repeatedly, across inputs* is not a flake — it is grounds to mark the
+edge `refuted` in the registry. Route it to `capability-cartographer` with the
+inputs that triggered it rather than letting the planner silently work around it
+forever.
+
 ## Never
 
 Do not "fix" a failure by widening a budget, weakening a loss vector, or

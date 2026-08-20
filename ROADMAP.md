@@ -93,6 +93,23 @@ re-modelling every edge when it changes.
 - [ ] Archives, 3D, geospatial, fonts, subtitles
 - [ ] Registry scale test — planning latency at 1000+ formats (`perf-profiler`)
 
+## Cross-cutting: distribution
+
+Not a phase, because it constrains Phase 5 rather than following it. ISPs
+blanket-block file-converter sites (`docs/RESEARCH.md §1.7`) — the reference
+product ships a `fail.html` explaining this to blocked users and offers an
+Electron offline build as the workaround. A local-first converter that cannot be
+*loaded* is as useless as a hosted one that is down.
+
+- [ ] Offline-capable build — PWA + service worker is lighter than Electron
+      (`wasm-runtime-engineer`)
+- [ ] Do not depend on a single domain
+- [ ] Expect category-based blocking, not reputation-based: being open source
+      and privacy-preserving does not exempt you
+
+This sharpens ADR-0006 rather than complicating it: an offline-capable converter
+survives an ISP block; a hosted one does not.
+
 ## Deliberately not scheduled
 
 Frontend framework, hosting, database, auth, pricing, and a licence for this
@@ -110,4 +127,4 @@ Tracked in `docs/RESEARCH.md §10`. Closing one is a milestone worth recording:
 | 2 | Durable synthesis provenance marker (legal review) | Phase 3 |
 | 3 | Plan stability across registry versions | Phase 2 |
 | 4 | Does mid-flow upload consent destroy the experience | Phase 5 |
-| 5 | How far does "any" go before it damages trust | Phase 3 |
+| 5 | How far does "any" go before it damages trust | Phase 3 — *evidence arrived, see §10.5* |

@@ -29,6 +29,33 @@ Contract: `docs/specs/conversion-plan.md`.
   different graphs. Estimate peak memory and decide *before* execution whether
   the job fits on-device (ADR-0006).
 
+## Techniques adopted from the reference implementation
+
+`p2r3/convert` ships a working Dijkstra planner; three of its ideas are ours to
+reuse, with the caveats (full analysis: `docs/RESEARCH.md §1.6`).
+
+**Path-dependent penalties.** They penalize category *sequences*, not just
+edges: `text→image→audio` +15, `image→video→audio` +10,000. It is how you
+suppress technically-valid nonsense without deleting the edges. **Caveat:** cost
+that depends on the path formally breaks Dijkstra's optimality precondition.
+They add it at enqueue time and accept the approximation. If you adopt it, say
+so in the code — a future reader will otherwise assume the result is optimal.
+
+**Runtime dead-end learning.** When a hop fails during execution, record the
+failing path *prefix* and score it at infinity, so the next yielded path routes
+around the observed failure. Plan → execute → learn → replan inside a single
+request. Pair it with our verification loop: an edge that dead-ends repeatedly
+in production is evidence for `capability-cartographer` to mark it `refuted`.
+
+**A penalized escape hatch.** Handlers that accept any input get edges from
+every node at a steep penalty, so they are chosen last but guarantee an output.
+Worth having — but under ADR-0009 an escape-hatch route still has to be
+explainable, so it needs an honest loss vector, not an exemption from one.
+
+**What not to copy:** their scalar cost. Hand-tuned constants (0.2, 1.4, 10000)
+work and cannot be explained to a user or calibrated against measurement. That
+gap is our entire reason for existing.
+
 ## Hard properties
 
 **Determinism.** Same registry version + same input properties + same target +

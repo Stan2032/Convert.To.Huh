@@ -30,6 +30,22 @@ These are hard, measured, and not going away soon (`docs/RESEARCH.md §6`):
   per origin; iOS evicts aggressively and `persist()` is hard to obtain. Call
   `estimate()` before assuming space, and test on real iOS hardware.
 
+## What is actually available as WASM
+
+Don't speculate about this — `docs/RESEARCH.md §1.6` lists the engine set a
+shipping production converter uses today: `@ffmpeg/core`,
+`@imagemagick/magick-wasm`, `7z-wasm`, `@bokuweb/zstd-wasm`, `sqlite-wasm`,
+`typst.ts`, `@yowasp/clang`, `wabt`, `browser_wasi_shim`, plus `pdf-parse`,
+`pdftoimg-js`, `opentype.js`, `three`, and `imagetracer`.
+
+**Typst is the notable one**: it compiles *and* renders in WASM, which makes it
+a better browser answer for `DocTree → PageLayout` than the LaTeX toolchain this
+project originally assumed. Raise it with `semantic-bridge-designer` before
+committing to a typesetting path.
+
+Note what is *absent*: no LibreOffice, no Ghostscript. Those stay server-side,
+which is a large part of why the runtime split in ADR-0006 exists at all.
+
 ## The decision you make honestly
 
 The planner estimates peak memory and wall time and picks browser or server.
