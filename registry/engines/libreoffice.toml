@@ -5,8 +5,12 @@ homepage    = "https://www.libreoffice.org/"
 
 [license]
 spdx            = "MPL-2.0"
-build_profiles  = ["lgpl", "gpl"]
+spdx_components = ["LGPL-3.0-or-later", "GPL-3.0-or-later"]
+build_profiles  = ["gpl"]
 patent_exposure = "none"
+verified        = true
+checked         = "2026-08-20"
+source          = "https://raw.githubusercontent.com/LibreOffice/core/master/COPYING.MPL"
 
 [security]
 hostility   = "extreme"
@@ -26,6 +30,21 @@ wasm   = false
 
 [notes]
 text = """
+LICENSE CORRECTED 2026-08-20, and this one changed a routing decision.
+
+The manifest claimed a bare `spdx = "MPL-2.0"`. The core tree ships THREE
+license files: COPYING.MPL (Mozilla Public License 2.0, the primary grant),
+COPYING.LGPL, and COPYING — which is GPL-3.0. So a single SPDX string cannot
+describe this engine, and `spdx_components` was added to the schema to say so.
+
+Consequence: `build_profiles` drops from ["lgpl", "gpl"] to ["gpl"]. Because
+GPL-3.0-licensed components are present in the tree, this engine cannot be
+assumed safe for the LGPL distribution profile without a component-level audit
+that nobody has done. Under ADR-0007 the planner prunes ineligible engines
+before search, so this narrowing means **no Office-format route exists in the
+LGPL profile** until that audit happens. That is the correct conservative
+default: a wrong `build_profiles` value produces routes we must not ship.
+
 The only realistic engine for the Office family, and the worst-behaved process
 in the fleet. Observed and documented (docs/RESEARCH.md §3.2): random crashes
 with fatal exceptions in core libraries during large batches; corrupt documents

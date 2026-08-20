@@ -7,6 +7,9 @@ homepage    = "https://github.com/ggml-org/whisper.cpp"
 spdx            = "MIT"
 build_profiles  = ["lgpl", "gpl"]
 patent_exposure = "none"
+verified        = true
+checked         = "2026-08-20"
+source          = "https://raw.githubusercontent.com/ggml-org/whisper.cpp/master/LICENSE"
 
 [security]
 hostility   = "moderate"
@@ -26,6 +29,12 @@ wasm   = true
 
 [notes]
 text = """
+LICENSE VERIFIED 2026-08-20: MIT, "Copyright (c) 2023-2026 The ggml authors".
+
+MODEL WEIGHTS ARE LICENSED SEPARATELY from the code and are NOT covered by this
+MIT grant. Whoever ships this must check the weights' terms independently —
+license-compliance-officer owns that, and it is unresolved here.
+
 The archetypal Synthesize engine, and the hop that makes AVI -> PDF produce
 something a human actually wants (content-model.md §4).
 

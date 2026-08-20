@@ -212,6 +212,22 @@ def check_engines(engines: dict[str, dict], f: Findings) -> dict[str, dict]:
         for prof in lic.get("build_profiles", []):
             if prof not in BUILD_PROFILES:
                 f.error(fname, f"unknown build profile `{prof}`")
+        # License determinations gate routing (ADR-0007), so they need provenance.
+        if lic.get("verified") is True:
+            if not lic.get("source"):
+                f.error(fname, "[license] verified is true but no `source` URL — a license "
+                               "claim that gates routing must be traceable")
+            if not lic.get("checked"):
+                f.error(fname, "[license] verified is true but no `checked` date")
+        else:
+            f.warn(fname, "[license] unverified — run down the actual license text "
+                          "of the pinned version and set verified/source/checked")
+        # A component license stricter than the headline one restricts profiles.
+        components = lic.get("spdx_components", [])
+        if any("GPL-3" in c or "AGPL" in c for c in components) and "lgpl" in lic.get("build_profiles", []):
+            f.error(fname, f"[license] spdx_components {components} include a strong copyleft "
+                           f"component, so the `lgpl` build profile cannot be claimed without "
+                           f"a component-level audit (ADR-0007)")
 
         sec = doc.get("security", {})
         hostility = sec.get("hostility")
@@ -477,6 +493,112 @@ SELF_TESTS: list[tuple[str, str, str]] = [
     ),
 ]
 
+ENGINE_SELF_TESTS: list[tuple[str, str, str]] = [
+    (
+        "lgpl profile claimed despite GPL-3 component",
+        """
+        id="e"
+        name="E"
+        version_pin=">=1,<2"
+        [license]
+        spdx="MPL-2.0"
+        spdx_components=["GPL-3.0-or-later"]
+        build_profiles=["lgpl","gpl"]
+        patent_exposure="none"
+        verified=true
+        checked="2026-01-01"
+        source="https://example.invalid/COPYING"
+        [security]
+        hostility="moderate"
+        isolation="gvisor"
+        network=false
+        [resources]
+        memory_model="streaming"
+        concurrency="thread-safe"
+        default_timeout_s=60
+        [runtimes]
+        native=true
+        """,
+        "strong copyleft component",
+    ),
+    (
+        "verified license without a source",
+        """
+        id="e"
+        name="E"
+        version_pin=">=1,<2"
+        [license]
+        spdx="MIT"
+        build_profiles=["lgpl"]
+        patent_exposure="none"
+        verified=true
+        [security]
+        hostility="moderate"
+        isolation="gvisor"
+        network=false
+        [resources]
+        memory_model="streaming"
+        concurrency="thread-safe"
+        default_timeout_s=60
+        [runtimes]
+        native=true
+        """,
+        "must be traceable",
+    ),
+    (
+        "extreme hostility below microvm",
+        """
+        id="e"
+        name="E"
+        version_pin=">=1,<2"
+        [license]
+        spdx="MIT"
+        build_profiles=["lgpl"]
+        patent_exposure="none"
+        verified=true
+        checked="2026-01-01"
+        source="https://example.invalid/L"
+        [security]
+        hostility="extreme"
+        isolation="gvisor"
+        network=false
+        [resources]
+        memory_model="streaming"
+        concurrency="thread-safe"
+        default_timeout_s=60
+        [runtimes]
+        native=true
+        """,
+        "requires isolation `microvm`",
+    ),
+    (
+        "network enabled",
+        """
+        id="e"
+        name="E"
+        version_pin=">=1,<2"
+        [license]
+        spdx="MIT"
+        build_profiles=["lgpl"]
+        patent_exposure="none"
+        verified=true
+        checked="2026-01-01"
+        source="https://example.invalid/L"
+        [security]
+        hostility="moderate"
+        isolation="gvisor"
+        network=true
+        [resources]
+        memory_model="streaming"
+        concurrency="thread-safe"
+        default_timeout_s=60
+        [runtimes]
+        native=true
+        """,
+        "network must be false",
+    ),
+]
+
 FAKE_FORMATS = {
     "a": {"id": "a", "kinds": ["AudioPCM"], "preserves": ["time", "sample_rate"]},
     "b": {"id": "b", "kinds": ["Text"], "preserves": ["text_as_text"]},
@@ -527,7 +649,19 @@ def self_test() -> int:
         for e in f.errors:
             print(f"         unexpected: {e}")
 
-    print(f"\nself-test: {len(SELF_TESTS) + 1 - failures}/{len(SELF_TESTS) + 1} passed")
+    for name, toml_src, expect in ENGINE_SELF_TESTS:
+        f = Findings()
+        check_engines({"engine.toml": tomllib.loads(toml_src)}, f)
+        hit = any(expect in e for e in f.errors)
+        print(f"  [{'PASS' if hit else 'FAIL'}] {name}")
+        if not hit:
+            failures += 1
+            print(f"         expected an error containing: {expect!r}")
+            for e in f.errors:
+                print(f"         got: {e}")
+
+    total = len(SELF_TESTS) + len(ENGINE_SELF_TESTS) + 1
+    print(f"\nself-test: {total - failures}/{total} passed")
     return 1 if failures else 0
 
 

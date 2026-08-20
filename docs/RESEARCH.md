@@ -698,6 +698,34 @@ linking it propagates GPL obligations to the distributed product. Separately
 and independently of licensing, H.264/H.265 carry **patent** obligations
 (MPEG-LA), which apply regardless of the FFmpeg license path taken.
 
+**Verified 2026-08-20** against the actual license files of each engine, not
+from memory. Four confirmed, two corrected.
+
+| Engine | SPDX | Source | Result |
+|---|---|---|---|
+| FFmpeg | LGPL-2.1-or-later | ffmpeg.org/legal.html | confirmed |
+| libvips | LGPL-2.1-or-later | `LICENSE`, includes "any later version" | confirmed |
+| whisper.cpp | MIT | `LICENSE` | confirmed — **but model weights are licensed separately and are not covered** |
+| Ghostscript | AGPL-3.0-or-later | `LICENSE` ("GNU Affero General Public License") | confirmed |
+| LibreOffice | MPL-2.0 **+ LGPL-3.0 + GPL-3.0** | `COPYING.MPL`, `COPYING.LGPL`, `COPYING` | **corrected** |
+
+**Correction 1 — a single SPDX string cannot describe a multi-licensed engine.**
+LibreOffice core ships three license files: `COPYING.MPL` (the primary grant),
+`COPYING.LGPL`, and `COPYING`, which is **GPL-3.0**. Our manifest claimed a bare
+`MPL-2.0`, and that omission produced a wrong `build_profiles = ["lgpl", "gpl"]`.
+Corrected to `["gpl"]` only, with an `spdx_components` field added to the schema.
+Because the planner prunes ineligible engines before search, the consequence is
+concrete: **no Office-format route exists in the LGPL profile** until someone
+does a component-level audit. That is the correct conservative default — a wrong
+eligibility value produces routes we must not ship.
+
+**Correction 2 — a stale version pin is a licensing risk, not just an ops one.**
+We pinned FFmpeg at `>=7.1,<8` while 9.0.1, 8.1.2 and 8.0.3 were the shipping
+releases: the pin excluded every current version. Licenses and GPL-dependency
+sets change between major versions, so re-checking on bump is part of the
+licensing obligation. A pin nobody has built against is a guess with a version
+number attached.
+
 **Implication.** Build profiles are a first-class concept, not a Dockerfile
 detail: an LGPL profile (safe to distribute in a proprietary product) and a GPL
 profile (self-host only). Every engine manifest declares its license and its

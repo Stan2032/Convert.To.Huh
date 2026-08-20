@@ -7,6 +7,9 @@ homepage    = "https://www.libvips.org/"
 spdx            = "LGPL-2.1-or-later"
 build_profiles  = ["lgpl", "gpl"]
 patent_exposure = "none"
+verified        = true
+checked         = "2026-08-20"
+source          = "https://raw.githubusercontent.com/libvips/libvips/master/LICENSE"
 
 [security]
 hostility   = "moderate"
@@ -26,6 +29,9 @@ wasm   = true
 
 [notes]
 text = """
+LICENSE VERIFIED 2026-08-20: LICENSE is LGPL 2.1 and contains the "any later
+version" clause, so `-or-later` is correct.
+
 Default raster engine: ~4x faster single-threaded and ~8x multi-threaded on
 JPEG, and roughly 200 MB vs 3 GB peak memory against ImageMagick on the same
 workload (docs/RESEARCH.md §3.1). Its demand-driven streaming model is why

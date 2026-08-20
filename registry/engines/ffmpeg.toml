@@ -1,12 +1,15 @@
 id          = "ffmpeg"
 name        = "FFmpeg"
-version_pin = ">=7.1,<8"
+version_pin = ">=8.0,<10"
 homepage    = "https://ffmpeg.org/"
 
 [license]
 spdx            = "LGPL-2.1-or-later"
 build_profiles  = ["lgpl"]
 patent_exposure = "h264-h265-mpegla"
+verified        = true
+checked         = "2026-08-20"
+source          = "https://www.ffmpeg.org/legal.html"
 
 [security]
 hostility   = "high"
@@ -26,6 +29,17 @@ wasm   = true
 
 [notes]
 text = """
+VERSION PIN CORRECTED 2026-08-20. This manifest originally pinned ">=7.1,<8",
+which excluded every currently shipping release — ffmpeg.org lists 9.0.1, 8.1.2
+and 8.0.3. Exactly the class of plausible-but-wrong data the PUID audit turned
+up on the format side. Re-validate this pin against what we actually build and
+test; a pin nobody has built against is a guess with a version number on it.
+
+LICENSE VERIFIED 2026-08-20 against ffmpeg.org/legal.html, quoting: "FFmpeg is
+licensed under the GNU Lesser General Public License (LGPL) version 2.1 or
+later. However, FFmpeg incorporates several optional parts and optimizations
+that are covered by the GNU General Public License."
+
 LICENSE: this manifest describes the LGPL build. `--enable-gpl` pulls in libx264
 and propagates GPL obligations to anything we distribute, so a GPL build is a
 SEPARATE engine entry with build_profiles = ["gpl"], not a flag on this one

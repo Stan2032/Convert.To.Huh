@@ -36,6 +36,27 @@ Note the existing example: `registry/engines/ghostscript.toml` has
 `build_profiles = []` because AGPL fits no profile we define. It is entered
 anyway — the registry documents what exists, not only what we ship.
 
+## Read the license files, not the badge
+
+Verified 2026-08-20 (R§8). Four engines confirmed, two corrected, and both
+corrections came from opening the actual files:
+
+**A single `spdx` string cannot describe a multi-licensed engine.** LibreOffice
+core ships `COPYING.MPL` (primary), `COPYING.LGPL`, *and* `COPYING` — which is
+GPL-3.0. The bare `spdx = "MPL-2.0"` hid that and produced a wrong
+`build_profiles`, now narrowed to `["gpl"]`. Use `spdx_components` for the rest
+of the tree; CI rejects claiming `lgpl` alongside strong-copyleft components.
+
+**A stale version pin is your problem too.** FFmpeg was pinned `>=7.1,<8` while
+8.x and 9.x shipped. GPL-dependency sets change between majors, so a pin that
+excludes every current release is a licensing claim about code nobody runs.
+
+**Model weights are not code.** whisper.cpp is MIT; its weights are licensed
+separately and that grant does not cover them. Unresolved, and yours.
+
+`verified = true` requires `source` and `checked` — CI-enforced. A license
+determination that gates routing has to be traceable to the text it came from.
+
 ## Standing work
 
 - Review every `registry/engines/` change. You are a required reviewer.

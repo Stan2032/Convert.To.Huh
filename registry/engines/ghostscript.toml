@@ -7,6 +7,9 @@ homepage    = "https://www.ghostscript.com/"
 spdx            = "AGPL-3.0-or-later"
 build_profiles  = []
 patent_exposure = "none"
+verified        = true
+checked         = "2026-08-20"
+source          = "https://raw.githubusercontent.com/ArtifexSoftware/ghostpdl/master/LICENSE"
 
 [security]
 hostility   = "extreme"
@@ -27,6 +30,11 @@ wasm   = false
 
 [notes]
 text = """
+LICENSE VERIFIED 2026-08-20: the LICENSE file confirms "GNU Affero General
+Public License". Artifex also sells a separate commercial license, which is the
+route anyone shipping this commercially would have to take.
+Current release is 10.09.0, inside the existing pin.
+
 `build_profiles = []` — DELIBERATELY EMPTY. AGPL makes this ineligible for every
 distribution profile we currently define, so the planner prunes it before search
 and no route can be proposed through it (ADR-0007). It is entered anyway because

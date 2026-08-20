@@ -47,12 +47,44 @@ An adapter is a thin, stateless translator. It must:
 forbidden syscall or a network connect is either exploited or exploitable, and
 in both cases the correct response is to stop, not to try again.
 
+## License fields carry provenance
+
+A license determination gates routing (ADR-0007): the planner prunes engines
+outside the active build profile *before* search, so a wrong value produces
+routes we must not ship. It is therefore recorded like evidence, not like trivia.
+
+```toml
+[license]
+spdx            = "MPL-2.0"                  # the headline grant
+spdx_components = ["LGPL-3.0-or-later", "GPL-3.0-or-later"]  # other licenses in the tree
+build_profiles  = ["gpl"]
+patent_exposure = "none"                     # SEPARATE obligation from spdx
+verified        = true                       # CI requires source + checked when true
+checked         = "2026-08-20"
+source          = "https://.../COPYING.MPL"
+```
+
+**`spdx` alone is not enough for a multi-licensed engine.** LibreOffice ships
+`COPYING.MPL` (MPL-2.0, primary), `COPYING.LGPL`, *and* `COPYING` (GPL-3.0).
+A bare `spdx = "MPL-2.0"` hid that, and hiding it produced a wrong
+`build_profiles`. CI now rejects claiming the `lgpl` profile when
+`spdx_components` contains strong copyleft.
+
+**Version pins go stale and that is a licensing risk too.** This repo pinned
+FFmpeg at `>=7.1,<8` while 8.x and 9.x were shipping. A pin nobody has built
+against is a guess with a version number on it — and licenses do change between
+versions. Re-check on every bump.
+
 ## Onboarding checklist
 
 An engine is integrated when all of these are true:
 
 - [ ] `registry/engines/<id>.toml` complete, `hostility` assigned by `sandbox-warden`
-- [ ] License and patent exposure recorded; build-profile eligibility set (R§8)
+- [ ] License read from the **actual license files of the pinned version**, not
+      from memory or a badge; `verified`, `source` and `checked` set, and
+      `spdx_components` listed if the tree is multi-licensed
+- [ ] Patent exposure recorded **separately** from license (R§8)
+- [ ] Build-profile eligibility set conservatively — when in doubt, exclude
 - [ ] Version pinned — engine version is part of our output, not an ambient detail
 - [ ] Adapter builds argument vectors, never shell strings
 - [ ] Every claimed capability is an edge with `status = "claimed"` at minimum
