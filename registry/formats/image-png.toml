@@ -1,0 +1,28 @@
+id         = "image/png"
+name       = "Portable Network Graphics"
+kinds      = ["Raster"]
+extensions = ["png"]
+mime_types = ["image/png"]
+puid       = "fmt/13"
+puid_verified = false
+spec_url   = "https://www.w3.org/TR/png-3/"
+
+preserves = ["geometry", "color_depth", "color_profile", "alpha", "metadata"]
+
+[[signatures]]
+offset = 0
+magic  = "89504E470D0A1A0A"
+weight = "decisive"
+
+[detection]
+priority_over = []
+container_of  = []
+
+[notes]
+text = """
+The 8-byte signature is deliberately designed to survive transfer corruption and
+is decisive. APNG shares this signature and is a separate format carrying the
+`time` property — an APNG detected by signature alone will be misidentified as
+PNG, so APNG must declare priority_over = ["image/png"] and probe for the acTL
+chunk. Not yet entered.
+"""

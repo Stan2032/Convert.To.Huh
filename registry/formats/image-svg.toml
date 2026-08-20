@@ -1,0 +1,33 @@
+id         = "image/svg+xml"
+name       = "Scalable Vector Graphics"
+kinds      = ["Vector", "Raster", "Text"]
+extensions = ["svg"]
+mime_types = ["image/svg+xml"]
+puid       = "fmt/92"
+puid_verified = false
+spec_url   = "https://www.w3.org/TR/SVG2/"
+
+preserves = ["geometry", "precision", "color_profile", "alpha", "text_as_text", "structure", "metadata", "interactivity"]
+
+[[signatures]]
+offset = 0
+magic  = "3C737667"
+weight = "weak"
+
+[detection]
+priority_over = []
+container_of  = ["application/xml"]
+
+[notes]
+text = """
+SVG has no reliable magic. A conformant file may open with an XML declaration, a
+DOCTYPE, comments or arbitrary whitespace, so the `<svg` signature is weak and
+detection must parse far enough to find the root element. This is the ambiguous
+textual case where the advisory ML tier earns its place (docs/RESEARCH.md §2.3).
+
+SECURITY: SVG is XML, therefore an XXE vector, and it carries scripts and remote
+references. It is among the coders explicitly disabled in ImageMagick hardening
+(§4.1). The no-network invariant (ADR-0003) means external entities and remote
+resources cannot resolve — a refused feature, reported to the user, never a
+silent omission.
+"""

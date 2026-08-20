@@ -1,0 +1,90 @@
+# Capabilities of libvips. Owner: capability-cartographer.
+# Every edge here is `claimed` — nothing has been run against a specimen yet.
+
+[[edge]]
+engine    = "libvips"
+op        = "Transcode"
+from      = "image/png"
+to        = "image/jpeg"
+from_kind = "Raster"
+to_kind   = "Raster"
+
+[edge.loss]
+alpha         = "lost"
+color_depth   = { value = "degraded", from = 16, to = 8 }
+geometry      = "preserved"
+color_profile = "preserved"
+metadata      = { value = "degraded", note = "EXIF retained, ancillary PNG chunks dropped" }
+generational  = true
+
+[edge.cost]
+time_model   = "linear_pixels"
+memory_model = "streaming"
+base_ms      = 8
+
+[edge.constraints]
+max_input_bytes = 2147483648
+requires        = []
+
+[edge.verification]
+status = "claimed"
+note   = "alpha=lost is forced by the target: image/jpeg omits alpha from its preserves list, so CI rule 4 would reject any other value. The color_depth magnitude and the metadata note are the parts that need a specimen."
+
+
+[[edge]]
+engine    = "libvips"
+op        = "Transcode"
+from      = "image/jpeg"
+to        = "image/png"
+from_kind = "Raster"
+to_kind   = "Raster"
+
+[edge.loss]
+geometry      = "preserved"
+color_depth   = "preserved"
+color_profile = "preserved"
+metadata      = "preserved"
+generational  = false
+
+[edge.cost]
+time_model   = "linear_pixels"
+memory_model = "streaming"
+base_ms      = 10
+
+[edge.constraints]
+max_input_bytes = 2147483648
+requires        = []
+
+[edge.verification]
+status = "claimed"
+note   = "Lossless in the sense that matters: PNG re-encodes the already-decoded JPEG pixels exactly. It does NOT recover what the original JPEG encode destroyed. The loss vector describes THIS hop, and chain composition (loss-vector.md §4) is what keeps the earlier generational loss visible in the total."
+
+
+[[edge]]
+engine    = "libvips"
+op        = "Transform"
+from      = "image/png"
+to        = "image/png"
+from_kind = "Raster"
+to_kind   = "Raster"
+
+[edge.loss]
+geometry      = { value = "degraded", note = "magnitude is the requested scale factor" }
+color_depth   = "preserved"
+color_profile = "preserved"
+alpha         = "preserved"
+metadata      = "preserved"
+generational  = false
+
+[edge.cost]
+time_model   = "linear_pixels"
+memory_model = "streaming"
+base_ms      = 6
+
+[edge.constraints]
+max_input_bytes = 2147483648
+requires        = []
+
+[edge.verification]
+status = "claimed"
+note   = "Same-format Transform (resize). Loss is deliberate and user-requested, so it is reported as an intended change rather than as damage (content-model.md §3)."

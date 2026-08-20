@@ -1,0 +1,33 @@
+id         = "audio/wav"
+name       = "Waveform Audio File Format"
+kinds      = ["AudioPCM"]
+extensions = ["wav", "wave"]
+mime_types = ["audio/wav", "audio/x-wav", "audio/vnd.wave"]
+puid       = "fmt/141"
+puid_verified = false
+spec_url   = "https://www.loc.gov/preservation/digital/formats/fdd/fdd000001.shtml"
+
+preserves = ["audio_channels", "sample_rate", "bit_depth", "time", "metadata"]
+
+[[signatures]]
+offset = 0
+magic  = "52494646"
+weight = "weak"
+
+[[signatures]]
+offset = 8
+magic  = "57415645"
+weight = "decisive"
+
+[detection]
+priority_over = []
+container_of  = []
+
+[notes]
+text = """
+Load-bearing well beyond its own merits: whisper.cpp consumes only standard WAV,
+so every ASR route passes through a normalization hop to 16 kHz mono WAV
+(docs/RESEARCH.md §3.6). That constraint is modelled as an edge `requires`
+rather than hidden inside the adapter — the planner has to be able to see it in
+order to insert the hop.
+"""

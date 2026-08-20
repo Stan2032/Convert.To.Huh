@@ -1,0 +1,93 @@
+# Capabilities of FFmpeg (LGPL build). Owner: capability-cartographer.
+
+[[edge]]
+engine    = "ffmpeg"
+op        = "Extract"
+from      = "video/x-msvideo"
+to        = "audio/wav"
+from_kind = "VideoStream"
+to_kind   = "AudioPCM"
+
+[edge.loss]
+geometry       = "lost"
+time           = "preserved"
+audio_channels = "preserved"
+sample_rate    = "preserved"
+bit_depth      = "preserved"
+metadata       = { value = "degraded", note = "container metadata dropped; stream metadata retained" }
+generational   = false
+
+[edge.cost]
+time_model   = "linear_duration"
+memory_model = "streaming"
+base_ms      = 50
+
+[edge.constraints]
+max_input_bytes = 21474836480
+requires        = []
+
+[edge.verification]
+status = "claimed"
+note   = "geometry=lost is the whole point of an Extract: the video is discarded and the audio survives intact. Hop 1 of the AVI->PDF transcript route."
+
+
+[[edge]]
+engine    = "ffmpeg"
+op        = "Transform"
+from      = "audio/wav"
+to        = "audio/wav"
+from_kind = "AudioPCM"
+to_kind   = "AudioPCM"
+
+[edge.loss]
+audio_channels = { value = "degraded", note = "downmixed to mono" }
+sample_rate    = { value = "degraded", from = 48000, to = 16000 }
+bit_depth      = "preserved"
+time           = "preserved"
+metadata       = "lost"
+generational   = false
+
+[edge.cost]
+time_model   = "linear_duration"
+memory_model = "streaming"
+base_ms      = 30
+
+[edge.constraints]
+max_input_bytes = 21474836480
+requires        = []
+provides        = ["wav_16khz_mono"]
+
+[edge.verification]
+status = "claimed"
+note   = "The normalization hop whisper.cpp requires (RESEARCH §3.6). It exists as a first-class edge, with `provides`, so the planner INSERTS it rather than the ASR adapter silently doing it. That visibility is the difference between a planner and a pile of shell scripts: the user sees that their audio was downmixed and resampled before transcription."
+
+
+[[edge]]
+engine    = "ffmpeg"
+op        = "Extract"
+from      = "video/x-msvideo"
+to        = "image/png"
+from_kind = "VideoStream"
+to_kind   = "Raster"
+
+[edge.loss]
+time           = "lost"
+geometry       = "preserved"
+color_profile  = { value = "degraded", note = "limited->full range conversion is lossy and frequently wrong" }
+audio_channels = "lost"
+sample_rate    = "lost"
+metadata       = "lost"
+generational   = false
+
+[edge.cost]
+time_model   = "linear_duration"
+memory_model = "streaming"
+base_ms      = 40
+
+[edge.constraints]
+max_input_bytes = 21474836480
+requires        = []
+
+[edge.verification]
+status = "claimed"
+note   = "Frame sampling: one input, many outputs. Sampling policy (every Nth frame, keyframes only, scene detection) is a hop parameter and is exactly what distinguishes the contact-sheet, frame-per-page and storyboard plans in content-model.md §4. `time = lost` because the frames are stills; a route that keeps timecodes must Assemble them into a DocTree to carry that information."

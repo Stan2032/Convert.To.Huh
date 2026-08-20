@@ -1,0 +1,169 @@
+# Spec: Registry Schema
+
+Status: **draft** · Owners: `format-registry-curator` (formats), `capability-cartographer` (edges), `engine-integrator` (engines)
+Enforced by: `tools/validate_registry.py` (CI)
+
+The registry is data, not code, and it is the most valuable thing in this
+repository. Everything below is machine-checked.
+
+## Files
+
+```
+registry/formats/<id>.toml    one format
+registry/engines/<id>.toml    one backend
+registry/edges/<engine>.toml  that engine's capabilities (many edges per file)
+```
+
+## Format entries
+
+```toml
+id           = "image/png"        # canonical: MIME type where one exists, else "x-huh/<name>"
+name         = "Portable Network Graphics"
+kinds        = ["Raster"]         # content kinds this format can carry
+extensions   = ["png"]            # hint only — never authoritative (invariant 1)
+mime_types   = ["image/png"]
+puid         = "fmt/13"           # PRONOM identifier, joins us to the preservation world
+spec_url     = "https://www.w3.org/TR/png-3/"
+
+preserves = ["geometry", "color_depth", "color_profile", "alpha", "metadata"]
+# properties this format is *capable* of carrying. An edge cannot claim to
+# preserve a property the target format cannot represent — CI checks this.
+
+[[signatures]]                    # structural detection (R§2.2)
+offset = 0
+magic  = "89504E470D0A1A0A"       # hex
+weight = "decisive"               # decisive | strong | weak
+
+[detection]
+priority_over = []                # PRONOM-style priority: this beats these ids
+                                  # e.g. docx sets priority_over = ["application/zip"]
+container_of  = []                # e.g. docx: ["application/zip"]
+
+[notes]
+text = "Free-form. Gotchas, ambiguities, why a field is what it is."
+```
+
+Rules:
+
+- `id` is stable forever. Renaming requires an alias entry, never an edit.
+- A format with no signatures and no `container_of` is **undetectable** and must
+  say so in `notes` — permitted, but it can only ever be a target, never a
+  detected source.
+- `puid` is required where PRONOM has one. Absence must be justified in `notes`.
+- Every format needs at least one corpus specimen before any edge touching it
+  is marked `verified` (see `corpus-keeper`).
+
+## Engine entries
+
+```toml
+id      = "libvips"
+name    = "libvips"
+version_pin = ">=8.15,<9"          # pinned: engine behaviour is part of our output
+homepage    = "https://www.libvips.org/"
+
+[license]
+spdx            = "LGPL-2.1-or-later"
+build_profiles  = ["lgpl", "gpl"]  # which of our distributions may include it
+patent_exposure = "none"           # tracked separately from license (R§8)
+
+[security]
+hostility  = "moderate"            # trusted | moderate | high | extreme
+isolation  = "gvisor"              # wasm | gvisor | microvm — minimum tier
+network    = false                 # always false; present so a `true` is reviewable
+delegates  = false                 # may it invoke other binaries? (R§4.1)
+policy_file = "policies/vips.conf" # optional hardening config we ship
+
+[resources]
+memory_model    = "streaming"      # streaming | whole-file | unbounded
+concurrency     = "thread-safe"    # thread-safe | process-per-job | singleton
+crash_expected  = false            # true for LibreOffice (R§3.2)
+default_timeout_s = 120
+
+[runtimes]
+native = true
+wasm   = true                      # is there a usable WASM build? (R§6)
+```
+
+`hostility` drives the isolation tier the executor enforces (R§4.4). Assigning
+it is `sandbox-warden`'s call, not the integrator's.
+
+## Edge entries
+
+An edge is one verifiable capability claim.
+
+```toml
+[[edge]]
+engine     = "libvips"
+op         = "Transcode"           # one of the six operation classes
+from       = "image/png"
+to         = "image/jpeg"
+from_kind  = "Raster"
+to_kind    = "Raster"
+
+[edge.loss]
+alpha         = "lost"             # JPEG has no alpha
+color_depth   = { value = "degraded", from = 16, to = 8 }
+geometry      = "preserved"
+color_profile = "preserved"
+metadata      = { value = "degraded", note = "EXIF kept, XMP dropped" }
+generational  = true               # lossy encode: compounds on repeat (§4)
+
+[edge.cost]
+time_model   = "linear_pixels"     # constant | linear_bytes | linear_pixels | linear_duration | superlinear
+memory_model = "streaming"
+base_ms      = 8
+
+[edge.constraints]
+max_input_bytes = 2_147_483_648
+requires        = []               # capability tokens this edge needs on its input
+provides        = []               # capability tokens this edge guarantees on its output
+
+[edge.verification]
+status     = "verified"            # claimed | verified | refuted
+specimens  = ["corpus/raster/alpha-gradient.png"]
+measured   = { ssim = 0.982 }
+verified_at = "2026-08-20"
+verified_by = "capability-cartographer"
+```
+
+Rules — all CI-enforced:
+
+1. `op` must be one of the six classes in `docs/specs/content-model.md`.
+2. If `from_kind != to_kind`, `op` may not be `Transcode` or `Transform`.
+3. `op = "Synthesize"` requires a `confidence` field and forces
+   `synthesized` entries in the loss vector for the properties it invents.
+4. An edge may not claim `preserved` for a property absent from the **target
+   format's** `preserves` list. You cannot preserve what the target cannot hold.
+5. `status = "verified"` requires at least one specimen and a `measured` block.
+6. The planner ignores `claimed` edges by default; `refuted` edges are retained
+   deliberately, as documentation of what does not work.
+7. Every property named must exist in the closed list in
+   `docs/specs/loss-vector.md`.
+
+### Capability tokens
+
+`requires` / `provides` are free-form strings naming a precondition an engine
+imposes that the *format* alone does not express. whisper.cpp accepts WAV, but
+not any WAV — it needs 16 kHz mono, so its edge declares
+`requires = ["wav_16khz_mono"]` and FFmpeg's resample edge declares the matching
+`provides`. The planner then treats the normalization as a hop to be scheduled
+rather than a detail hidden inside an adapter (R§3.6), which is what makes the
+downmix visible to the user in the final receipt.
+
+Tokens are matched by exact string. The vocabulary is intentionally open —
+unlike loss properties — because engine preconditions are open-ended. A token
+with a `requires` and no `provides` anywhere in the registry is a dead end and
+CI warns about it.
+
+## Detection priority
+
+When several formats' signatures match, PRONOM-style priority resolves it
+(R§2.2): every DOCX is a valid ZIP, so `docx` declares
+`priority_over = ["application/zip"]` and wins. Priority must form a DAG — CI
+rejects cycles.
+
+## Versioning
+
+The registry is versioned as a whole (`registry/VERSION`). Receipts pin the
+version they were planned against, because a registry update that changes a
+route silently changes a user's output (R§10.3).

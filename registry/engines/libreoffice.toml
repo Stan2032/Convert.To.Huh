@@ -1,0 +1,45 @@
+id          = "libreoffice"
+name        = "LibreOffice (headless, via unoserver)"
+version_pin = ">=25.2,<26"
+homepage    = "https://www.libreoffice.org/"
+
+[license]
+spdx            = "MPL-2.0"
+build_profiles  = ["lgpl", "gpl"]
+patent_exposure = "none"
+
+[security]
+hostility   = "extreme"
+isolation   = "microvm"
+network     = false
+delegates   = true
+
+[resources]
+memory_model      = "whole-file"
+concurrency       = "singleton"
+crash_expected    = true
+default_timeout_s = 90
+
+[runtimes]
+native = true
+wasm   = false
+
+[notes]
+text = """
+The only realistic engine for the Office family, and the worst-behaved process
+in the fleet. Observed and documented (docs/RESEARCH.md §3.2): random crashes
+with fatal exceptions in core libraries during large batches; corrupt documents
+hanging at 100% CPU; unoserver DECLINING BY DESIGN to restart LibreOffice after
+a crash; and its own --conversion-timeout killing LibreOffice and taking
+unoserver down with it.
+
+Hence: concurrency = "singleton" and crash_expected = true. One document per
+instance, its own supervised pool, aggressive wall-clock kill, never sharing a
+worker with another engine. Listener mode is still worth it — 50-75% lower CPU,
+2-4x throughput vs cold-starting per document.
+
+delegates = true and unavoidable: it spawns helpers. That is a large part of why
+the isolation floor is microvm rather than gvisor despite MPL provenance.
+`hostility: extreme` here reflects blast radius and unreliability, not a CVE
+record comparable to Ghostscript's.
+"""

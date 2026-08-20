@@ -1,0 +1,38 @@
+id         = "application/zip"
+name       = "ZIP archive"
+kinds      = ["Container"]
+extensions = ["zip"]
+mime_types = ["application/zip"]
+puid       = "x-fmt/263"
+puid_verified = false
+spec_url   = "https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT"
+
+preserves = ["metadata", "structure"]
+
+[[signatures]]
+offset = 0
+magic  = "504B0304"
+weight = "strong"
+
+[[signatures]]
+offset = 0
+magic  = "504B0506"
+weight = "strong"
+
+[detection]
+priority_over = []
+container_of  = []
+
+[notes]
+text = """
+The base of a large family — DOCX, XLSX, PPTX, ODF, EPUB, JAR and APK are all
+ZIPs. Each must declare priority_over = ["application/zip"] or every Office
+document detects as a plain archive (docs/RESEARCH.md §2.2). Priority must form
+a DAG; CI rejects cycles.
+
+SECURITY: the archetypal decompression bomb. 281 TB from 10 MB, ~4.5 PB with
+Zip64, ratios past 28,000,000:1 via overlapping entries (§4.3). Budgets — entry
+count, total uncompressed bytes, recursion depth — are computed from declared
+headers before extraction and enforced during it, and nested archives are
+re-budgeted at each level. Refusal is a normal outcome here, not an error.
+"""

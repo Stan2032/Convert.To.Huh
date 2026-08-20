@@ -1,0 +1,47 @@
+id          = "ghostscript"
+name        = "Ghostscript"
+version_pin = ">=10.04,<11"
+homepage    = "https://www.ghostscript.com/"
+
+[license]
+spdx            = "AGPL-3.0-or-later"
+build_profiles  = []
+patent_exposure = "none"
+
+[security]
+hostility   = "extreme"
+isolation   = "microvm"
+network     = false
+delegates   = false
+policy_file = "policies/ghostscript.conf"
+
+[resources]
+memory_model      = "whole-file"
+concurrency       = "process-per-job"
+crash_expected    = true
+default_timeout_s = 60
+
+[runtimes]
+native = true
+wasm   = false
+
+[notes]
+text = """
+`build_profiles = []` — DELIBERATELY EMPTY. AGPL makes this ineligible for every
+distribution profile we currently define, so the planner prunes it before search
+and no route can be proposed through it (ADR-0007). It is entered anyway because
+the registry documents what exists, not only what we ship, and because
+license-compliance-officer needs the exposure recorded.
+
+`hostility: extreme` — the only engine at this level so far. A sustained record
+of escapes from the mechanism meant to contain it: CVE-2018-19475 (-dSAFER
+bypass), CVE-2023-36664 (CVSS 9.8 RCE), CVE-2024-29510 (format string,
+EXPLOITED IN THE WILD via EPS disguised as JPEG). See docs/RESEARCH.md §4.2.
+
+-dSAFER is enabled and is NOT the boundary. The microVM is the boundary. If
+Ghostscript is ever enabled, it runs nowhere else.
+
+Related: ImageMagick delegates PDF/PS/EPS/XPS here by default. That delegation
+is severed (ADR-0003); any PDF hop is explicit and separately sandboxed, so the
+planner can see it and reason about it.
+"""

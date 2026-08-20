@@ -1,0 +1,27 @@
+id         = "text/plain"
+name       = "Plain text"
+kinds      = ["Text"]
+extensions = ["txt", "text"]
+mime_types = ["text/plain"]
+puid       = "x-fmt/111"
+puid_verified = false
+spec_url   = "https://www.rfc-editor.org/rfc/rfc2046"
+
+preserves = ["text_as_text"]
+
+[detection]
+priority_over = []
+container_of  = []
+
+[notes]
+text = """
+UNDETECTABLE BY SIGNATURE — declared explicitly, as the schema requires. Plain
+text has no magic bytes; identification is a negative result (decodes in some
+encoding, matches nothing else) plus encoding detection. The canonical case for
+the advisory ML tier (docs/RESEARCH.md §2.3), where libmagic's handcrafted rules
+are weakest.
+
+Encoding is not modelled yet, and should be: "text/plain" spans UTF-8, UTF-16LE
+with and without BOM, and a long tail of legacy codepages. Treating them as one
+format will produce mojibake. Open question for format-registry-curator.
+"""

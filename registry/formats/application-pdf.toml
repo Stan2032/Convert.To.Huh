@@ -1,0 +1,32 @@
+id         = "application/pdf"
+name       = "Portable Document Format"
+kinds      = ["PageLayout", "Text", "Raster", "Vector"]
+extensions = ["pdf"]
+mime_types = ["application/pdf"]
+puid       = "fmt/276"
+puid_verified = false
+spec_url   = "https://www.iso.org/standard/75839.html"
+
+preserves = ["geometry", "color_profile", "text_as_text", "fonts", "metadata", "interactivity", "precision"]
+
+[[signatures]]
+offset = 0
+magic  = "255044462D"
+weight = "decisive"
+
+[detection]
+priority_over = []
+container_of  = []
+
+[notes]
+text = """
+"PDF" is not one target. PDF/A-2b (preservation), PDF/UA-1 (accessibility) and
+tagged-vs-untagged are materially different outputs with different achievable-by
+edges, and each must become its own format entry before we claim to produce it
+(docs/RESEARCH.md §3.4). veraPDF validates the A and UA profiles and belongs in
+the fidelity harness.
+
+`structure` is absent from `preserves` on purpose: untagged PDF commits text to
+fixed geometry and discards semantic structure. That is precisely why
+PageLayout → DocTree is Synthesize rather than Extract (content-model.md §6).
+"""

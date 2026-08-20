@@ -1,0 +1,39 @@
+id          = "libvips"
+name        = "libvips"
+version_pin = ">=8.15,<9"
+homepage    = "https://www.libvips.org/"
+
+[license]
+spdx            = "LGPL-2.1-or-later"
+build_profiles  = ["lgpl", "gpl"]
+patent_exposure = "none"
+
+[security]
+hostility   = "moderate"
+isolation   = "gvisor"
+network     = false
+delegates   = false
+
+[resources]
+memory_model      = "streaming"
+concurrency       = "thread-safe"
+crash_expected    = false
+default_timeout_s = 120
+
+[runtimes]
+native = true
+wasm   = true
+
+[notes]
+text = """
+Default raster engine: ~4x faster single-threaded and ~8x multi-threaded on
+JPEG, and roughly 200 MB vs 3 GB peak memory against ImageMagick on the same
+workload (docs/RESEARCH.md §3.1). Its demand-driven streaming model is why
+memory_model is `streaming` and why it can be trusted with large inputs.
+
+Counter-evidence on record: at least one report of libvips being slower and
+heavier than ImageMagick on small images. Engine selection is therefore a
+planner decision informed by measured input size, not a global constant.
+`hostility: moderate` rather than `trusted` — it is still a C library parsing
+hostile input.
+"""
