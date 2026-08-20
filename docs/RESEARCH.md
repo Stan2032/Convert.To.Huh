@@ -48,23 +48,79 @@ measures the conversion. That is where we compete.
 
 ### 1.3 Prior art that matters: NCSA Polyglot
 
-*Towards a Universal, Quantifiable, and Scalable File Format Converter*
-(IEEE, NCSA) introduces the **I/O-Graph**: a data structure storing the input
-and output formats of available software, over which the system performs a
-**shortest-path search** between source and target format. Fewer conversions is
-assumed better for information preservation. Crucially, **edge weights can
-encode the amount of information retained**, so the search can prefer
-least-lossy chains. Their worked example chains `.lwo → .3ds` (Blender) then
-`.3ds → .stp` (a second tool) — a conversion neither tool could do alone.
+*Towards a Universal, Quantifiable, and Scalable File Format Converter* —
+McHenry, Kooper and Bajcsy, NCSA / University of Illinois at Urbana-Champaign.
+**Read from the primary source**, not a summary; the detail below is quoted or
+closely paraphrased from the paper.
 
-A modern CLI, `convertr`, applies the same idea ("smart routing graph",
-minimize route cost) across Pandoc/FFmpeg/LibreOffice/ImageMagick backends.
+**The I/O-Graph.** Vertices are the union of all input and output formats
+supported by the available applications. Edges are *directed*, each edge
+representing one application that converts source format A to target format B.
+**Parallel edges are allowed**, indicating multiple applications capable of the
+same conversion. Their 3D example graph covers 17 applications and is "densely
+packed with edges." Chained conversions — those no single application can do —
+are found by searching for a path. Worked example: `.lwo → .3ds` via Blender,
+then `.3ds → .stp` via Adobe 3D Reviewer.
 
-**Implication.** The core idea is validated and ~15 years old. It has never
-been executed as a polished product with a real loss model. We adopt the
-I/O-Graph wholesale and extend it in three ways: typed content kinds (§5.1),
-loss as a **vector** rather than a scalar (§5.3), and cross-domain
-*synthesis* edges that the original explicitly did not contemplate.
+**Weights, and how they are estimated.** Weighting edges by information retained
+requires comparing content before and after conversion — which requires loading
+every format, which as the authors note is circular: "if we could do this we
+would not need to use 3rd party software to perform conversions, or for that
+matter even need a universal converter."
+
+Their escape from that circularity is the most useful idea in the paper. They
+support a few formats natively, then convert **A → B → A** and score the
+*round trip* against the original. That single score is assigned to every edge
+along the path and **averaged over the different paths that traverse them** — an
+approach they describe as "similar to Q-Learning." The claim is that a bad edge
+penalizing an otherwise good path will wash out, because "there will likely be
+other paths that use that edge and the average score should stabilize."
+
+With weights in place they replace hop-count search with **Dijkstra's shortest
+weighted path** to minimize information loss. Scores are distances, so they are
+flipped to similarities by subtracting from the maximum.
+
+**Results, and the caveat that matters.** Weights run 0–100 as average
+information retention. The authors are explicit that these "do not indicate a
+percentage of information preserved. They are **relative values comparable
+within a particular measure**." And the measure changes the answer: under a
+light-fields descriptor the best single conversion is Adobe 3D Reviewer between
+`.pdf` and `.stp` (61.67) and the best target format is `.stp` (40.73); under a
+spin-image measure it is `.obj → .pdf` (59.07) with `.stl` best (34.89).
+
+**Scale.** A prototype scripting 7 applications, evaluated on 40 models (20
+`.stp` from NARA's TWR-841 set, 20 `.obj` from the web). Parallelism scaled at
+roughly 1/n: 20 `.stp` files to every reachable format took 33m06s on one
+daemon, 16m40s on two, 11m40s on three.
+
+**Implications for us — four of them.**
+
+1. **Adopt the graph wholesale.** Directed edges, parallel edges for competing
+   engines, path search for chained conversions. This is settled design, and it
+   is ~15 years old.
+2. **Adopt round-trip scoring as a bootstrap technique**, because we inherit the
+   exact same circularity: we cannot independently parse every target format we
+   claim to write. Where we *can* measure directly against a specimen, we do;
+   where we cannot, A→B→A is the fallback. See `fidelity-analyst`.
+3. **Reject their credit assignment.** Averaging one scalar across every edge on
+   a path blurs blame — it cannot say *which* hop destroyed *what*, and the
+   authors' own defence ("the average should stabilize") is a hope about graph
+   density, not a guarantee. Per-property vectors measured per-edge give
+   attributable loss. This is the direct motivation for ADR-0004.
+4. **Their metric-dependence result is a warning, not a footnote.** Two
+   reasonable measures produced different "best format" answers on the same
+   data. A single fidelity number will silently encode a preference. Our loss
+   vector makes that preference explicit and inspectable.
+
+**What they did not do, and why it never shipped.** The quality measures
+"consider only geometry" — no materials, textures or animation, though Table 1
+acknowledges those exist. The work is demonstrated on 3D alone, so cross-domain
+conversion never arises and `Synthesize`-class operations are not contemplated
+at all. And automation was **AutoHotKey driving Windows GUI applications**,
+chosen because high-end 3D tools ship GUI-only. That is a remarkable engineering
+decision and a fatal one for productization: it is unsandboxable, unparallelizable
+beyond whole machines, and breaks on any UI change. Our headless, sandboxed,
+capability-declared engines are the direct answer to that failure mode.
 
 ### 1.4 Related theory: chaining lossy adapters
 
@@ -568,6 +624,42 @@ trust in everything else the product claims? There is a line between delightful
 and absurd and we do not know where it is. Owned by `semantic-bridge-designer`.
 
 ---
+
+## 11. Research access notes
+
+Recorded because the next person will hit the same wall.
+
+**Two separate allowlists exist.** `curl` (via the egress proxy) and the
+`WebFetch` tool are gated independently. `www.archives.gov` is reachable by
+`curl` and *blocked* for `WebFetch`. So when a domain is whitelisted, reach for
+`curl` first; if the content is a PDF, fetch it and extract locally.
+
+**Extracting a PDF here:** no `pdftotext`, `mutool`, `gs` or `qpdf` is
+installed, and `pip install pypdf` succeeds but then panics on import because
+the system `cryptography` module is broken. The workaround is to block
+`cryptography` on `sys.meta_path` so pypdf falls back to its no-crypto provider;
+that is only needed for encrypted PDFs. This is how §1.3 was read from source.
+
+**Reachable:** `raw.githubusercontent.com`, `github.com`, PyPI, npm, crates.io,
+`convert.to.it` (302 → `p2r3.com/convert`, itself blocked), `www.archives.gov`.
+
+**Blocked and worth requesting**, in priority order:
+
+| Domain | Unblocks |
+|---|---|
+| `p2r3.com` | The reference product itself. `convert.to.it` redirects here. |
+| `pronom.nationalarchives.gov.uk`, `www.nationalarchives.gov.uk` | The 8 PUIDs flagged `puid_verified = false`, and canonical signatures |
+| `www.iana.org` | The media-type registry — canonical MIME names |
+| `www.loc.gov` | Library of Congress format descriptions (FDD) |
+| `nvd.nist.gov`, `www.cve.org` | `sandbox-warden`'s standing CVE watch on pinned engines |
+| `www.w3.org`, `developer.mozilla.org` | Format specs; browser API support data |
+| `ffmpeg.org`, `www.libvips.org`, `pandoc.org`, `imagemagick.org`, `ghostscript.com` | Engine capability matrices, verified rather than recalled |
+
+`WebSearch` works without a whitelist and returns summaries, which is how most
+of this dossier was built. It is adequate for orientation and **not** adequate
+for the kind of claim that ends up in a registry entry — which is exactly why
+every PUID here carries `puid_verified = false`.
+
 
 ## Sources
 

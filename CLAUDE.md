@@ -55,6 +55,15 @@ carry") almost always mean a format entry or the chosen target is wrong. Both
 seed-data rejections in this repository were real bugs elsewhere —
 see `registry/README.md`.
 
+## Network access
+
+Most reference sites are blocked by the egress proxy, and `curl` and `WebFetch`
+have **separate** allowlists — a domain reachable by one may be blocked for the
+other. `docs/RESEARCH.md §11` records what is reachable, the PDF-extraction
+workaround, and the prioritized list of domains worth requesting. `WebSearch`
+always works but returns summaries: fine for orientation, not sufficient for a
+claim that lands in a registry entry.
+
 ## Conventions
 
 - **ADRs are binding.** If your work requires violating one, stop and revisit

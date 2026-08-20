@@ -33,6 +33,14 @@ person re-litigating it. Never delete one; record why it failed.
 Promoting `claimed → verified` requires at least one corpus specimen and a
 `measured` block. CI enforces both (rule 5).
 
+**When you cannot parse the target format** to check the output — which happens
+constantly, since we write formats we have no independent reader for — use
+round-trip scoring (A→B→A) as the fallback, and record in `measured` that the
+result is round-trip evidence about a *pair* of conversions rather than a direct
+measurement of this edge. `fidelity-analyst` owns the technique and its
+pitfalls; the one you must not repeat is smearing a single path score across
+every edge on the path.
+
 ## Writing a loss vector
 
 Work from the target format's `preserves` list outward:

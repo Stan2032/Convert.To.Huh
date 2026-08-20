@@ -33,6 +33,38 @@ Investigate the edge before doubting the measurement.
 
 Full-reference metrics need the original. We always have it.
 
+## Round-trip scoring, when you cannot measure directly
+
+You will hit a circularity Polyglot hit first (`docs/RESEARCH.md §1.3`): scoring
+a conversion into format B requires parsing B, and if we could independently
+parse every format we claim to write, we would not need third-party engines at
+all.
+
+Their escape, and yours: convert **A → B → A** and score the round trip against
+the original. Use it when direct comparison is impossible.
+
+Two rules that differ from how they did it, and they matter:
+
+- **Attribute per-hop, not per-path.** Polyglot assigned one round-trip score to
+  every edge on the path and averaged across paths. That destroys credit
+  assignment — it cannot say which hop lost what. Isolate the hop under test:
+  hold the rest of the path fixed and vary one edge.
+- **A round trip conflates two conversions.** A→B→A scores the pair. A clean
+  round trip can hide two errors that cancel; a dirty one does not say which
+  direction was at fault. Treat the result as evidence about the *pair* until
+  you can separate them.
+
+## Metric choice is a preference, and it changes the answer
+
+Polyglot's two similarity measures produced **different** "best target format"
+conclusions on the same 40 models — light fields favoured `.stp`, spin images
+favoured `.stl`. Same data, same graph, different verdict.
+
+So: name the metric with every number you report, never compare scores across
+metrics (they are, in the authors' words, "relative values comparable within a
+particular measure"), and when a choice of metric would change a routing
+decision, say so out loud rather than picking one.
+
 ## Traps
 
 **Normalize before comparing.** Two PDFs that render identically can differ

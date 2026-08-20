@@ -4,11 +4,25 @@ Status: **accepted** · 2026-08-20
 
 ## Context
 
-Polyglot weighted edges by "information retained" as a scalar (R§1.3). A scalar
-cannot distinguish "kept every pixel, destroyed all text selectability" from
-"kept the text, halved the resolution," and it cannot compose honestly: two
-conversions losing different things are not multiplicatively worse at one
-thing.
+Polyglot weighted edges by "information retained" as a single scalar, estimated
+by round-tripping A→B→A and assigning that one score to **every edge on the
+path, averaged across paths** (R§1.3). Two problems follow, and the second is
+the fatal one.
+
+A scalar cannot distinguish "kept every pixel, destroyed all text
+selectability" from "kept the text, halved the resolution," and it cannot
+compose honestly: two conversions losing different things are not
+multiplicatively worse at one thing.
+
+Worse, averaging a path score across its edges **destroys credit assignment**.
+It cannot say which hop lost what. The authors' defence — that a bad edge
+penalizing a good path "should stabilize" once enough other paths traverse it —
+is a hope about graph density, not a guarantee, and it fails exactly where it
+matters most: a rarely-traversed edge keeps whatever blame it was handed.
+
+Their own results show the cost. Two reasonable similarity measures produced
+*different* "best target format" answers on the same 40 models. A single
+fidelity number silently encodes a preference about what matters.
 
 The adapter-chaining literature formulates composition as a matrix over
 properties (R§1.4).
@@ -31,6 +45,9 @@ contaminating. See `docs/specs/loss-vector.md`.
   uniform, which is known to be wrong (`loss-vector.md §7`).
 - The closed property list is a bottleneck by design: an open list makes
   vectors incomparable across edges.
+- Round-trip scoring survives as a *bootstrap technique* where direct
+  measurement is impossible (R§1.3), but the score is attributed per-property
+  to the specific hop under test, not smeared across the path.
 
 ## What would change our mind
 
