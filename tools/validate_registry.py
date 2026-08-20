@@ -144,7 +144,11 @@ def check_formats(formats: dict[str, dict], f: Findings) -> dict[str, dict]:
         if "puid" in doc and "puid_verified" not in doc:
             f.warn(fname, "has a puid but no puid_verified flag")
         if doc.get("puid_verified") is False:
-            f.warn(fname, f"puid `{doc.get('puid')}` is unverified against PRONOM")
+            f.warn(fname, f"puid `{doc.get('puid')}` is unverified against PRONOM "
+                          f"(run: python3 tools/verify_pronom.py {doc.get('id','')})")
+        if doc.get("puid_verified") is True and not doc.get("puid_name"):
+            f.error(fname, "puid_verified is true but puid_name is missing — record "
+                           "the exact PRONOM format name so drift is detectable")
         if "puid" not in doc and "puid" not in notes.lower():
             f.warn(fname, "no PUID and no justification in notes")
 

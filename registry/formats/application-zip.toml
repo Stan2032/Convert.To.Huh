@@ -4,7 +4,8 @@ kinds      = ["Container"]
 extensions = ["zip"]
 mime_types = ["application/zip"]
 puid       = "x-fmt/263"
-puid_verified = false
+puid_verified = true
+puid_name  = "ZIP Format"
 spec_url   = "https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT"
 
 preserves = ["metadata", "structure"]
@@ -35,4 +36,9 @@ Zip64, ratios past 28,000,000:1 via overlapping entries (§4.3). Budgets — ent
 count, total uncompressed bytes, recursion depth — are computed from declared
 headers before extraction and enforced during it, and nested archives are
 re-budgeted at each level. Refusal is a normal outcome here, not an error.
+PRONOM VERIFIED 2026-08-20. PRONOM's EOF signature
+`504B01{43-65531}504B0506{18-65531}` locates the central directory and
+end-of-central-directory records via byte RANGES. That is the structurally
+correct way to identify a ZIP — the local file header we match at BOF is the
+part a zip bomb manipulates. Worth adopting once the detector supports ranges.
 """

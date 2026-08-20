@@ -285,11 +285,41 @@ Congress FDD signatures, matches them concurrently, applies PRONOM priority
 rules during matching rather than after, and reads only as much of the file as
 needed.
 
+**PRONOM has a machine-readable API**, which makes this operational rather than
+aspirational: `https://www.nationalarchives.gov.uk/PRONOM/{puid}.xml` returns
+format name, version, PUIDs, MIME types and full internal signatures.
+`tools/verify_pronom.py` uses it to check every entry in our registry.
+
+**Verified 2026-08-20:** all 8 seed PUIDs are correct. Two findings came out of
+doing it properly rather than trusting recall.
+
+**(a) PRONOM identifies format *versions*; we identify *formats*.** `fmt/13` is
+PNG **1.2**, `fmt/43` is JFIF **1.01**, `fmt/92` is SVG **1.1**, `fmt/276` is
+PDF **1.7**. Their signatures are correspondingly narrow — fmt/43 requires an
+APP0 segment containing "JFIF", so it does *not* match Exif JPEG, which carries
+a different PUID. Our signatures are deliberately broader, because a converter
+needs to know "this is a JPEG", not "this is JFIF 1.01". The `puid` field
+therefore names a *representative version*, and saying so explicitly is the
+difference between a useful cross-reference and a false equivalence.
+
+**(b) PRONOM's signature syntax is strictly more expressive than ours.** It has
+wildcards (`{4}`, `{14-*}`), bounded ranges (`{43-65531}`), alternation
+(`(46|460A|460D)`), arbitrary gaps (`*`) and **EOF anchoring**. Three concrete
+consequences: PRONOM detects a truncated PNG via an EOF anchor on the `IEND`
+chunk and we cannot; PRONOM identifies ZIP by locating the *central directory*
+rather than the local file header — which is the structurally correct approach
+and notably the part a zip bomb manipulates (§4.3); and PRONOM confirms
+`text/plain` has **no internal signature at all**, independently corroborating
+our UNDETECTABLE classification.
+
 **Implication.** We do not invent format identity. Every registry entry carries
 its PUID where one exists, so our identifiers are joinable with the digital
-preservation world. Siegfried's *priority rules* concept (format A's signature
-beats format B's when both match — e.g. every DOCX is also a ZIP) is adopted
-directly; see `docs/specs/registry-schema.md`.
+preservation world — and verification is a repeatable command, not a promise.
+Siegfried's *priority rules* concept (format A's signature beats format B's when
+both match — every DOCX is also a ZIP) is adopted directly; see
+`docs/specs/registry-schema.md`. Closing the signature-expressiveness gap means
+extending the detector first and the schema second; until then
+`verify_pronom.py` reports which entries are affected so it stays visible.
 
 ### 2.3 ML-based identification: Magika
 

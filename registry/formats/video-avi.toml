@@ -4,7 +4,8 @@ kinds      = ["VideoStream", "AudioPCM"]
 extensions = ["avi"]
 mime_types = ["video/x-msvideo", "video/avi"]
 puid       = "fmt/5"
-puid_verified = false
+puid_verified = true
+puid_name  = "Audio/Video Interleaved Format"
 spec_url   = "https://learn.microsoft.com/en-us/windows/win32/directshow/avi-riff-file-reference"
 
 preserves = ["geometry", "time", "audio_channels", "sample_rate", "bit_depth", "metadata"]
@@ -32,4 +33,8 @@ not detection.
 
 This is the source format in the worked AVI → PDF example (content-model.md §4),
 the project's founding use case.
+PRONOM VERIFIED 2026-08-20. PRONOM expresses this as a single signature with a
+wildcard for the RIFF size field — `52494646{4}41564920` — where we use two
+signatures at offsets 0 and 8. Equivalent in effect, and confirmation that the
+form type at offset 8 is the real discriminator.
 """

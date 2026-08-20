@@ -23,6 +23,8 @@ kinds        = ["Raster"]         # content kinds this format can carry
 extensions   = ["png"]            # hint only — never authoritative (invariant 1)
 mime_types   = ["image/png"]
 puid         = "fmt/13"           # PRONOM identifier, joins us to the preservation world
+puid_verified = true              # checked with tools/verify_pronom.py
+puid_name    = "Portable Network Graphics 1.2"   # exact PRONOM name, so drift is detectable
 spec_url     = "https://www.w3.org/TR/png-3/"
 
 preserves = ["geometry", "color_depth", "color_profile", "alpha", "metadata"]
@@ -31,8 +33,9 @@ preserves = ["geometry", "color_depth", "color_profile", "alpha", "metadata"]
 
 [[signatures]]                    # structural detection (R§2.2)
 offset = 0
-magic  = "89504E470D0A1A0A"       # hex
+magic  = "89504E470D0A1A0A"       # uppercase hex, whole bytes
 weight = "decisive"               # decisive | strong | weak
+# position = "BOF"                # BOF (default) | EOF  — not yet implemented
 
 [detection]
 priority_over = []                # PRONOM-style priority: this beats these ids
@@ -50,6 +53,18 @@ Rules:
   say so in `notes` — permitted, but it can only ever be a target, never a
   detected source.
 - `puid` is required where PRONOM has one. Absence must be justified in `notes`.
+- **`puid` names a representative version, not an exact equivalence.** PRONOM
+  identifies format *versions* — `fmt/13` is PNG **1.2**, `fmt/43` is JFIF
+  **1.01**, `fmt/276` is PDF **1.7** — whereas this registry identifies
+  *formats*. Our signatures are deliberately broader than PRONOM's as a result
+  (we match all JPEGs, not only JFIF 1.01), because a converter cares that a
+  file *is* a JPEG. Record the divergence in `notes`; do not narrow our
+  signature to match PRONOM's.
+- `puid_verified = true` requires `puid_name` — CI-enforced. Recording the exact
+  PRONOM name is what makes a later PRONOM change detectable rather than silent.
+- Verify with `python3 tools/verify_pronom.py [format-id]`. It is network-bound
+  and therefore **not** in the default CI gate; it is run deliberately when
+  adding or auditing an entry.
 - Every format needs at least one corpus specimen before any edge touching it
   is marked `verified` (see `corpus-keeper`).
 
@@ -139,6 +154,33 @@ Rules — all CI-enforced:
    deliberately, as documentation of what does not work.
 7. Every property named must exist in the closed list in
    `docs/specs/loss-vector.md`.
+
+### Known gap: our signature syntax is weaker than PRONOM's
+
+PRONOM byte sequences use constructs our `magic` field cannot express:
+
+| Construct | Example | Meaning |
+|---|---|---|
+| wildcard byte-count | `52494646{4}41564920` | skip exactly 4 bytes (the RIFF size field) |
+| open range | `{14-*}` | skip 14 or more bytes |
+| bounded range | `504B01{43-65531}504B0506` | ZIP central directory location |
+| alternation | `(46\|460A\|460D)` | any of these byte strings |
+| arbitrary gap | `...49484452*69545874` | any number of bytes between |
+| EOF anchoring | `Absolute from EOF` | offset counted from end of file |
+
+Consequences we accept for now, and should not forget:
+
+- Our PNG signature cannot detect truncation; PRONOM's EOF anchor on the `IEND`
+  chunk can.
+- Our ZIP signature matches the local file header at BOF, while PRONOM locates
+  the central directory — **the structurally correct approach, and notably the
+  part a zip bomb manipulates** (R§4.3).
+- Our PDF signature is version-agnostic by choice, which is a deliberate
+  divergence rather than a gap.
+
+`tools/verify_pronom.py` reports which entries have a PRONOM signature richer
+than we can express, so the gap stays visible. Closing it means extending the
+detector first and the schema second.
 
 ### Capability tokens
 

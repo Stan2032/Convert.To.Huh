@@ -23,10 +23,24 @@ plausible-looking wrong signature is worse than no signature, because it
 silently misidentifies files and nobody notices until a conversion produces
 garbage.
 
-**PUIDs get verified.** Record `puid_verified = false` until you have checked
-against PRONOM. Every unverified PUID in this repository was written from
-memory and is exactly the kind of plausible data that is wrong often enough to
-matter. Verifying them is standing work.
+**PUIDs get verified, with the tool.** Run
+`python3 tools/verify_pronom.py [format-id]`. It queries PRONOM's XML API
+(`.../PRONOM/{puid}.xml`) and checks the PUID resolves, matches, and agrees on
+MIME type. Set `puid_verified = true` **and** `puid_name` to the exact PRONOM
+name — CI rejects the first without the second, because recording the name is
+what makes a later PRONOM change detectable rather than silent.
+
+**A PUID is a representative version, not an equivalence.** PRONOM identifies
+format *versions*: `fmt/13` is PNG 1.2, `fmt/43` is JFIF 1.01 and does not match
+Exif JPEG. Our signatures are deliberately broader — a converter needs "is a
+JPEG", not "is JFIF 1.01". When they diverge, record it in `[notes]`; **do not
+narrow our signature to match PRONOM's.**
+
+**Their signature syntax beats ours**, and the tool tells you when it matters.
+PRONOM supports wildcards, byte ranges, alternation and EOF anchoring; our
+`magic` is a fixed hex prefix. So PRONOM can detect a truncated PNG and we
+cannot. Closing that gap means extending the detector first, schema second —
+not quietly copying a pattern our matcher can't evaluate.
 
 **`preserves` means "can carry this property at all."** Capacity limits are
 `degraded` magnitudes on the *edge*, not omissions from the format. JPEG carries

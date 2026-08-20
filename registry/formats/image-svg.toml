@@ -4,7 +4,8 @@ kinds      = ["Vector", "Raster", "Text"]
 extensions = ["svg"]
 mime_types = ["image/svg+xml"]
 puid       = "fmt/92"
-puid_verified = false
+puid_verified = true
+puid_name  = "Scalable Vector Graphics 1.1"
 spec_url   = "https://www.w3.org/TR/SVG2/"
 
 preserves = ["geometry", "precision", "color_profile", "alpha", "text_as_text", "structure", "metadata", "interactivity"]
@@ -30,4 +31,9 @@ references. It is among the coders explicitly disabled in ImageMagick hardening
 (§4.1). The no-network invariant (ADR-0003) means external entities and remote
 resources cannot resolve — a refused feature, reported to the user, never a
 silent omission.
+PRONOM VERIFIED 2026-08-20. fmt/92 is SVG 1.1, while `spec_url` points at SVG 2
+— deliberate, since we target the current spec but cite the closest PUID.
+PRONOM's signature confirms the weakness noted above: it requires an XML
+declaration *then* `<svg` *then* `version="1.` rather than trusting `<svg`
+alone.
 """

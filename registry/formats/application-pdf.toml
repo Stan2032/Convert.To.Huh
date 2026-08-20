@@ -4,7 +4,8 @@ kinds      = ["PageLayout", "Text", "Raster", "Vector"]
 extensions = ["pdf"]
 mime_types = ["application/pdf"]
 puid       = "fmt/276"
-puid_verified = false
+puid_verified = true
+puid_name  = "Acrobat PDF 1.7 - Portable Document Format 1.7"
 spec_url   = "https://www.iso.org/standard/75839.html"
 
 preserves = ["geometry", "color_profile", "text_as_text", "fonts", "metadata", "interactivity", "precision"]
@@ -29,4 +30,10 @@ the fidelity harness.
 `structure` is absent from `preserves` on purpose: untagged PDF commits text to
 fixed geometry and discards semantic structure. That is precisely why
 PageLayout → DocTree is Synthesize rather than Extract (content-model.md §6).
+PRONOM VERIFIED 2026-08-20. fmt/276 is PDF **1.7**, and its signature is
+correspondingly version-specific: `255044462D312E37` (`%PDF-1.7`). Ours is
+`255044462D` (`%PDF-`), which is version-agnostic and right for our purposes —
+we route on "is a PDF", not "is PDF 1.7". PRONOM also anchors the EOF marker
+`2525454F(46|460A|460D|460D0A|460D00)`, i.e. `%%EOF` with the line-ending
+variants; worth adopting once the detector supports alternation.
 """

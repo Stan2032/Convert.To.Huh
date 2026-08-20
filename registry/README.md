@@ -24,9 +24,13 @@ correct: a claim copied from a README is not a capability
 (`docs/RESEARCH.md §3.5`). Edges become real when `capability-cartographer`
 runs them against a corpus specimen and records a measurement.
 
-Similarly, PUIDs carry `puid_verified = false` until `format-registry-curator`
-confirms them against PRONOM. They were recorded from memory and are exactly the
-kind of plausible-looking data that is wrong often enough to matter.
+PUIDs, by contrast, **are** now verified. All 8 were checked against PRONOM's
+XML API on 2026-08-20 with `tools/verify_pronom.py`, and all 8 were correct —
+but doing it properly surfaced two things that recall would have missed: PRONOM
+identifies format *versions* rather than formats (so a PUID is a representative
+version, not an equivalence), and PRONOM's signature syntax is strictly more
+expressive than ours. Both are recorded per-format in `[notes]` and in
+`docs/RESEARCH.md §2.2`.
 
 ## The checking is not ceremonial
 

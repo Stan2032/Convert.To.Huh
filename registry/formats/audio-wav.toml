@@ -4,7 +4,8 @@ kinds      = ["AudioPCM"]
 extensions = ["wav", "wave"]
 mime_types = ["audio/wav", "audio/x-wav", "audio/vnd.wave"]
 puid       = "fmt/141"
-puid_verified = false
+puid_verified = true
+puid_name  = "Waveform Audio (PCMWAVEFORMAT)"
 spec_url   = "https://www.loc.gov/preservation/digital/formats/fdd/fdd000001.shtml"
 
 preserves = ["audio_channels", "sample_rate", "bit_depth", "time", "metadata"]
@@ -30,4 +31,11 @@ so every ASR route passes through a normalization hop to 16 kHz mono WAV
 (docs/RESEARCH.md §3.6). That constraint is modelled as an edge `requires`
 rather than hidden inside the adapter — the planner has to be able to see it in
 order to insert the hop.
+PRONOM VERIFIED 2026-08-20. PRONOM's signature goes considerably further than
+ours — `52494646{4}57415645666D7420100000000100{14-*}64617461` — requiring the
+`fmt ` chunk with PCM parameters and a `data` chunk. That specificity is why
+fmt/141 is named PCMWAVEFORMAT: non-PCM WAV variants are different PUIDs. Our
+RIFF+WAVE pair matches all of them, which is what a converter wants.
+PRONOM's MIME is `audio/x-wav`; ours lists that plus the IANA-registered
+`audio/vnd.wave`.
 """

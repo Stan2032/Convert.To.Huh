@@ -4,7 +4,8 @@ kinds      = ["Raster"]
 extensions = ["jpg", "jpeg", "jpe", "jfif"]
 mime_types = ["image/jpeg"]
 puid       = "fmt/43"
-puid_verified = false
+puid_verified = true
+puid_name  = "JPEG File Interchange Format 1.01"
 spec_url   = "https://www.w3.org/Graphics/JPEG/itu-t81.pdf"
 
 preserves = ["geometry", "color_depth", "color_profile", "metadata"]
@@ -36,4 +37,9 @@ Three bytes is short enough to collide, so the weight is `strong`, not
 `decisive`. CVE-2024-29510 was exploited in the wild using EPS files carrying a
 .jpg extension (docs/RESEARCH.md §4.2) — this entry is the concrete reason
 ADR-0005 exists.
+PRONOM VERIFIED 2026-08-20. fmt/43 is JFIF 1.01, whose PRONOM signature is
+`FFD8FFE0{2}4A464946000101(00|01|02)` — it requires an APP0 segment containing
+"JFIF". Our `FFD8FF` is deliberately BROADER: it also matches Exif JPEG, which
+PRONOM assigns a different PUID. That breadth is right for a converter (we care
+that it is a JPEG) and means our PUID is indicative rather than exact.
 """

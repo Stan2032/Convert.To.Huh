@@ -46,7 +46,12 @@ These hold everywhere. Violating one is a bug regardless of what else works.
 ```bash
 python3 tools/validate_registry.py     # must exit 0
 python3 tools/validate_agents.py       # must exit 0
+python3 tools/check_links.py           # must exit 0
 ```
+
+`python3 tools/verify_pronom.py` checks format PUIDs against PRONOM's live API.
+It is network-bound, so it is deliberately **not** in the CI gate — run it when
+adding or auditing a format entry.
 
 The registry validator enforces the parts of the specs that can be mechanized.
 **If it rejects your change, the usual fix is not to weaken your data.** Rule 4
