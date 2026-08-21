@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-Twelve binding decisions. An ADR constrains what may be built; if your work
+Thirteen binding decisions. An ADR constrains what may be built; if your work
 requires violating one, **stop and revisit the ADR first** rather than working
 around it. Reversal means a new ADR that supersedes the old one and states what
 changed our mind — never a quiet edit.
@@ -23,6 +23,7 @@ preference wearing a decision's clothes.
 | [0010](0010-conversion-is-not-a-cipher.md) | Conversion is not a cipher; it is a canonicalizer | accepted |
 | [0011](0011-the-registry-is-the-deliverable.md) | The registry is the deliverable | accepted |
 | [0012](0012-lost-needs-a-policy-qualifier.md) | `lost` needs a policy qualifier | accepted |
+| [0013](0013-loss-belongs-to-the-invocation.md) | Loss belongs to the invocation, not the engine | accepted |
 
 ## Which ones bite most often
 
@@ -41,6 +42,10 @@ preference wearing a decision's clothes.
 - **0012** is the first decision the *dataset* forced rather than an argument —
   three engines measured, two of them disagreeing about what replaces a lost
   alpha channel. Evidence that the measurement discipline pays.
+- **0013** falsified 0012's scope within a day, using the falsification
+  condition 0012 had itself written down. Read the pair together: they are the
+  clearest demonstration in this repository that the "what would change our
+  mind" section is load-bearing rather than decorative.
 
 ## Reading order for someone new
 

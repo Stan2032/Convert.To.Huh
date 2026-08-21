@@ -659,48 +659,55 @@
       "from_kind": "Raster",
       "to_kind": "Raster",
       "engine": "libvips",
+      "invocation": "vips jpegsave IN OUT",
       "operation": "Transcode",
       "loss": {
         "alpha": "lost",
         "color_depth": "degraded",
         "color_profile": "preserved",
         "geometry": "preserved",
-        "metadata": "degraded"
+        "metadata": "lost"
       },
-      "verification": "claimed",
+      "loss_policy": {
+        "alpha": "composite_black"
+      },
+      "verification": "verified",
       "generational": true
     },
     {
-      "from": "image/jpeg",
-      "to": "image/png",
+      "from": "image/png",
+      "to": "image/webp",
       "from_kind": "Raster",
       "to_kind": "Raster",
       "engine": "libvips",
+      "invocation": "vips webpsave IN OUT",
       "operation": "Transcode",
       "loss": {
-        "color_depth": "preserved",
+        "alpha": "preserved",
+        "color_depth": "degraded",
         "color_profile": "preserved",
         "geometry": "preserved",
-        "metadata": "preserved"
+        "metadata": "lost"
       },
-      "verification": "claimed",
-      "generational": false
+      "verification": "verified",
+      "generational": true
     },
     {
       "from": "image/png",
-      "to": "image/png",
+      "to": "image/tiff",
       "from_kind": "Raster",
       "to_kind": "Raster",
       "engine": "libvips",
-      "operation": "Transform",
+      "invocation": "vips tiffsave IN OUT",
+      "operation": "Transcode",
       "loss": {
         "alpha": "preserved",
         "color_depth": "preserved",
         "color_profile": "preserved",
-        "geometry": "degraded",
-        "metadata": "preserved"
+        "geometry": "preserved",
+        "metadata": "lost"
       },
-      "verification": "claimed",
+      "verification": "verified",
       "generational": false
     },
     {
@@ -726,7 +733,7 @@
     "formats": 12,
     "engines": 7,
     "edges_total": 17,
-    "edges_verified": 10,
-    "edges_claimed": 7
+    "edges_verified": 13,
+    "edges_claimed": 4
   }
 }

@@ -1,20 +1,25 @@
 # Capabilities of libvips. Owner: capability-cartographer.
-# Every edge here is `claimed` — nothing has been run against a specimen yet.
+#
+# Every edge records the INVOCATION it was measured with (ADR-0013). libvips
+# defaults are not neutral: `vips webpsave` is lossy and `vips jpegsave`
+# composites transparency onto black. Both are flags, both are the default, and
+# both surprise people.
 
 [[edge]]
-engine    = "libvips"
-op        = "Transcode"
-from      = "image/png"
-to        = "image/jpeg"
-from_kind = "Raster"
-to_kind   = "Raster"
+engine     = "libvips"
+invocation = "vips jpegsave IN OUT"
+op         = "Transcode"
+from       = "image/png"
+to         = "image/jpeg"
+from_kind  = "Raster"
+to_kind    = "Raster"
 
 [edge.loss]
-alpha         = "lost"
+alpha         = { value = "lost", policy = "composite_black" }
 color_depth   = { value = "degraded", from = 16, to = 8 }
 geometry      = "preserved"
 color_profile = "preserved"
-metadata      = { value = "degraded", note = "EXIF retained, ancillary PNG chunks dropped" }
+metadata      = "lost"
 generational  = true
 
 [edge.cost]
@@ -23,28 +28,52 @@ memory_model = "streaming"
 base_ms      = 8
 
 [edge.constraints]
-max_input_bytes = 2147483648
+max_input_bytes = 536870912
 requires        = []
 
 [edge.verification]
-status = "claimed"
-note   = "alpha=lost is forced by the target: image/jpeg omits alpha from its preserves list, so CI rule 4 would reject any other value. The color_depth magnitude and the metadata note are the parts that need a specimen."
+status      = "verified"
+specimens   = [
+  "corpus/raster/rgb-photo.png",
+  "corpus/raster/rgba-gradient.png",
+  "corpus/raster/rgba-hard-edge.png",
+  "corpus/raster/gray16.png",
+  "corpus/raster/rgba-opaque.png",
+]
+verified_at = "2026-08-21"
+verified_by = "capability-cartographer"
+
+[edge.verification.measured]
+tool          = "core/examples/libvips_edges.rs"
+engine_build  = "vips-8.15.1"
+ssim_opaque   = 0.9933
+ssim_alpha    = 0.4686
+note = """
+The two SSIM figures are the finding, not an average. On specimens without
+transparency libvips scores 0.9933. On rgba-hard-edge — half opaque, half fully
+transparent — it scores 0.4686, because compositing onto black replaces half the
+image with black. Averaging those into one number would hide exactly the thing a
+user needs to know. Add `--background 255` and the same conversion composites
+onto white instead; that is a DIFFERENT edge and is not yet measured.
+"""
 
 
 [[edge]]
-engine    = "libvips"
-op        = "Transcode"
-from      = "image/jpeg"
-to        = "image/png"
-from_kind = "Raster"
-to_kind   = "Raster"
+engine     = "libvips"
+invocation = "vips webpsave IN OUT"
+op         = "Transcode"
+from       = "image/png"
+to         = "image/webp"
+from_kind  = "Raster"
+to_kind    = "Raster"
 
 [edge.loss]
+alpha         = "preserved"
+color_depth   = "degraded"
 geometry      = "preserved"
-color_depth   = "preserved"
 color_profile = "preserved"
-metadata      = "preserved"
-generational  = false
+metadata      = "lost"
+generational  = true
 
 [edge.cost]
 time_model   = "linear_pixels"
@@ -52,39 +81,73 @@ memory_model = "streaming"
 base_ms      = 10
 
 [edge.constraints]
-max_input_bytes = 2147483648
+max_input_bytes = 536870912
 requires        = []
 
 [edge.verification]
-status = "claimed"
-note   = "Lossless in the sense that matters: PNG re-encodes the already-decoded JPEG pixels exactly. It does NOT recover what the original JPEG encode destroyed. The loss vector describes THIS hop, and chain composition (loss-vector.md §4) is what keeps the earlier generational loss visible in the total."
+status      = "verified"
+specimens   = ["corpus/raster/rgb-photo.png", "corpus/raster/rgba-gradient.png"]
+verified_at = "2026-08-21"
+verified_by = "capability-cartographer"
+
+[edge.verification.measured]
+tool         = "core/examples/libvips_edges.rs"
+engine_build = "vips-8.15.1"
+ssim_photo   = 0.8362
+bytes_photo  = 1942
+note = """
+THE DEFAULT IS LOSSY, and badly so: SSIM 0.8362 on rgb-photo at 1,942 bytes.
+image-rs writes the same pair LOSSLESS at SSIM 1.0 and 37,098 bytes. A consumer
+reading "PNG to WebP" from the image-rs edge and then running libvips in their
+own pipeline would silently get visibly degraded output.
+
+`vips webpsave --lossless` produces 15,512 bytes at SSIM 1.0. That is a separate
+edge and should be added; it is not recorded here because this entry documents
+what the DEFAULT invocation does. See ADR-0013.
+
+KNOWN IMPRECISION: `color_depth = degraded` is carrying two different meanings
+here. WebP is 8-bit, so 16-bit input genuinely loses colour depth — that part is
+correct. But the LOSSY QUANTISATION at SSIM 0.8362 is not colour-depth loss at
+all, and the closed vocabulary has no property for it (docs/RESEARCH.md §13.7).
+The label is the closest available, not the right one. A `signal_fidelity`
+property is proposed and not yet adopted.
+"""
 
 
 [[edge]]
-engine    = "libvips"
-op        = "Transform"
-from      = "image/png"
-to        = "image/png"
-from_kind = "Raster"
-to_kind   = "Raster"
+engine     = "libvips"
+invocation = "vips tiffsave IN OUT"
+op         = "Transcode"
+from       = "image/png"
+to         = "image/tiff"
+from_kind  = "Raster"
+to_kind    = "Raster"
 
 [edge.loss]
-geometry      = { value = "degraded", note = "magnitude is the requested scale factor" }
-color_depth   = "preserved"
-color_profile = "preserved"
 alpha         = "preserved"
-metadata      = "preserved"
+color_depth   = "preserved"
+geometry      = "preserved"
+color_profile = "preserved"
+metadata      = "lost"
 generational  = false
 
 [edge.cost]
 time_model   = "linear_pixels"
 memory_model = "streaming"
-base_ms      = 6
+base_ms      = 9
 
 [edge.constraints]
-max_input_bytes = 2147483648
+max_input_bytes = 536870912
 requires        = []
 
 [edge.verification]
-status = "claimed"
-note   = "Same-format Transform (resize). Loss is deliberate and user-requested, so it is reported as an intended change rather than as damage (content-model.md §3)."
+status      = "verified"
+specimens   = ["corpus/raster/rgba-gradient.png", "corpus/raster/rgb-photo.png", "corpus/raster/gray16.png"]
+verified_at = "2026-08-21"
+verified_by = "capability-cartographer"
+
+[edge.verification.measured]
+tool         = "core/examples/libvips_edges.rs"
+engine_build = "vips-8.15.1"
+ssim         = 1.0
+note = "Lossless on every specimen, alpha intact. Uncompressed by default and correspondingly large — 110,830 bytes for a 94,487-byte PNG."

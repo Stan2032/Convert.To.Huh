@@ -113,6 +113,8 @@ pub struct EdgeVerification {
 #[derive(Debug, Clone, Deserialize)]
 pub struct RawEdge {
     pub engine: String,
+    #[serde(default)]
+    pub invocation: Option<String>,
     pub op: String,
     pub from: String,
     pub to: String,
@@ -133,6 +135,10 @@ pub struct RawEdge {
 #[derive(Debug, Clone)]
 pub struct Edge {
     pub engine: String,
+    /// The exact call measured. ADR-0013: loss belongs to the invocation, not
+    /// the engine — `vips webpsave` is lossy and `vips webpsave --lossless` is
+    /// not, and both are "libvips PNG to WebP".
+    pub invocation: Option<String>,
     pub op: String,
     pub from: String,
     pub to: String,
@@ -225,6 +231,7 @@ impl Registry {
                 let (loss, loss_policy, generational) = parse_loss(&r.loss);
                 edges.push(Edge {
                     engine: r.engine,
+                    invocation: r.invocation,
                     op: r.op,
                     from: r.from,
                     to: r.to,

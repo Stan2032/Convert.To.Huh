@@ -54,6 +54,10 @@ pub struct EdgeOut {
     pub from_kind: String,
     pub to_kind: String,
     pub engine: String,
+    /// The exact invocation measured. Loss is a property of HOW the engine was
+    /// called (ADR-0013), so an edge without this is under-specified.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub invocation: Option<String>,
     pub operation: String,
     /// Per-property outcome. Absent property = not applicable to this conversion.
     pub loss: std::collections::BTreeMap<String, String>,
@@ -160,6 +164,7 @@ pub fn build(reg: &Registry) -> Dataset {
             from_kind: e.from_kind.clone(),
             to_kind: e.to_kind.clone(),
             engine: e.engine.clone(),
+            invocation: e.invocation.clone(),
             operation: e.op.clone(),
             loss: e.loss.0.iter().map(|(k, v)| (k.clone(), v.as_str().to_string())).collect(),
             loss_policy: e.loss_policy.clone(),

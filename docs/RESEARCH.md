@@ -1138,6 +1138,77 @@ test when a fourth engine is added, and it is written into ADR-0012's
 "what would change our mind".
 
 
+### 13.6 Loss belongs to the invocation — ADR-0012 falsified in a day
+
+ADR-0012 closed with an explicit falsification condition: *if the flattening
+policy is configuration rather than engine identity, the field records a default
+and should record the invocation instead.* Two measurements met it within hours.
+
+**Alpha flattening is a flag.** `vips jpegsave IN OUT` composites transparency
+onto black; `vips jpegsave IN OUT --background 255` composites onto white. Same
+engine, same version, same pair, different loss.
+
+**WebP lossiness is a flag, and the default is the surprising one:**
+
+| Invocation | Bytes | SSIM |
+|---|---|---|
+| `vips webpsave IN OUT` | 1,942 | **0.8362** |
+| `vips webpsave IN OUT --lossless` | 15,512 | 1.0 |
+| image-rs WebP encoder | 37,098 | 1.0 |
+
+The consumer risk is concrete: read "PNG → WebP" from the image-rs edge —
+lossless, SSIM 1.0 — then run libvips in your own pipeline and silently get
+**0.84 SSIM**. Visible degradation, published as lossless.
+
+**Design implication:** an edge is `(engine, version, invocation, from, to)`.
+See **ADR-0013**. And the cross-engine WebP gap must be reported as a
+*default-flags* difference, not a capability difference — calling libvips
+"worse" would repeat §13.3's mistake of letting the measurement setup dictate
+the verdict.
+
+### 13.7 The vocabulary has no word for lossy compression
+
+Found while writing the libvips WebP edge, and the most fundamental gap so far.
+
+`PNG → JPEG` through image-rs on an 8-bit specimen: 8 bits in, 8 bits out,
+geometry identical, colour profile intact, **SSIM 0.9950**. Something was
+clearly lost. The registry records `color_depth = degraded`.
+
+That label is wrong for this case. Nothing about colour depth changed. What
+changed is that pixel values were *approximated* by quantisation. Scanning the
+closed vocabulary for a term that means this:
+
+- `color_depth` — bits per channel. Structural, and unchanged here.
+- `geometry` — dimensions. Unchanged.
+- `color_profile` — colour space. Unchanged.
+- `precision` — "numeric precision of stored values", written for numeric data.
+
+**Nothing covers it.** The most common form of loss in the entire raster domain —
+lossy compression — has no property to name it, so it has been getting recorded
+under `color_depth` where it does not belong.
+
+Two distinct problems are tangled in that one label:
+
+1. **Genuine colour-depth loss** — `gray16.png` (16-bit) into JPEG (8-bit). Real,
+   correctly named.
+2. **Quantisation loss** — 8-bit into JPEG at quality 85. Real, misnamed.
+
+Both appear on the same edge because one edge covers specimens with different
+properties. The measurement harness already distinguishes them by reporting
+`unexercised`; the registry flattens that distinction away.
+
+**Design implication, deliberately not acted on yet.** The vocabulary probably
+needs a `signal_fidelity` property, valued like the others and measured by the
+domain's own metric — SSIM for raster, spectral distance for audio. That is an
+ADR-0004 change, and ADR-0004 has already been amended twice today (0012, 0013).
+Making a third change in the same session, on a finding an hour old, would be
+exactly the haste this project's discipline exists to prevent.
+
+Recorded, proposed, and left for a future session with fresh evidence. The
+existing edges stay as they are and are **known to be imprecise on this point** —
+which is better documented than silently wrong.
+
+
 ## Sources
 
 - [Convert To It](https://converttoit.com/) · [Grokipedia: Convert to it](https://grokipedia.com/page/Convert_to_it) · [Convert To It API](https://converttoit.com/api)
