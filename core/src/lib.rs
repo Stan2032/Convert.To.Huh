@@ -10,3 +10,4 @@ pub mod fidelity;
 pub mod loss;
 pub mod planner;
 pub mod registry;
+pub mod sanitize;

@@ -5,7 +5,7 @@
 //!   huh convert <in> <out> [--quality N] [--allow-unverified] [--receipt R.json]
 //!   huh graph
 
-use huh_core::{detect, execute, planner, registry::Registry};
+use huh_core::{detect, execute, planner, registry::Registry, sanitize};
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
@@ -30,6 +30,7 @@ fn usage() -> ExitCode {
            huh plan <from> <to> [-k N] [--allow-unverified] [--profile lgpl|gpl] [--runtime native|wasm]\n  \
            huh suggest <file> [--allow-unverified]   what can this become, and what does each cost?\n  \
            huh convert <in> <out> [--quality 1-100] [--allow-unverified] [--receipt out.json]\n  \
+           huh sanitize <in> <out> [--to <format-id>] [--quality 1-100] [--report r.json]\n  \
            huh graph\n\n\
          Formats are registry ids, e.g. image/png, image/jpeg."
     );
@@ -256,6 +257,74 @@ fn main() -> ExitCode {
                 eprintln!("  {:<14}             {}\n", "", pl.rationale);
             }
             ExitCode::SUCCESS
+        }
+
+        "sanitize" => {
+            let (Some(inp), Some(outp)) = (args.get(1), args.get(2)) else { return usage() };
+            let bytes = match std::fs::read(inp) {
+                Ok(b) => b,
+                Err(e) => { eprintln!("{inp}: {e}"); return ExitCode::FAILURE; }
+            };
+            let name = Path::new(inp).file_name().map(|s| s.to_string_lossy().to_string());
+            let d = detect::detect(&reg, &bytes, name.as_deref());
+            if d.detected_by == "unknown" {
+                eprintln!(
+                    "refused: cannot identify {inp} by content.\n\
+                     Sanitizing means parsing content and rebuilding it. An \
+                     unidentified file cannot be parsed, so there is nothing to \
+                     rebuild from — passing the bytes through unchanged would be \
+                     the one genuinely dangerous outcome."
+                );
+                return ExitCode::from(3);
+            }
+            let target = opt(&args, "--to").unwrap_or_else(|| d.format.clone());
+            let quality: u8 = opt(&args, "--quality").and_then(|q| q.parse().ok()).unwrap_or(95);
+
+            eprintln!("detected {} (by {}, confidence {:.2})", d.format, d.detected_by, d.confidence);
+            if d.extension_mismatch {
+                eprintln!("NOTE:    extension disagrees with content — sanitizing by CONTENT type.");
+            }
+
+            match sanitize::sanitize(&bytes, &d.format, &target, quality) {
+                Ok((out, report)) => {
+                    if let Err(e) = std::fs::write(outp, &out) {
+                        eprintln!("{outp}: {e}");
+                        return ExitCode::FAILURE;
+                    }
+                    eprintln!("\nrebuilt {} -> {} ({} -> {} bytes)",
+                              d.format, target, report.input_bytes, report.output_bytes);
+                    if report.passengers.is_empty() {
+                        eprintln!("no non-content data found");
+                    } else {
+                        eprintln!("\nremoved {} passenger(s), {} bytes:",
+                                  report.passengers.len(), report.passenger_bytes);
+                        for p in &report.passengers {
+                            eprintln!("  {:<16} {:<12} {:>6} B   {}",
+                                      p.kind, p.label, p.bytes, p.note);
+                        }
+                    }
+                    match report.content_ssim {
+                        Some(s) if report.content_preserved =>
+                            eprintln!("\ncontent intact: SSIM {s:.4}"),
+                        Some(s) =>
+                            eprintln!("\nWARNING: content CHANGED, SSIM {s:.4} — the rebuild was not faithful"),
+                        None =>
+                            eprintln!("\nWARNING: content not comparable (geometry changed)"),
+                    }
+                    if !report.properties_lost.is_empty() {
+                        eprintln!("properties destroyed: {}", report.properties_lost.join(", "));
+                    }
+                    if let Some(r) = opt(&args, "--report") {
+                        let _ = std::fs::write(&r, serde_json::to_string_pretty(&report).unwrap());
+                        eprintln!("report:  {r}");
+                    }
+                    // A rebuild that mangles the content is a failure, even though
+                    // it is technically "sanitized".
+                    if !report.content_preserved { return ExitCode::from(4); }
+                    ExitCode::SUCCESS
+                }
+                Err(e) => { eprintln!("sanitize failed: {e}"); ExitCode::FAILURE }
+            }
         }
 
         "graph" => {

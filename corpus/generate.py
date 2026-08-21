@@ -94,6 +94,47 @@ def gen_opaque_rgba(w=64, h=64):
     write_png(OUT / "rgba-opaque.png", w, h, 8, 6, rows)
 
 
+def gen_png_with_passengers(w=48, h=48):
+    """A valid PNG carrying content that is NOT part of the image.
+
+    Sanitization has to be tested against a file that actually has something
+    to strip. Every passenger here is legitimate PNG structure or a benign
+    appendage — no exploit content — but each one is a real place where data
+    rides along unnoticed:
+
+      tEXt      arbitrary key/value metadata, rendered by nothing
+      a private ancillary chunk, which decoders skip silently by design
+      bytes after IEND, which every decoder ignores and every byte-copy keeps
+
+    The last is the important one: appending after IEND leaves a file that is
+    bit-for-bit valid to every viewer while carrying an arbitrary payload.
+    """
+    rows = []
+    for y in range(h):
+        row = bytearray()
+        for x in range(w):
+            row += bytes(((x * 5) % 256, (y * 5) % 256, ((x ^ y) * 3) % 256))
+        rows.append(bytes(row))
+
+    raw = b"".join(b"\x00" + r for r in rows)
+    png = (b"\x89PNG\r\n\x1a\n"
+           + chunk(b"IHDR", struct.pack(">IIBBBBB", w, h, 8, 2, 0, 0, 0))
+           # Metadata nobody sees but everybody copies.
+           + chunk(b"tEXt", b"Author\x00Alice Example")
+           + chunk(b"tEXt", b"Comment\x00internal-doc-id-88213-do-not-share")
+           # A private ancillary chunk: lowercase first letter = decoders skip it.
+           + chunk(b"prVt", b"PASSENGER-PAYLOAD-" + b"A" * 64)
+           + chunk(b"IDAT", zlib.compress(raw, 9))
+           + chunk(b"IEND", b"")
+           # Appended after end-of-image. Structurally invisible; perfectly persistent.
+           + b"TRAILER:" + b"B" * 256)
+
+    path = OUT / "png-with-passengers.png"
+    path.write_bytes(png)
+    print(f"  {path.name:<28} {len(png):>7} bytes  {w}x{h} "
+          f"(2 tEXt, 1 private chunk, {8 + 256} trailing bytes)")
+
+
 if __name__ == "__main__":
     OUT.mkdir(parents=True, exist_ok=True)
     print("generating corpus specimens:")
@@ -101,4 +142,5 @@ if __name__ == "__main__":
     gen_rgb_photo()
     gen_gray16()
     gen_opaque_rgba()
+    gen_png_with_passengers()
     print("done")

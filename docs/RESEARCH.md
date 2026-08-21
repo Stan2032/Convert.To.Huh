@@ -891,6 +891,105 @@ for the kind of claim that ends up in a registry entry — which is exactly why
 every PUID here carries `puid_verified = false`.
 
 
+## 12. Content Disarm and Reconstruction
+
+The direction ADR-0010 pivots to. Recorded after the cipher premise was refuted
+by measurement, so this section post-dates most of the dossier.
+
+### 12.1 What CDR is, and why conversion already implements it
+
+CDR does not scan for threats — it assumes it cannot recognise them. Instead it
+**parses a file to its content and writes a fresh container**, so anything that
+was not part of the content simply does not make the trip. No signature
+database, no heuristics, no arms race.
+
+That is exactly what `path_channel.rs` measured: seven lossless routes, one
+byte-identical output. The property that made the path useless as key material
+is precisely the property CDR needs.
+
+**Design implication:** the sanitizer is not a new subsystem. It is the existing
+decode/encode pipeline with the target format pinned to the source format, plus
+a report. `core/src/sanitize.rs` is ~200 lines because the machinery already
+existed.
+
+### 12.2 Where a passenger hides in a perfectly valid file
+
+Measured against `corpus/raster/png-with-passengers.png`:
+
+| Vector | Bytes | Why it survives ordinary handling |
+|---|---|---|
+| `tEXt` / `zTXt` / `iTXt` chunks | 32, 54 | Free-form metadata. Rendered by nothing, copied by everything. |
+| Private ancillary chunk (`prVt`) | 94 | PNG's case convention makes unrecognised lowercase chunks *skippable by design*. A decoder that ignores it is spec-compliant. |
+| Data appended after `IEND` | 264 | Structurally invisible. The file is bit-for-bit valid to every viewer. |
+
+The third is the one worth internalising: **a file can be entirely valid and
+still carry an arbitrary payload.** Nothing is malformed. Every decoder is
+behaving correctly. This is why validation is not sanitization — a validator
+would pass this file, because it *is* valid.
+
+Sanitizing it removes 444 bytes across 4 passengers at SSIM 1.0000.
+
+### 12.3 The documented weaknesses of existing CDR — two of which we answer
+
+From vendor and critic sources (OPSWAT, Deep Instinct, Fortinet, Wikipedia):
+
+1. **Images are largely uncovered.** CDR is built around documents; the
+   commonly cited gap is that it "cannot sanitize portable executable files and
+   most image files," which is called out as a source of false confidence.
+2. **Sanitized output is sometimes unusable, with no explanation.** Removing
+   exploitable content can leave a document that renders but no longer serves
+   its purpose — and the tool does not say what it took.
+3. **The sanitizer is itself attack surface.** Parsing hostile input is the
+   whole job, so the parser is the target. Commercial CDR has been shown
+   vulnerable.
+4. Encrypted or password-protected files cannot be sanitized without the key.
+5. Archives are handled poorly or not recursively.
+
+**Design implications, one per finding:**
+
+- (1) is a *gap we are already in*. Raster conversion is where this project
+  started; images are the covered case, not the missing one.
+- (2) is answered directly by the loss vector. `properties destroyed: metadata`
+  and an itemised passenger list is the report the complaint asks for. This is
+  the clearest instance yet of the project's thesis paying off somewhere it was
+  not designed for.
+- (3) hardens ADR-0003 rather than complicating it. Engine hostility was already
+  the assumption; sanitization makes isolation load-bearing instead of
+  precautionary, and moves `sandbox-warden` onto the critical path.
+- (4) and (5) are honest scope limits and should be refused explicitly rather
+  than silently passed through. `huh sanitize` already refuses unidentifiable
+  input for this reason: passing bytes through unchanged is the one genuinely
+  dangerous outcome for a tool whose users believe it cleans files.
+
+### 12.4 Two properties a sanitizer must have that a converter need not
+
+- **Idempotence.** Sanitizing a clean file must be a no-op. If a second pass
+  changes bytes, the output was never canonical, and "sanitized" means nothing.
+  Enforced by `sanitize::tests::sanitizing_is_idempotent`.
+- **Content preservation as a hard gate.** Destroying the file removes every
+  passenger and is worthless. `huh sanitize` exits non-zero when SSIM shows the
+  rebuild was unfaithful, so "safe but ruined" is a failure rather than a pass.
+
+### 12.5 Open question: what does canonicalization guarantee?
+
+We have measured that six raster formats through one engine converge. That is
+evidence, not a theorem, and the honest scope of the claim is narrow:
+
+- It holds for **content this engine parses**. A format with encoder freedom
+  (JPEG quantization tables, PNG filter selection) could in principle carry
+  information through a rebuild if the encoder preserved the input's choices.
+  `image-rs` does not — it re-derives them — but that is an implementation
+  property, not a guarantee, and it is unversioned.
+- It says nothing about formats with **executable or scripted content** (PDF
+  actions, Office macros, SVG scripts), where "content" and "code" are not
+  separable by parsing alone.
+
+**Design implication:** canonicalization must be a *tested property per format
+pair*, recorded in the registry like any other capability claim, not an
+architectural assumption. The same discipline as `verified` edges, for the same
+reason — see `docs/RESEARCH.md §3.5`.
+
+
 ## Sources
 
 - [Convert To It](https://converttoit.com/) · [Grokipedia: Convert to it](https://grokipedia.com/page/Convert_to_it) · [Convert To It API](https://converttoit.com/api)

@@ -6,9 +6,21 @@ you are about to touch.
 ## What this project is
 
 A universal file converter built as a **planner over a typed graph**, not a
-lookup table of format pairs. The distinguishing capability is cross-domain
-conversion — `AVI → PDF` — treated as an underspecified question with several
-good answers rather than as an error.
+lookup table of format pairs, with two capabilities that follow from the same
+machinery:
+
+1. **Cross-domain conversion** — `AVI → PDF` — treated as an underspecified
+   question with several good answers rather than as an error.
+2. **Sanitization that proves what it removed** (ADR-0010). Lossless conversion
+   is canonicalizing: it rebuilds a file from parsed content and erases
+   everything else, measurably. The loss vector then reports, property by
+   property, what did not survive.
+
+The second was not planned. It came out of testing this repository's original
+premise — deriving an encryption key from the conversion path — which
+measurement refuted: seven different lossless routes produce byte-identical
+output, so the path cannot be key material. The property that killed the cipher
+idea is exactly what a sanitizer needs. See ADR-0010 and `RESEARCH.md §12`.
 
 **Current state: design and scaffolding. Nothing converts yet, on purpose.**
 Every capability edge in the registry is `claimed`, and the planner ignores

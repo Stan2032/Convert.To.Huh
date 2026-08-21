@@ -43,7 +43,7 @@ fn main() {
     ];
 
     println!("=== Q1: do DIFFERENT LOSSLESS PATHS give DIFFERENT BYTES? ===");
-    println!("{:<52} {:>7} {:<18} {}", "PATH", "BYTES", "SHA256[..16]", "SSIM");
+    println!("{:<52} {:>7} {:<18} SSIM", "PATH", "BYTES", "SHA256[..16]");
     let mut digests = std::collections::BTreeMap::new();
     for p in &lossless {
         match run(&src, p, &b) {

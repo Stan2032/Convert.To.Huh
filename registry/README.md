@@ -16,17 +16,26 @@ Schema: `docs/specs/registry-schema.md`.
 
 ## Current state — read this before assuming anything works
 
-**Every edge in this registry is `status = "claimed"`. Zero are `verified`.**
+**10 edges are `verified`; the rest are `claimed`.** The planner ignores
+`claimed` edges by default (`registry-schema.md`, rule 6), so only the verified
+subset can actually be routed.
 
-The planner ignores `claimed` edges by default (`registry-schema.md`, rule 6),
-which means the system as committed converts **nothing**. That is deliberate and
-correct: a claim copied from a README is not a capability
-(`docs/RESEARCH.md §3.5`). Edges become real when `capability-cartographer`
-runs them against a corpus specimen and records a measurement.
+Every verified edge belongs to `image-rs` and was promoted the same way: run
+against corpus specimens, measured with SSIM and per-property observation, and
+the numbers written into a `measured` block. `tools/verify_edges.sh`
+regenerates them. The claimed edges — libvips, FFmpeg, LibreOffice,
+whisper.cpp — are still what they always were: plausible statements copied from
+documentation, which is not a capability (`docs/RESEARCH.md §3.5`).
 
-PUIDs, by contrast, **are** now verified. All 8 were checked against PRONOM's
-XML API on 2026-08-20 with `tools/verify_pronom.py`, and all 8 were correct —
-but doing it properly surfaced two things that recall would have missed: PRONOM
+The gap between those two groups is the whole point of the `verification`
+field. Two of the four errors this registry's validator has caught were in
+hand-written loss vectors that looked entirely reasonable.
+
+PUIDs are verified too — 11 of 12, checked against PRONOM's XML API with
+`tools/verify_pronom.py`, all correct. (WebP is the exception: PRONOM's search
+returned nothing for it, so the field is deliberately empty rather than filled
+with a plausible guess — see `registry/formats/image-webp.toml`.) Doing it
+properly surfaced two things recall would have missed: PRONOM
 identifies format *versions* rather than formats (so a PUID is a representative
 version, not an equivalence), and PRONOM's signature syntax is strictly more
 expressive than ours. Both are recorded per-format in `[notes]` and in
