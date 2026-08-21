@@ -1040,6 +1040,79 @@ architectural assumption. The same discipline as `verified` edges, for the same
 reason — see `docs/RESEARCH.md §3.5`.
 
 
+## 13. Cross-engine measurement — the first finding the registry produced
+
+ADR-0011 predicted that recording loss per `(engine, from, to)` rather than per
+`(from, to)` would matter. It does, and more than expected.
+
+### 13.1 Two engines, one conversion, incompatible results
+
+`core/examples/cross_engine.rs` runs `PNG → JPEG` at nominal quality 85 through
+**image-rs** (Rust, in-process) and **libvips 8.15.1** (C, subprocess), scoring
+both against the original.
+
+| Specimen | vips bytes | image-rs bytes | vips SSIM | image-rs SSIM |
+|---|---|---|---|---|
+| gray16 | 836 | 1,023 | 0.9985 | 0.9989 |
+| rgb-photo | 4,275 | 5,506 | 0.9950 | 0.9956 |
+| rgba-opaque | 1,211 | 1,290 | 0.9967 | 0.9970 |
+| **rgba-gradient** | 1,848 | 2,833 | **0.6022** | **0.9950** |
+
+Every specimen agrees closely except the one with **real transparency**, where
+the gap is enormous. Both engines record `alpha = lost`, which is true for both,
+and both are doing something entirely different.
+
+### 13.2 The mechanism, confirmed by pixel arithmetic
+
+Sampling row 64 along an alpha ramp that runs opaque → transparent:
+
+| x | original RGB / alpha | libvips | image-rs |
+|---|---|---|---|
+| 0 | (0,128,128) α=255 | (1,127,126) | (0,130,128) |
+| 64 | (128,128,128) α=126 | (64,64,64) | (128,128,126) |
+| 127 | (255,128,128) α=0 | (0,0,0) | (252,128,126) |
+
+**libvips composites onto black**, scaling RGB by alpha: 128 × 126/255 ≈ 63,
+measured 64. **image-rs discards the alpha channel** and keeps RGB untouched:
+predicted 128, measured 128. Both match prediction to within JPEG quantisation
+noise.
+
+In practice: convert a logo with a transparent background, and libvips hands you
+a **black box** while image-rs hands you whatever colour was hiding beneath the
+transparency. Neither is wrong. Neither is documented at the point of use.
+
+### 13.3 The honest caveat about that SSIM gap
+
+The SSIM comparison is against the **un-composited** original RGB, which favours
+image-rs by construction. Composite the original onto black first and libvips
+would score better. The pixel table is the unambiguous evidence; the SSIM column
+is the metric encoding a preference — exactly the Polyglot finding in §1.3, met
+again from a different direction.
+
+**Design implication:** report the flattening policy, never a winner.
+
+### 13.4 `alpha = lost` is true and insufficient — a schema gap
+
+This is the important consequence. Two engines carry identical loss vectors and
+produce visually incompatible output. A user routing on the registry would be
+badly surprised.
+
+`lost` says the property is gone. It does not say **what replaced it**, and for
+alpha that is the whole question. The vocabulary needs a qualifier — a
+`flatten_policy` of `composite_black`, `composite_white`, `discard_channel` or
+`premultiplied` — recorded per edge and measured, not assumed.
+
+This is a genuine gap in ADR-0004's model, found by measurement rather than
+argument, and it is the first thing this dataset has produced that its own
+designers did not already know. Recorded here rather than fixed immediately:
+changing the closed property vocabulary is an ADR-level decision, and one
+specimen through two engines is grounds for a hypothesis, not a schema change.
+
+**Next:** widen to more specimens and a third engine (Ghostscript or ImageMagick)
+before proposing the vocabulary change. If the policy split holds, ADR-0004
+needs amending.
+
+
 ## Sources
 
 - [Convert To It](https://converttoit.com/) · [Grokipedia: Convert to it](https://grokipedia.com/page/Convert_to_it) · [Convert To It API](https://converttoit.com/api)
