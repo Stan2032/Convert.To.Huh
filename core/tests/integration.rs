@@ -227,6 +227,7 @@ fn edge(from: &str, to: &str, loss: &[(&str, LossValue)], ms: u64) -> Edge {
         from_kind: "Raster".into(),
         to_kind: "Raster".into(),
         loss: v,
+        loss_policy: Default::default(),
         generational: false,
         base_ms: ms,
         requires: vec![],

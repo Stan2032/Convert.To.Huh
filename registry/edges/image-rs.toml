@@ -10,7 +10,7 @@ from_kind = "Raster"
 to_kind   = "Raster"
 
 [edge.loss]
-alpha         = "lost"
+alpha         = { value = "lost", policy = "discard_channel" }
 color_depth   = { value = "degraded", from = 16, to = 8 }
 geometry      = "preserved"
 color_profile = "preserved"

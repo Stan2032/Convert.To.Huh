@@ -390,6 +390,16 @@
       ]
     },
     {
+      "id": "imagemagick",
+      "name": "ImageMagick",
+      "version_pin": ">=6.9,<8",
+      "license": "ImageMagick",
+      "build_profiles": [
+        "lgpl",
+        "gpl"
+      ]
+    },
+    {
       "id": "libreoffice",
       "name": "LibreOffice (headless, via unoserver)",
       "version_pin": ">=25.2,<26",
@@ -486,6 +496,9 @@
         "color_profile": "preserved",
         "geometry": "preserved",
         "metadata": "lost"
+      },
+      "loss_policy": {
+        "alpha": "discard_channel"
       },
       "verification": "verified",
       "generational": true
@@ -711,7 +724,7 @@
   ],
   "counts": {
     "formats": 12,
-    "engines": 6,
+    "engines": 7,
     "edges_total": 17,
     "edges_verified": 10,
     "edges_claimed": 7

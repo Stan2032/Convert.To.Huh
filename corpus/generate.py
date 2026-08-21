@@ -135,6 +135,24 @@ def gen_png_with_passengers(w=48, h=48):
           f"(2 tEXt, 1 private chunk, {8 + 256} trailing bytes)")
 
 
+def gen_alpha_hard_edge(w=64, h=64):
+    """Fully opaque beside fully transparent, with no ramp between.
+
+    A companion to rgba-gradient for testing alpha FLATTENING POLICY. The
+    gradient shows how an engine treats partial alpha; this shows how it treats
+    the fully-transparent case, with no interpolation to confuse the reading.
+    Both specimens are needed to establish that a policy belongs to the engine
+    rather than to one image (docs/RESEARCH.md §13).
+    """
+    rows = []
+    for _ in range(h):
+        row = bytearray()
+        for x in range(w):
+            row += bytes((220, 40, 40, 255 if x < w // 2 else 0))
+        rows.append(bytes(row))
+    write_png(OUT / "rgba-hard-edge.png", w, h, 8, 6, rows)
+
+
 if __name__ == "__main__":
     OUT.mkdir(parents=True, exist_ok=True)
     print("generating corpus specimens:")
@@ -143,4 +161,5 @@ if __name__ == "__main__":
     gen_gray16()
     gen_opaque_rgba()
     gen_png_with_passengers()
+    gen_alpha_hard_edge()
     print("done")

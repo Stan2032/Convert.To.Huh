@@ -139,6 +139,10 @@ pub struct Edge {
     pub from_kind: String,
     pub to_kind: String,
     pub loss: LossVector,
+    /// Per-property qualifier saying WHAT REPLACED a lost property. ADR-0012.
+    /// `lost` alone is true but insufficient: libvips composites alpha onto
+    /// black while image-rs discards the channel, and both are "lost".
+    pub loss_policy: BTreeMap<String, String>,
     pub generational: bool,
     pub base_ms: u64,
     pub requires: Vec<String>,
@@ -160,8 +164,11 @@ pub struct Registry {
     pub edges: Vec<Edge>,
 }
 
-fn parse_loss(raw: &BTreeMap<String, toml::Value>) -> (LossVector, bool) {
+fn parse_loss(
+    raw: &BTreeMap<String, toml::Value>,
+) -> (LossVector, BTreeMap<String, String>, bool) {
     let mut v = LossVector::new();
+    let mut policy = BTreeMap::new();
     let mut generational = false;
     for (k, val) in raw {
         if k == "generational" {
@@ -171,7 +178,12 @@ fn parse_loss(raw: &BTreeMap<String, toml::Value>) -> (LossVector, bool) {
         // A value is either a bare string or a table with a `value` key.
         let s = match val {
             toml::Value::String(s) => Some(s.as_str()),
-            toml::Value::Table(t) => t.get("value").and_then(|x| x.as_str()),
+            toml::Value::Table(t) => {
+                if let Some(pol) = t.get("policy").and_then(|x| x.as_str()) {
+                    policy.insert(k.clone(), pol.to_string());
+                }
+                t.get("value").and_then(|x| x.as_str())
+            }
             _ => None,
         };
         let lv = match s {
@@ -183,7 +195,7 @@ fn parse_loss(raw: &BTreeMap<String, toml::Value>) -> (LossVector, bool) {
         };
         v.set(k, lv);
     }
-    (v, generational)
+    (v, policy, generational)
 }
 
 impl Registry {
@@ -210,7 +222,7 @@ impl Registry {
         for p in read_toml_dir(&reg.join("edges"))? {
             let f: EdgeFile = toml::from_str(&p.1).map_err(|e| format!("{}: {e}", p.0))?;
             for r in f.edge {
-                let (loss, generational) = parse_loss(&r.loss);
+                let (loss, loss_policy, generational) = parse_loss(&r.loss);
                 edges.push(Edge {
                     engine: r.engine,
                     op: r.op,
@@ -219,6 +231,7 @@ impl Registry {
                     from_kind: r.from_kind,
                     to_kind: r.to_kind,
                     loss,
+                    loss_policy,
                     generational,
                     base_ms: r.cost.base_ms,
                     requires: r.constraints.requires,

@@ -57,6 +57,11 @@ pub struct EdgeOut {
     pub operation: String,
     /// Per-property outcome. Absent property = not applicable to this conversion.
     pub loss: std::collections::BTreeMap<String, String>,
+    /// What REPLACED a lost property, where engines differ (ADR-0012).
+    /// `alpha: composite_black` and `alpha: discard_channel` are both `lost`
+    /// and produce visually incompatible output.
+    #[serde(skip_serializing_if = "std::collections::BTreeMap::is_empty")]
+    pub loss_policy: std::collections::BTreeMap<String, String>,
     /// `verified` means measured against a specimen. `claimed` means asserted
     /// and NOT yet tested — consumers should treat the two differently.
     pub verification: String,
@@ -157,6 +162,7 @@ pub fn build(reg: &Registry) -> Dataset {
             engine: e.engine.clone(),
             operation: e.op.clone(),
             loss: e.loss.0.iter().map(|(k, v)| (k.clone(), v.as_str().to_string())).collect(),
+            loss_policy: e.loss_policy.clone(),
             verification: e.status.clone(),
             generational: e.generational,
         })

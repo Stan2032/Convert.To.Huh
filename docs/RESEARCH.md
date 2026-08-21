@@ -1108,9 +1108,34 @@ designers did not already know. Recorded here rather than fixed immediately:
 changing the closed property vocabulary is an ADR-level decision, and one
 specimen through two engines is grounds for a hypothesis, not a schema change.
 
-**Next:** widen to more specimens and a third engine (Ghostscript or ImageMagick)
-before proposing the vocabulary change. If the policy split holds, ADR-0004
-needs amending.
+### 13.5 Third engine, second specimen: the split is real
+
+Done 2026-08-21. **ImageMagick 6.9.12** added as a third independent parser
+family, and a second specimen (`corpus/raster/rgba-hard-edge.png` — fully opaque
+beside fully transparent, no ramp) added so a policy cannot be an artifact of
+one image.
+
+| Engine | Transparent pixel becomes | Policy |
+|---|---|---|
+| libvips 8.15.1 | `(0,0,0)` | `composite_black` |
+| image-rs 0.25 | `(220,40,41)` — original colour | `discard_channel` |
+| ImageMagick 6.9.12 | `(220,40,41)` — original colour | `discard_channel` |
+
+Identical results on both specimens, so **the policy belongs to the engine, not
+the image**. libvips is the outlier, two to one.
+
+That was sufficient grounds to amend the schema — see **ADR-0012**, which adds
+an optional `policy` qualifier to a loss value, emitted in the dataset as
+`loss_policy`. The qualifier is deliberately descriptive and stays out of the
+composition algebra: once alpha is gone, a later hop's policy is irrelevant, and
+pretending otherwise would corrupt ADR-0004's join.
+
+**Design implication, and the honest limit:** this may be *configuration* rather
+than engine identity. libvips can probably be told to discard instead of
+composite. If most callers change it, the field records a default rather than a
+behaviour and should record the invocation instead. That is the first thing to
+test when a fourth engine is added, and it is written into ADR-0012's
+"what would change our mind".
 
 
 ## Sources
