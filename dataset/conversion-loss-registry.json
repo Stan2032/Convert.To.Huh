@@ -1,0 +1,719 @@
+{
+  "schema_version": "1.0.0",
+  "registry_version": "2026.08.0-alpha",
+  "license": "CC0-1.0",
+  "source": "https://github.com/Stan2032/Convert.To.Huh",
+  "properties": [
+    {
+      "id": "geometry",
+      "description": "Pixel or sample dimensions, and aspect ratio."
+    },
+    {
+      "id": "color_depth",
+      "description": "Bits per channel, and the size of the representable colour set."
+    },
+    {
+      "id": "color_profile",
+      "description": "ICC profile or colour space; determines whether colours reproduce accurately."
+    },
+    {
+      "id": "alpha",
+      "description": "Per-pixel transparency. Note the difference between a format supporting alpha and a file using it."
+    },
+    {
+      "id": "time",
+      "description": "Temporal structure: duration, frame timing, animation, synchronisation."
+    },
+    {
+      "id": "layers",
+      "description": "Independently addressable planes or objects that have not been flattened together."
+    },
+    {
+      "id": "text_as_text",
+      "description": "Whether text remains selectable, searchable and machine-readable, rather than becoming a picture of text."
+    },
+    {
+      "id": "structure",
+      "description": "Document hierarchy: headings, lists, tables, reading order."
+    },
+    {
+      "id": "metadata",
+      "description": "Descriptive and embedded data: authorship, timestamps, EXIF, GPS, comments."
+    },
+    {
+      "id": "fonts",
+      "description": "Embedded font programs, and whether glyphs render as the author intended."
+    },
+    {
+      "id": "interactivity",
+      "description": "Links, form fields, scripts, and other active behaviour."
+    },
+    {
+      "id": "audio_channels",
+      "description": "Channel count and layout, e.g. stereo or surround."
+    },
+    {
+      "id": "sample_rate",
+      "description": "Audio samples per second."
+    },
+    {
+      "id": "bit_depth",
+      "description": "Bits per audio sample."
+    },
+    {
+      "id": "precision",
+      "description": "Numeric precision of stored values, e.g. float versus integer."
+    },
+    {
+      "id": "topology",
+      "description": "Mesh connectivity: which vertices form which faces."
+    },
+    {
+      "id": "materials",
+      "description": "Surface appearance: textures, shaders, material assignments."
+    },
+    {
+      "id": "rigging",
+      "description": "Skeleton, joints, weights and animation bindings."
+    },
+    {
+      "id": "provenance",
+      "description": "Recorded history of the file's origin and prior processing."
+    }
+  ],
+  "formats": [
+    {
+      "id": "application/pdf",
+      "name": "Portable Document Format",
+      "kinds": [
+        "PageLayout",
+        "Text",
+        "Raster",
+        "Vector"
+      ],
+      "extensions": [
+        "pdf"
+      ],
+      "mime_types": [
+        "application/pdf"
+      ],
+      "preserves": [
+        "geometry",
+        "color_profile",
+        "text_as_text",
+        "fonts",
+        "metadata",
+        "interactivity",
+        "precision"
+      ],
+      "puid": "fmt/276",
+      "puid_verified": true
+    },
+    {
+      "id": "application/zip",
+      "name": "ZIP archive",
+      "kinds": [
+        "Container"
+      ],
+      "extensions": [
+        "zip"
+      ],
+      "mime_types": [
+        "application/zip"
+      ],
+      "preserves": [
+        "metadata",
+        "structure"
+      ],
+      "puid": "x-fmt/263",
+      "puid_verified": true
+    },
+    {
+      "id": "audio/wav",
+      "name": "Waveform Audio File Format",
+      "kinds": [
+        "AudioPCM"
+      ],
+      "extensions": [
+        "wav",
+        "wave"
+      ],
+      "mime_types": [
+        "audio/wav",
+        "audio/x-wav",
+        "audio/vnd.wave"
+      ],
+      "preserves": [
+        "audio_channels",
+        "sample_rate",
+        "bit_depth",
+        "time",
+        "metadata"
+      ],
+      "puid": "fmt/141",
+      "puid_verified": true
+    },
+    {
+      "id": "image/bmp",
+      "name": "Windows Bitmap",
+      "kinds": [
+        "Raster"
+      ],
+      "extensions": [
+        "bmp",
+        "dib"
+      ],
+      "mime_types": [
+        "image/bmp",
+        "image/x-ms-bmp"
+      ],
+      "preserves": [
+        "geometry",
+        "color_depth",
+        "color_profile",
+        "alpha",
+        "metadata"
+      ],
+      "puid": "fmt/116",
+      "puid_verified": true
+    },
+    {
+      "id": "image/gif",
+      "name": "Graphics Interchange Format",
+      "kinds": [
+        "Raster"
+      ],
+      "extensions": [
+        "gif"
+      ],
+      "mime_types": [
+        "image/gif"
+      ],
+      "preserves": [
+        "geometry",
+        "alpha",
+        "time",
+        "metadata"
+      ],
+      "puid": "fmt/4",
+      "puid_verified": true
+    },
+    {
+      "id": "image/jpeg",
+      "name": "JPEG (JFIF)",
+      "kinds": [
+        "Raster"
+      ],
+      "extensions": [
+        "jpg",
+        "jpeg",
+        "jpe",
+        "jfif"
+      ],
+      "mime_types": [
+        "image/jpeg"
+      ],
+      "preserves": [
+        "geometry",
+        "color_depth",
+        "color_profile",
+        "metadata"
+      ],
+      "puid": "fmt/43",
+      "puid_verified": true
+    },
+    {
+      "id": "image/png",
+      "name": "Portable Network Graphics",
+      "kinds": [
+        "Raster"
+      ],
+      "extensions": [
+        "png"
+      ],
+      "mime_types": [
+        "image/png"
+      ],
+      "preserves": [
+        "geometry",
+        "color_depth",
+        "color_profile",
+        "alpha",
+        "metadata"
+      ],
+      "puid": "fmt/13",
+      "puid_verified": true
+    },
+    {
+      "id": "image/svg+xml",
+      "name": "Scalable Vector Graphics",
+      "kinds": [
+        "Vector",
+        "Raster",
+        "Text"
+      ],
+      "extensions": [
+        "svg"
+      ],
+      "mime_types": [
+        "image/svg+xml"
+      ],
+      "preserves": [
+        "geometry",
+        "precision",
+        "color_profile",
+        "alpha",
+        "text_as_text",
+        "structure",
+        "metadata",
+        "interactivity"
+      ],
+      "puid": "fmt/92",
+      "puid_verified": true
+    },
+    {
+      "id": "image/tiff",
+      "name": "Tagged Image File Format",
+      "kinds": [
+        "Raster"
+      ],
+      "extensions": [
+        "tif",
+        "tiff"
+      ],
+      "mime_types": [
+        "image/tiff"
+      ],
+      "preserves": [
+        "geometry",
+        "color_depth",
+        "color_profile",
+        "alpha",
+        "layers",
+        "metadata"
+      ],
+      "puid": "fmt/353",
+      "puid_verified": true
+    },
+    {
+      "id": "image/webp",
+      "name": "WebP",
+      "kinds": [
+        "Raster"
+      ],
+      "extensions": [
+        "webp"
+      ],
+      "mime_types": [
+        "image/webp"
+      ],
+      "preserves": [
+        "geometry",
+        "color_depth",
+        "color_profile",
+        "alpha",
+        "time",
+        "metadata"
+      ],
+      "puid_verified": false
+    },
+    {
+      "id": "text/plain",
+      "name": "Plain text",
+      "kinds": [
+        "Text"
+      ],
+      "extensions": [
+        "txt",
+        "text"
+      ],
+      "mime_types": [
+        "text/plain"
+      ],
+      "preserves": [
+        "text_as_text"
+      ],
+      "puid": "x-fmt/111",
+      "puid_verified": true
+    },
+    {
+      "id": "video/x-msvideo",
+      "name": "Audio Video Interleave",
+      "kinds": [
+        "VideoStream",
+        "AudioPCM"
+      ],
+      "extensions": [
+        "avi"
+      ],
+      "mime_types": [
+        "video/x-msvideo",
+        "video/avi"
+      ],
+      "preserves": [
+        "geometry",
+        "time",
+        "audio_channels",
+        "sample_rate",
+        "bit_depth",
+        "metadata"
+      ],
+      "puid": "fmt/5",
+      "puid_verified": true
+    }
+  ],
+  "engines": [
+    {
+      "id": "ffmpeg",
+      "name": "FFmpeg",
+      "version_pin": ">=8.0,<10",
+      "license": "LGPL-2.1-or-later",
+      "build_profiles": [
+        "lgpl"
+      ]
+    },
+    {
+      "id": "ghostscript",
+      "name": "Ghostscript",
+      "version_pin": ">=10.04,<11",
+      "license": "AGPL-3.0-or-later",
+      "build_profiles": []
+    },
+    {
+      "id": "image-rs",
+      "name": "image-rs (Rust `image` crate)",
+      "version_pin": ">=0.25,<0.26",
+      "license": "MIT",
+      "build_profiles": [
+        "lgpl",
+        "gpl"
+      ]
+    },
+    {
+      "id": "libreoffice",
+      "name": "LibreOffice (headless, via unoserver)",
+      "version_pin": ">=25.2,<26",
+      "license": "MPL-2.0",
+      "build_profiles": [
+        "gpl"
+      ]
+    },
+    {
+      "id": "libvips",
+      "name": "libvips",
+      "version_pin": ">=8.15,<9",
+      "license": "LGPL-2.1-or-later",
+      "build_profiles": [
+        "lgpl",
+        "gpl"
+      ]
+    },
+    {
+      "id": "whisper.cpp",
+      "name": "whisper.cpp",
+      "version_pin": ">=1.7,<2",
+      "license": "MIT",
+      "build_profiles": [
+        "lgpl",
+        "gpl"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "from": "video/x-msvideo",
+      "to": "audio/wav",
+      "from_kind": "VideoStream",
+      "to_kind": "AudioPCM",
+      "engine": "ffmpeg",
+      "operation": "Extract",
+      "loss": {
+        "audio_channels": "preserved",
+        "bit_depth": "preserved",
+        "geometry": "lost",
+        "metadata": "degraded",
+        "sample_rate": "preserved",
+        "time": "preserved"
+      },
+      "verification": "claimed",
+      "generational": false
+    },
+    {
+      "from": "audio/wav",
+      "to": "audio/wav",
+      "from_kind": "AudioPCM",
+      "to_kind": "AudioPCM",
+      "engine": "ffmpeg",
+      "operation": "Transform",
+      "loss": {
+        "audio_channels": "degraded",
+        "bit_depth": "preserved",
+        "metadata": "lost",
+        "sample_rate": "degraded",
+        "time": "preserved"
+      },
+      "verification": "claimed",
+      "generational": false
+    },
+    {
+      "from": "video/x-msvideo",
+      "to": "image/png",
+      "from_kind": "VideoStream",
+      "to_kind": "Raster",
+      "engine": "ffmpeg",
+      "operation": "Extract",
+      "loss": {
+        "audio_channels": "lost",
+        "color_profile": "degraded",
+        "geometry": "preserved",
+        "metadata": "lost",
+        "sample_rate": "lost",
+        "time": "lost"
+      },
+      "verification": "claimed",
+      "generational": false
+    },
+    {
+      "from": "image/png",
+      "to": "image/jpeg",
+      "from_kind": "Raster",
+      "to_kind": "Raster",
+      "engine": "image-rs",
+      "operation": "Transcode",
+      "loss": {
+        "alpha": "lost",
+        "color_depth": "degraded",
+        "color_profile": "preserved",
+        "geometry": "preserved",
+        "metadata": "lost"
+      },
+      "verification": "verified",
+      "generational": true
+    },
+    {
+      "from": "image/jpeg",
+      "to": "image/png",
+      "from_kind": "Raster",
+      "to_kind": "Raster",
+      "engine": "image-rs",
+      "operation": "Transcode",
+      "loss": {
+        "color_depth": "preserved",
+        "color_profile": "preserved",
+        "geometry": "preserved",
+        "metadata": "lost"
+      },
+      "verification": "verified",
+      "generational": false
+    },
+    {
+      "from": "image/png",
+      "to": "image/tiff",
+      "from_kind": "Raster",
+      "to_kind": "Raster",
+      "engine": "image-rs",
+      "operation": "Transcode",
+      "loss": {
+        "alpha": "preserved",
+        "color_depth": "preserved",
+        "color_profile": "preserved",
+        "geometry": "preserved",
+        "metadata": "lost"
+      },
+      "verification": "verified",
+      "generational": false
+    },
+    {
+      "from": "image/png",
+      "to": "image/webp",
+      "from_kind": "Raster",
+      "to_kind": "Raster",
+      "engine": "image-rs",
+      "operation": "Transcode",
+      "loss": {
+        "alpha": "preserved",
+        "color_depth": "degraded",
+        "color_profile": "preserved",
+        "geometry": "preserved",
+        "metadata": "lost"
+      },
+      "verification": "verified",
+      "generational": false
+    },
+    {
+      "from": "image/png",
+      "to": "image/gif",
+      "from_kind": "Raster",
+      "to_kind": "Raster",
+      "engine": "image-rs",
+      "operation": "Transcode",
+      "loss": {
+        "alpha": "degraded",
+        "color_depth": "lost",
+        "geometry": "preserved",
+        "metadata": "lost"
+      },
+      "verification": "verified",
+      "generational": false
+    },
+    {
+      "from": "image/png",
+      "to": "image/bmp",
+      "from_kind": "Raster",
+      "to_kind": "Raster",
+      "engine": "image-rs",
+      "operation": "Transcode",
+      "loss": {
+        "alpha": "preserved",
+        "color_depth": "degraded",
+        "color_profile": "preserved",
+        "geometry": "preserved",
+        "metadata": "lost"
+      },
+      "verification": "verified",
+      "generational": false
+    },
+    {
+      "from": "image/gif",
+      "to": "image/png",
+      "from_kind": "Raster",
+      "to_kind": "Raster",
+      "engine": "image-rs",
+      "operation": "Transcode",
+      "loss": {
+        "alpha": "preserved",
+        "color_depth": "preserved",
+        "geometry": "preserved",
+        "metadata": "lost"
+      },
+      "verification": "verified",
+      "generational": false
+    },
+    {
+      "from": "image/tiff",
+      "to": "image/png",
+      "from_kind": "Raster",
+      "to_kind": "Raster",
+      "engine": "image-rs",
+      "operation": "Transcode",
+      "loss": {
+        "alpha": "preserved",
+        "color_depth": "preserved",
+        "color_profile": "preserved",
+        "geometry": "preserved",
+        "metadata": "lost"
+      },
+      "verification": "verified",
+      "generational": false
+    },
+    {
+      "from": "image/webp",
+      "to": "image/png",
+      "from_kind": "Raster",
+      "to_kind": "Raster",
+      "engine": "image-rs",
+      "operation": "Transcode",
+      "loss": {
+        "alpha": "preserved",
+        "color_depth": "preserved",
+        "color_profile": "preserved",
+        "geometry": "preserved",
+        "metadata": "lost"
+      },
+      "verification": "verified",
+      "generational": false
+    },
+    {
+      "from": "image/bmp",
+      "to": "image/png",
+      "from_kind": "Raster",
+      "to_kind": "Raster",
+      "engine": "image-rs",
+      "operation": "Transcode",
+      "loss": {
+        "alpha": "preserved",
+        "color_depth": "preserved",
+        "color_profile": "preserved",
+        "geometry": "preserved",
+        "metadata": "lost"
+      },
+      "verification": "verified",
+      "generational": false
+    },
+    {
+      "from": "image/png",
+      "to": "image/jpeg",
+      "from_kind": "Raster",
+      "to_kind": "Raster",
+      "engine": "libvips",
+      "operation": "Transcode",
+      "loss": {
+        "alpha": "lost",
+        "color_depth": "degraded",
+        "color_profile": "preserved",
+        "geometry": "preserved",
+        "metadata": "degraded"
+      },
+      "verification": "claimed",
+      "generational": true
+    },
+    {
+      "from": "image/jpeg",
+      "to": "image/png",
+      "from_kind": "Raster",
+      "to_kind": "Raster",
+      "engine": "libvips",
+      "operation": "Transcode",
+      "loss": {
+        "color_depth": "preserved",
+        "color_profile": "preserved",
+        "geometry": "preserved",
+        "metadata": "preserved"
+      },
+      "verification": "claimed",
+      "generational": false
+    },
+    {
+      "from": "image/png",
+      "to": "image/png",
+      "from_kind": "Raster",
+      "to_kind": "Raster",
+      "engine": "libvips",
+      "operation": "Transform",
+      "loss": {
+        "alpha": "preserved",
+        "color_depth": "preserved",
+        "color_profile": "preserved",
+        "geometry": "degraded",
+        "metadata": "preserved"
+      },
+      "verification": "claimed",
+      "generational": false
+    },
+    {
+      "from": "audio/wav",
+      "to": "text/plain",
+      "from_kind": "AudioPCM",
+      "to_kind": "Text",
+      "engine": "whisper.cpp",
+      "operation": "Synthesize",
+      "loss": {
+        "audio_channels": "lost",
+        "bit_depth": "lost",
+        "metadata": "lost",
+        "sample_rate": "lost",
+        "text_as_text": "synthesized",
+        "time": "lost"
+      },
+      "verification": "claimed",
+      "generational": false
+    }
+  ],
+  "counts": {
+    "formats": 12,
+    "engines": 6,
+    "edges_total": 17,
+    "edges_verified": 10,
+    "edges_claimed": 7
+  }
+}

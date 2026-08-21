@@ -42,6 +42,10 @@ pub struct Format {
     pub mime_types: Vec<String>,
     pub preserves: Vec<String>,
     #[serde(default)]
+    pub puid: Option<String>,
+    #[serde(default)]
+    pub puid_verified: bool,
+    #[serde(default)]
     pub signatures: Vec<Signature>,
     #[serde(default)]
     pub detection: Detection,

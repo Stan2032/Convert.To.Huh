@@ -195,6 +195,8 @@ fn fmt(id: &str, preserves: &[&str]) -> Format {
         extensions: vec![],
         mime_types: vec![],
         preserves: preserves.iter().map(|s| s.to_string()).collect(),
+        puid: None,
+        puid_verified: false,
         signatures: vec![],
         detection: Default::default(),
     }

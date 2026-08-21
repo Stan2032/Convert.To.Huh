@@ -6,6 +6,7 @@
 pub mod detect;
 pub mod engines;
 pub mod execute;
+pub mod export;
 pub mod fidelity;
 pub mod loss;
 pub mod planner;

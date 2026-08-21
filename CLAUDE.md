@@ -22,7 +22,14 @@ measurement refuted: seven different lossless routes produce byte-identical
 output, so the path cannot be key material. The property that killed the cipher
 idea is exactly what a sanitizer needs. See ADR-0010 and `RESEARCH.md §12`.
 
-**Current state: design and scaffolding. Nothing converts yet, on purpose.**
+**The deliverable is `dataset/conversion-loss-registry.json`** (ADR-0011) — a
+CC0 dataset of what each conversion destroys. Nothing publishes this; PRONOM
+says what a file *is*, nothing says what converting it *costs*. The CLI exists
+to produce and validate that data, not the other way round. Success is measured
+in verified edges, not features.
+
+**Prior art matters here.** Dangerzone and mat2 already do sanitization, better
+isolated and across more formats. Do not rebuild them — see `RESEARCH.md §12.3b`.
 Every capability edge in the registry is `claimed`, and the planner ignores
 unverified edges. Edges become real when someone runs them against a specimen
 and records a measurement.
@@ -47,7 +54,8 @@ These hold everywhere. Violating one is a bug regardless of what else works.
 |---|---|
 | `docs/RESEARCH.md` | Evidence base. Findings carry sources **and design implications**. Cited as `R§n`. |
 | `docs/ARCHITECTURE.md` | System design and the invariants above. |
-| `docs/adr/` | Nine binding decisions. Superseded by new ADRs, never edited quietly. |
+| `dataset/` | **The deliverable.** CC0 conversion-loss data, emitted by `huh export`. |
+| `docs/adr/` | Eleven binding decisions. Superseded by new ADRs, never edited quietly. |
 | `docs/specs/` | Contracts, partly machine-enforced. |
 | `registry/` | Formats, engines, edges. The core asset. |
 | `tools/` | Validators. Dependency-free, run in CI. |

@@ -5,7 +5,7 @@
 //!   huh convert <in> <out> [--quality N] [--allow-unverified] [--receipt R.json]
 //!   huh graph
 
-use huh_core::{detect, execute, planner, registry::Registry, sanitize};
+use huh_core::{detect, execute, export, planner, registry::Registry, sanitize};
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
@@ -31,7 +31,8 @@ fn usage() -> ExitCode {
            huh suggest <file> [--allow-unverified]   what can this become, and what does each cost?\n  \
            huh convert <in> <out> [--quality 1-100] [--allow-unverified] [--receipt out.json]\n  \
            huh sanitize <in> <out> [--to <format-id>] [--quality 1-100] [--report r.json]\n  \
-           huh graph\n\n\
+           huh graph\n  \
+           huh export [--out FILE]      emit the registry as a public dataset\n\n\
          Formats are registry ids, e.g. image/png, image/jpeg."
     );
     ExitCode::from(2)
@@ -325,6 +326,34 @@ fn main() -> ExitCode {
                 }
                 Err(e) => { eprintln!("sanitize failed: {e}"); ExitCode::FAILURE }
             }
+        }
+
+        "export" => {
+            let dataset = export::build(&reg);
+            let json = serde_json::to_string_pretty(&dataset).unwrap();
+            match opt(&args, "--out") {
+                Some(path) => {
+                    if let Err(e) = std::fs::write(&path, json.as_bytes()) {
+                        eprintln!("{path}: {e}");
+                        return ExitCode::FAILURE;
+                    }
+                    eprintln!(
+                        "wrote {path} — schema {}, registry {}\n  \
+                         {} formats, {} engines, {} edges ({} verified, {} claimed)\n  \
+                         licence {}",
+                        dataset.schema_version, dataset.registry_version,
+                        dataset.counts.formats, dataset.counts.engines,
+                        dataset.counts.edges_total, dataset.counts.edges_verified,
+                        dataset.counts.edges_claimed, dataset.license
+                    );
+                    if dataset.counts.edges_verified == 0 {
+                        eprintln!("\nWARNING: no verified edges. Consumers should treat \
+                                   `claimed` entries as untested assertions.");
+                    }
+                }
+                None => println!("{json}"),
+            }
+            ExitCode::SUCCESS
         }
 
         "graph" => {

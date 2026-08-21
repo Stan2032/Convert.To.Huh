@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-Ten binding decisions. An ADR constrains what may be built; if your work
+Eleven binding decisions. An ADR constrains what may be built; if your work
 requires violating one, **stop and revisit the ADR first** rather than working
 around it. Reversal means a new ADR that supersedes the old one and states what
 changed our mind — never a quiet edit.
@@ -21,6 +21,7 @@ preference wearing a decision's clothes.
 | [0008](0008-plan-execution-state-machine.md) | Plan execution is a state machine over persisted hops | accepted |
 | [0009](0009-synthesis-is-never-silent.md) | Synthesis is never silent | accepted |
 | [0010](0010-conversion-is-not-a-cipher.md) | Conversion is not a cipher; it is a canonicalizer | accepted |
+| [0011](0011-the-registry-is-the-deliverable.md) | The registry is the deliverable | accepted |
 
 ## Which ones bite most often
 
@@ -33,6 +34,9 @@ preference wearing a decision's clothes.
 - **0010** redirected the project's purpose after measurement refuted the
   original premise. It is the clearest example of the repository's habit of
   recording negative results rather than deleting them.
+- **0011** narrows that redirect again after a prior-art check found the tool
+  largely already built by others. It is what the project is *for*: read it
+  before proposing features.
 
 ## Reading order for someone new
 
