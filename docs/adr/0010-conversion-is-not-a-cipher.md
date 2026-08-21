@@ -65,6 +65,49 @@ Stated as the tension that kills the idea:
 formats escapes it, because the constraint is on the meaning of "lossless"
 rather than on any particular format's capabilities.
 
+### Changing MEDIUM repeatedly does not help either
+
+The strongest form of the proposal: convert image to audio, audio to image,
+again and again, stripping every metadata trail, so nothing indicates what to
+convert back into. `experiments/binary_waterfall.py` tests it — three changes of
+medium, no extension, no filename, no metadata, no key.
+
+The original was recovered **byte-identical** in a single pass. The scan shows
+why: each layer is a header prepended to an untouched payload.
+
+| Offset | Found |
+|---|---|
+| 0 | RIFF container (outer "audio") |
+| 44 | BMP header ("image" layer) |
+| 98 | RIFF container (first "audio") |
+| 142 | **the original PNG, intact** |
+
+Reinterpreting bytes as another medium does not change the bytes. File carving
+is standard forensics, automated in `binwalk` and `foremost`. Notably the
+reference implementation's own contributor guide forbids this style —
+"avoid simple binary waterfalls, as they're not semantically meaningful."
+
+The alternative, *genuine* semantic conversion (sonify the image, transcribe the
+audio), does change the bytes — and destroys information at every hop, for the
+sender as much as the attacker. Sonify an image and run speech recognition on
+it: there is no speech, so the output bears no relation to the input. Not
+concealed. Gone.
+
+**Anything decodable is identifiable.** For a recipient to reverse the chain,
+every intermediate must be a well-formed file of its type; well-formed means it
+carries that type's structure; and that structure is precisely what a detector
+keys on. A file cannot be decodable-by-the-right-person yet structurally
+anonymous.
+
+Stripping metadata does not touch this. Identification is content-based —
+ADR-0005, this project's founding rule. Our own detector returned `audio/wav` at
+confidence 1.00 on the stripped blob, from structure alone. PRONOM holds ~2,000
+such signatures; `libmagic`, `siegfried` and Magika do the same.
+
+Nor is guessing the path required. Each layer announces itself: WAV, then BMP,
+then PNG — signposts, not a search space. And the attacker never needs the path
+anyway, because they are extracting content, not reconstructing a route.
+
 ### Two further objections, each independently fatal
 
 **Entropy.** Suppose the path did survive. A 128-bit key needs 3.4 × 10³⁸
