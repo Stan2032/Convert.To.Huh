@@ -961,6 +961,56 @@ From vendor and critic sources (OPSWAT, Deep Instinct, Fortinet, Wikipedia):
   input for this reason: passing bytes through unchanged is the one genuinely
   dangerous outcome for a tool whose users believe it cleans files.
 
+### 12.3b Prior art in open source — most of the tool already exists
+
+Checked on 2026-08-21, prompted by the right question: *are we reinventing the
+wheel?* Largely yes, and the honest accounting matters more than the pitch.
+
+**Dangerzone** (Freedom of the Press Foundation, `dangerzone.rocks`) converts
+potentially dangerous documents into safe PDFs by rendering them in disposable
+containers, and strips all metadata. Its isolation is considerably better than
+anything here: a **gVisor sandbox inside a container**, networking disabled,
+nothing mounted from the host. That is precisely what ADR-0003 demands and what
+this project has *not* built. The PDF flattening measured in
+`experiments/pdf_flatten.py` is a weaker version of what Dangerzone ships to
+journalists today.
+
+**mat2** (`jvoisin/mat2`, used by Tails) removes metadata across roughly 25
+format families — avi, bmp, epub, flac, gif, jpeg, mp3, mp4, ODF, PDF, png,
+pptx/xlsx/docx, svg, tar, tiff, torrent, wav, wmv, zip — at the file-structure
+level, writing `.cleaned` copies rather than editing in place. Six raster
+formats here is not competitive with that. **It is now archived (read-only)**,
+which is the one opening: a widely-depended-on tool is unmaintained.
+
+**Design implication, and a correction.** §12.3 positioned "images are
+uncovered" and "nobody says what was removed" as market gaps. The first is
+wrong as stated — mat2 covers images. The second is narrower than claimed:
+neither tool reports what sanitization *cost*, but that is a missing feature,
+not a missing product. **Building a parallel sanitizer is reinventing
+Dangerzone and mat2 with less rigour.**
+
+### 12.3c What is actually unfilled: the registry as public data
+
+Searched for a machine-readable database of conversion loss — what each format
+can carry, and what a given conversion destroys. **None found.** The digital
+preservation field discusses conversion loss continuously (OpenAIRE, CESSDA,
+USGS all publish prose guidance about resolution, layers, formatting and
+precision being lost) but publishes no structured, measured data.
+
+PRONOM identifies *what a file is*, with ~2,000 signatures and an XML API. There
+is no equivalent for *what conversion costs you*. That is the asset this project
+is uniquely arranged to produce, because everything here already exists to
+generate it: a closed property vocabulary (ADR-0004), verified-not-claimed edges
+(rule 6), specimen-backed measurement, and a validator that has caught four
+genuine errors in hand-written data.
+
+**Design implication:** the registry is the contribution; the CLI is the
+instrument that produces it. A verified loss registry would be useful to
+Dangerzone, to a mat2 successor, to `convert.to.it`, and to preservation
+institutions — none of whom have one — in a way that a fourth sanitizer would
+not be. This reframes the deliverable from *a tool that competes* to *data that
+other tools consume*.
+
 ### 12.4 Two properties a sanitizer must have that a converter need not
 
 - **Idempotence.** Sanitizing a clean file must be a no-op. If a second pass
