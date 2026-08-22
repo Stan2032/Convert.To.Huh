@@ -3,6 +3,7 @@
 //! One implementation, compiled to native and `wasm32` (ADR-0002), so the
 //! browser's estimate and the server's cannot drift.
 
+pub mod clean;
 pub mod detect;
 pub mod engines;
 pub mod execute;
@@ -12,3 +13,4 @@ pub mod loss;
 pub mod planner;
 pub mod registry;
 pub mod sanitize;
+pub mod subprocess;

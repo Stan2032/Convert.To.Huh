@@ -5,7 +5,7 @@
 //!   huh convert <in> <out> [--quality N] [--allow-unverified] [--receipt R.json]
 //!   huh graph
 
-use huh_core::{detect, execute, export, planner, registry::Registry, sanitize};
+use huh_core::{clean, detect, execute, export, planner, registry::Registry, sanitize};
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
@@ -30,6 +30,7 @@ fn usage() -> ExitCode {
            huh plan <from> <to> [-k N] [--allow-unverified] [--profile lgpl|gpl] [--runtime native|wasm]\n  \
            huh suggest <file> [--allow-unverified]   what can this become, and what does each cost?\n  \
            huh convert <in> <out> [--quality 1-100] [--allow-unverified] [--receipt out.json]\n  \
+           huh clean <in> <out> [--dpi N] [--report r.json]   detect, rebuild, report\n  \
            huh sanitize <in> <out> [--to <format-id>] [--quality 1-100] [--report r.json]\n  \
            huh graph\n  \
            huh export [--out FILE]      emit the registry as a public dataset\n\n\
@@ -258,6 +259,63 @@ fn main() -> ExitCode {
                 eprintln!("  {:<14}             {}\n", "", pl.rationale);
             }
             ExitCode::SUCCESS
+        }
+
+        "clean" => {
+            let (Some(inp), Some(outp)) = (args.get(1), args.get(2)) else { return usage() };
+            let bytes = match std::fs::read(inp) {
+                Ok(b) => b,
+                Err(e) => { eprintln!("{inp}: {e}"); return ExitCode::FAILURE; }
+            };
+            let name = Path::new(inp).file_name().map(|s| s.to_string_lossy().to_string());
+            let d = detect::detect(&reg, &bytes, name.as_deref());
+            if d.detected_by == "unknown" {
+                eprintln!(
+                    "refused: cannot identify {inp} by content.\n\
+                     Cleaning means parsing content and rebuilding it. An unidentified \
+                     file cannot be parsed, so passing the bytes through unchanged would \
+                     be the one genuinely dangerous outcome."
+                );
+                return ExitCode::from(3);
+            }
+            let dpi: u32 = opt(&args, "--dpi").and_then(|v| v.parse().ok()).unwrap_or(150);
+
+            eprintln!("detected {} (by {}, confidence {:.2})", d.format, d.detected_by, d.confidence);
+            if d.extension_mismatch {
+                eprintln!("NOTE:    extension disagrees with content — cleaning by CONTENT type.");
+            }
+
+            match clean::clean(&bytes, &d.format, dpi) {
+                Ok((out, report)) => {
+                    if let Err(e) = std::fs::write(outp, &out) {
+                        eprintln!("{outp}: {e}"); return ExitCode::FAILURE;
+                    }
+                    eprintln!("strategy {} ({} -> {} bytes, {} ms)",
+                              report.strategy, report.input_bytes, report.output_bytes, report.wall_ms);
+                    for inv in &report.invocations {
+                        eprintln!("  ran: {inv}");
+                    }
+                    if report.removed.is_empty() {
+                        eprintln!("\nno non-content data found");
+                    } else {
+                        eprintln!("\nremoved:");
+                        for r in &report.removed { eprintln!("  - {r}"); }
+                    }
+                    if !report.properties_lost.is_empty() {
+                        eprintln!("\nproperties destroyed: {}", report.properties_lost.join(", "));
+                        eprintln!("(that is the COST of cleaning, not a bug — see docs/specs/loss-vector.md)");
+                    }
+                    if let Some(s) = report.sanitize.as_ref().and_then(|s| s.content_ssim) {
+                        eprintln!("content intact: SSIM {s:.4}");
+                    }
+                    if let Some(r) = opt(&args, "--report") {
+                        let _ = std::fs::write(&r, serde_json::to_string_pretty(&report).unwrap());
+                        eprintln!("report:  {r}");
+                    }
+                    ExitCode::SUCCESS
+                }
+                Err(e) => { eprintln!("clean failed: {e}"); ExitCode::FAILURE }
+            }
         }
 
         "sanitize" => {
