@@ -152,7 +152,9 @@ pub fn execute(plan: &Plan, input: &[u8], quality: u8) -> Result<(Vec<u8>, Recei
         });
     }
 
-    let ssim = fidelity::ssim(&original, &result);
+    // Worst case across backgrounds. A conversion that only looks faithful
+    // against a flattering background is not faithful (RESEARCH.md §13.9).
+    let ssim = fidelity::content_equivalence(&original, &result);
 
     let receipt = Receipt {
         registry_version: plan.registry_version.clone(),

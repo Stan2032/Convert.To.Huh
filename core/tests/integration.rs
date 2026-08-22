@@ -75,13 +75,39 @@ fn png_to_jpeg_actually_converts_and_measurements_agree() {
     let (out, receipt) = execute::execute(&plan, &input, 85).expect("conversion succeeds");
 
     assert_eq!(&out[..3], &[0xFF, 0xD8, 0xFF], "output must actually be a JPEG");
-    assert!(receipt.ssim.unwrap() > 0.95, "ssim was {:?}", receipt.ssim);
     assert!(receipt.measurements.iter().all(|m| !m.contradicts),
         "no measurement may contradict the declared vector: {:?}", receipt.measurements);
+
+    // This specimen carries real transparency and JPEG cannot, so the fidelity
+    // score MUST be poor — the conversion genuinely destroys something.
+    //
+    // An earlier version of this test asserted > 0.95 here, and passed, because
+    // the harness compared stored RGB and ignored alpha (RESEARCH.md §13.8).
+    // That assertion was encoding the bug: it demanded the measurement agree
+    // with an intuition that was wrong. The honest expectation is the opposite.
+    let s = receipt.ssim.expect("comparable geometry");
+    assert!(s < 0.95,
+        "an alpha-destroying conversion scored {s:.4} — either the specimen lost \
+         its transparency or the harness is ignoring alpha again");
 
     // The specimen has real transparency, so alpha loss must be OBSERVED.
     let alpha = receipt.measurements.iter().find(|m| m.property == "alpha").unwrap();
     assert_eq!(alpha.measured, "lost");
+}
+
+#[test]
+fn fidelity_is_high_where_nothing_is_actually_lost() {
+    // The counterpart to the test above: on an OPAQUE specimen the same
+    // conversion loses nothing structural, so the score must be high. Without
+    // this pair, "alpha conversions score low" could be satisfied by a harness
+    // that simply scores everything low.
+    let r = reg();
+    let p = Planner::new(&r, &Policy::default());
+    let plan = p.plan("image/png", "image/jpeg").unwrap();
+    let input = specimen("rgb-photo.png");
+    let (_, receipt) = execute::execute(&plan, &input, 85).expect("conversion succeeds");
+    let s = receipt.ssim.expect("comparable geometry");
+    assert!(s > 0.95, "opaque conversion scored only {s:.4}");
 }
 
 #[test]

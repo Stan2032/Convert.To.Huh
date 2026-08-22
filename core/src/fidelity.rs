@@ -43,6 +43,23 @@ pub fn ssim_composited(a: &DynamicImage, b: &DynamicImage, bg: [u8; 3]) -> Optio
     ssim(&ca, &cb)
 }
 
+/// Are two images equivalent in CONTENT, independent of any background?
+///
+/// The right question when asking "did the content survive?" — as sanitization
+/// does — because it refuses to smuggle in a preference. Two images that agree
+/// against both white and black agree against every background between them, so
+/// the worst of the two scores is a lower bound on their similarity under any
+/// compositing choice.
+///
+/// Prefer this to `ssim_composited` wherever the goal is equivalence rather
+/// than "how close under one specific presentation". §13.9 showed that choosing
+/// a background silently chooses a winner; taking the worst case refuses to.
+pub fn content_equivalence(a: &DynamicImage, b: &DynamicImage) -> Option<f64> {
+    let on_white = ssim_composited(a, b, [255, 255, 255])?;
+    let on_black = ssim_composited(a, b, [0, 0, 0])?;
+    Some(on_white.min(on_black))
+}
+
 /// Structural similarity on luma, 8x8 sliding windows, stride 4.
 ///
 /// NOTE: reads STORED RGB and ignores alpha. For anything carrying transparency

@@ -139,7 +139,10 @@ pub fn sanitize(
     // perfectly on "no passengers remain" and be worthless.
     let rebuilt = engines::decode(&out, target, &budget)?;
     let after = engines::observe(&rebuilt);
-    let content_ssim = fidelity::ssim(&img, &rebuilt);
+    // Equivalence, not similarity-under-one-presentation: a sanitizer must not
+    // report "content preserved" on the strength of a background it picked
+    // itself (RESEARCH.md §13.9).
+    let content_ssim = fidelity::content_equivalence(&img, &rebuilt);
 
     let mut properties_lost = Vec::new();
     if !found.is_empty() {
