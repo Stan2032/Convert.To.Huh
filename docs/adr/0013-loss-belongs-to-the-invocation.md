@@ -36,6 +36,10 @@ by default. With `--background 255` the same conversion composites onto white:
 | `vips webpsave IN OUT --lossless` | 15,512 | 1.0 |
 | image-rs WebP encoder | 37,098 | 1.0 |
 
+(That table is unaffected by the measurement bug in `RESEARCH.md §13.8`:
+`rgb-photo` carries **no transparency**, so there is no compositing choice to
+distort the comparison.)
+
 The second is the more serious finding. A consumer reading "PNG → WebP" from
 this dataset — measured through image-rs, lossless, SSIM 1.0 — and then running
 libvips in their own pipeline would silently get **0.84 SSIM** output. That is

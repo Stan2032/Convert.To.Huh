@@ -711,6 +711,45 @@
       "generational": false
     },
     {
+      "from": "image/png",
+      "to": "image/webp",
+      "from_kind": "Raster",
+      "to_kind": "Raster",
+      "engine": "libvips",
+      "invocation": "vips webpsave IN OUT --lossless",
+      "operation": "Transcode",
+      "loss": {
+        "alpha": "preserved",
+        "color_depth": "degraded",
+        "color_profile": "preserved",
+        "geometry": "preserved",
+        "metadata": "lost"
+      },
+      "verification": "verified",
+      "generational": false
+    },
+    {
+      "from": "image/png",
+      "to": "image/jpeg",
+      "from_kind": "Raster",
+      "to_kind": "Raster",
+      "engine": "libvips",
+      "invocation": "vips jpegsave IN OUT --background 255",
+      "operation": "Transcode",
+      "loss": {
+        "alpha": "lost",
+        "color_depth": "degraded",
+        "color_profile": "preserved",
+        "geometry": "preserved",
+        "metadata": "lost"
+      },
+      "loss_policy": {
+        "alpha": "composite_white"
+      },
+      "verification": "verified",
+      "generational": true
+    },
+    {
       "from": "audio/wav",
       "to": "text/plain",
       "from_kind": "AudioPCM",
@@ -732,8 +771,8 @@
   "counts": {
     "formats": 12,
     "engines": 7,
-    "edges_total": 17,
-    "edges_verified": 13,
+    "edges_total": 19,
+    "edges_verified": 15,
     "edges_claimed": 4
   }
 }

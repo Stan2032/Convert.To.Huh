@@ -27,6 +27,14 @@ Both match prediction to within JPEG quantisation noise, and both hold
 identically on a smooth alpha ramp and on a hard opaque/transparent edge — so
 the policy belongs to the **engine**, not to the specimen.
 
+> **CORRECTION (RESEARCH.md §13.8, §13.9).** An earlier draft of this ADR also
+> cited SSIM figures showing libvips scoring far worse. Those were invalid: the
+> harness compared stored RGB and ignored alpha, so it scored its own choice of
+> baseline. Re-measured against a stated background the ranking **reverses**
+> depending on the background chosen. **This decision is unaffected**, because it
+> rests on the pixel table above — directly observed values, confirmed by
+> arithmetic — and never on the scores.
+
 **All three record `alpha = lost`. All three are correct.** And a logo on a
 transparent background comes out of libvips as a black box and out of the other
 two showing whatever colour sat beneath the transparency.

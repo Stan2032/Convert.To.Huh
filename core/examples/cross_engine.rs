@@ -9,7 +9,7 @@
 //!
 //! Requires libvips: apt-get install libvips-tools
 use huh_core::engines::{decode, encode, observe, Budget};
-use huh_core::fidelity::ssim;
+use huh_core::fidelity::{ssim, ssim_composited};
 use std::process::Command;
 
 fn main() {
@@ -65,8 +65,17 @@ fn main() {
         let irs_bytes = encode(&original, "image/jpeg", QUALITY).expect("image-rs encode");
         let irs_img = decode(&irs_bytes, "image/jpeg", &budget).expect("image-rs jpeg");
 
-        let vs = ssim(&original, &vips_img).unwrap_or(-1.0);
-        let is = ssim(&original, &irs_img).unwrap_or(-1.0);
+        // Alpha in play: composite everything onto the SAME background before
+        // comparing. Comparing stored RGB rewards engines that leave RGB under
+        // transparent pixels untouched, which is a fact about the comparison
+        // rather than about the conversion (RESEARCH.md §13.8).
+        let (vs, is) = if before.has_alpha {
+            (ssim_composited(&original, &vips_img, [255, 255, 255]).unwrap_or(-1.0),
+             ssim_composited(&original, &irs_img, [255, 255, 255]).unwrap_or(-1.0))
+        } else {
+            (ssim(&original, &vips_img).unwrap_or(-1.0),
+             ssim(&original, &irs_img).unwrap_or(-1.0))
+        };
 
         // Both should drop alpha — JPEG cannot carry it. Disagreement here
         // would be a registry-level finding, not a quality difference.

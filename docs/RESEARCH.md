@@ -1058,9 +1058,16 @@ both against the original.
 | rgba-opaque | 1,211 | 1,290 | 0.9967 | 0.9970 |
 | **rgba-gradient** | 1,848 | 2,833 | **0.6022** | **0.9950** |
 
-Every specimen agrees closely except the one with **real transparency**, where
-the gap is enormous. Both engines record `alpha = lost`, which is true for both,
-and both are doing something entirely different.
+> **CORRECTED — see §13.8.** The SSIM column above is *invalid* for the
+> transparency case. It compares stored RGB and ignores alpha, which scores the
+> comparison's own choice of baseline rather than the engines. Re-measured
+> against a defined background the ranking **reverses** depending on which
+> background is chosen. The finding that survives is the policy difference
+> below, established by pixel arithmetic rather than by SSIM.
+
+Every specimen agrees closely except the one with **real transparency**. Both
+engines record `alpha = lost`, which is true for both, and both are doing
+something entirely different.
 
 ### 13.2 The mechanism, confirmed by pixel arithmetic
 
@@ -1207,6 +1214,75 @@ exactly the haste this project's discipline exists to prevent.
 Recorded, proposed, and left for a future session with fresh evidence. The
 existing edges stay as they are and are **known to be imprecise on this point** —
 which is better documented than silently wrong.
+
+
+### 13.8 The measuring instrument was wrong
+
+The most important correction in this dossier, found while measuring the flag
+variants ADR-0013 called for.
+
+`vips webpsave --lossless` scored **SSIM 0.4691** on `rgba-hard-edge` while
+*preserving* alpha. A lossless conversion cannot lose content, so the instrument
+was at fault, not the engine.
+
+**Cause.** `fidelity::ssim` calls `to_luma8()`, which ignores alpha and reads
+**stored RGB**. A fully transparent pixel is invisible, so whatever RGB sits
+beneath it cannot matter to a viewer — but it dominates a naive pixel
+comparison. libvips premultiplies (storing `(0,0,0)` under transparency);
+image-rs leaves the original colour there. Identical on screen, wildly different
+to `to_luma8()`.
+
+Compositing both images onto the same background before comparing fixes it:
+
+| Invocation | before fix | after fix |
+|---|---|---|
+| `vips webpsave --lossless`, rgba-hard-edge | 0.4691 | **1.0000** |
+| `vips webpsave --lossless`, rgba-gradient | 0.9731 | **1.0000** |
+| `vips jpegsave --background 255`, rgba-hard-edge | 0.7193 | **0.9855** |
+
+`--lossless` is genuinely lossless, alpha included. The earlier number was an
+artifact.
+
+### 13.9 The background choice decides the winner — demonstrated
+
+§13.3 warned that a fidelity metric encodes a preference. `background_bias.rs`
+now demonstrates it. The same two conversions, the same original, scored twice:
+
+| Specimen | vips / white | image-rs / white | vips / black | image-rs / black |
+|---|---|---|---|---|
+| rgba-gradient | 0.4010 | **0.7946** | **0.9933** | 0.6069 |
+| rgba-hard-edge | 0.4431 | **0.7281** | **0.9858** | 0.4691 |
+
+**The ranking reverses.** Against white, image-rs wins by a wide margin. Against
+black, libvips wins by a wider one. Neither engine changed; only the question
+did.
+
+This is not a subtlety to note in passing — it means **any published SSIM for an
+alpha-losing conversion is meaningless without stating the background**, and
+that §13.1's headline comparison was scoring the author's unstated choice of
+baseline. It has been corrected in place rather than deleted.
+
+**What survives unchanged.** ADR-0012 and ADR-0013 both rest on *directly
+observed pixel values*, not on SSIM: libvips composites onto black, image-rs and
+ImageMagick discard the channel, and `--background` / `--lossless` change the
+behaviour. Those are arithmetic, and arithmetic does not have a baseline
+problem. Only the quality *scores* were wrong.
+
+**Design implications, three of them.**
+
+1. `fidelity::ssim` now documents that it reads stored RGB and must not be used
+   where transparency is involved; `ssim_composited` takes the background as an
+   explicit argument because there is no neutral default and hiding the choice
+   is what caused this.
+2. Registry `measured` blocks for alpha-bearing edges must record the
+   comparison background alongside the number. A score without it is not
+   reproducible.
+3. The general lesson, which applies well beyond alpha: **a measurement harness
+   is itself an untested claim until something forces it to disagree with
+   arithmetic.** This one went unchallenged for a day and produced a headline
+   figure that was quoted in a PR description and two ADRs. The cross-check that
+   caught it — a conversion that *must* score 1.0 scoring 0.47 — is the kind of
+   invariant the harness should assert automatically.
 
 
 ## Sources
