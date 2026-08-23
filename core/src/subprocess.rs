@@ -47,18 +47,39 @@ pub struct Scratch {
 
 impl Scratch {
     pub fn new(tag: &str) -> Result<Scratch, ConvertError> {
-        // Process id plus a monotonic counter: unique without pulling in a
-        // random-number dependency, and predictable enough to debug.
         use std::sync::atomic::{AtomicU64, Ordering};
         static N: AtomicU64 = AtomicU64::new(0);
-        let path = std::env::temp_dir().join(format!(
-            "huh-{tag}-{}-{}",
-            std::process::id(),
-            N.fetch_add(1, Ordering::Relaxed)
-        ));
-        std::fs::create_dir_all(&path)
-            .map_err(|e| ConvertError::Internal(format!("scratch dir: {e}")))?;
-        Ok(Scratch { path })
+
+        // `temp_dir()` is normally /tmp: world-writable and shared with every
+        // other local user. The old name was pid + counter and the directory was
+        // made with `create_dir_all`, which SUCCEEDS on a path that already
+        // exists — including one another user pre-created as a symlink. Engine
+        // input and output then live in a directory someone else controls.
+        //
+        // Two independent defences, because either alone is thin:
+        //   1. `create_dir` (not `_all`) fails when the path exists, so a
+        //      pre-created path is an error rather than a silent adoption.
+        //   2. An unpredictable suffix, so it cannot be pre-created to begin
+        //      with — and, on a miss, retry rather than fail.
+        for _ in 0..8 {
+            let path = std::env::temp_dir().join(format!(
+                "huh-{tag}-{}-{}-{:x}",
+                std::process::id(),
+                N.fetch_add(1, Ordering::Relaxed),
+                scratch_entropy()
+            ));
+            match std::fs::create_dir(&path) {
+                Ok(()) => {
+                    restrict_to_owner(&path);
+                    return Ok(Scratch { path });
+                }
+                Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => continue,
+                Err(e) => return Err(ConvertError::Internal(format!("scratch dir: {e}"))),
+            }
+        }
+        Err(ConvertError::Internal(
+            "scratch dir: could not create an unused path in the temp directory".into(),
+        ))
     }
 
     pub fn path(&self) -> &Path {
@@ -74,6 +95,42 @@ impl Drop for Scratch {
     fn drop(&mut self) {
         let _ = std::fs::remove_dir_all(&self.path);
     }
+}
+
+/// Unpredictable bits for a scratch directory name.
+///
+/// `/dev/urandom` where it exists, so the value does not come from anything an
+/// observer can also read off the clock. The time-based fallback is weaker and
+/// is only a fallback — exclusive creation, not this, is what makes the
+/// directory safe.
+fn scratch_entropy() -> u64 {
+    #[cfg(unix)]
+    {
+        use std::io::Read;
+        if let Ok(mut f) = std::fs::File::open("/dev/urandom") {
+            let mut b = [0u8; 8];
+            if f.read_exact(&mut b).is_ok() {
+                return u64::from_ne_bytes(b);
+            }
+        }
+    }
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_nanos() as u64)
+        .unwrap_or(0)
+}
+
+/// Make a scratch directory readable only by its owner, where the platform
+/// has a notion of that. Best-effort: the exclusive create above is the
+/// load-bearing part.
+fn restrict_to_owner(path: &Path) {
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let _ = std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o700));
+    }
+    #[cfg(not(unix))]
+    let _ = path;
 }
 
 #[derive(Debug)]
@@ -161,6 +218,32 @@ impl External {
                 _ => ConvertError::Internal(format!("spawn {}: {e}", self.program)),
             })?;
 
+        // Drain both pipes on their own threads, STARTING NOW rather than after
+        // the child exits. A pipe holds a bounded amount — 64 KiB on Linux — and
+        // a child whose pipe is full blocks on write. It then never exits, so
+        // the poll loop below runs to the timeout and kills it.
+        //
+        // That failure mode is especially nasty here because it is misreported:
+        // the caller sees `BudgetExceeded` and blames a hung engine. Every
+        // engine this module runs writes more than 64 KiB. Found by review, then
+        // reproduced by the two tests at the bottom of this file.
+        let mut child_out = child.stdout.take();
+        let mut child_err = child.stderr.take();
+        let drain_out = std::thread::spawn(move || {
+            let mut buf = Vec::new();
+            if let Some(s) = child_out.as_mut() {
+                let _ = std::io::Read::read_to_end(s, &mut buf);
+            }
+            buf
+        });
+        let drain_err = std::thread::spawn(move || {
+            let mut buf = Vec::new();
+            if let Some(s) = child_err.as_mut() {
+                let _ = std::io::Read::read_to_end(s, &mut buf);
+            }
+            buf
+        });
+
         // Poll rather than block, so the timeout can be enforced. std has no
         // wait-with-timeout; sleeping briefly between checks costs a few ms of
         // latency and avoids a dependency.
@@ -169,8 +252,12 @@ impl External {
                 Ok(Some(s)) => break s,
                 Ok(None) => {
                     if started.elapsed() > self.timeout {
+                        // Killing the child closes its ends of both pipes, so
+                        // the drain threads reach EOF and finish on their own.
                         let _ = child.kill();
                         let _ = child.wait();
+                        let _ = drain_out.join();
+                        let _ = drain_err.join();
                         return Err(ConvertError::BudgetExceeded(format!(
                             "`{}` exceeded {}s and was killed",
                             self.program,
@@ -183,14 +270,19 @@ impl External {
             }
         };
 
-        let out = child
-            .wait_with_output()
-            .map_err(|e| ConvertError::Internal(format!("collect output: {e}")))?;
-        let stderr = String::from_utf8_lossy(&out.stderr).to_string();
+        // The child has exited, so both pipes are at EOF and these joins return
+        // promptly with everything that was written.
+        let stdout = drain_out
+            .join()
+            .map_err(|_| ConvertError::Internal("stdout reader panicked".into()))?;
+        let stderr_raw = drain_err
+            .join()
+            .map_err(|_| ConvertError::Internal("stderr reader panicked".into()))?;
+        let stderr = String::from_utf8_lossy(&stderr_raw).to_string();
         let elapsed = started.elapsed();
 
         if status.success() {
-            return Ok(Output { stdout: out.stdout, stderr, elapsed });
+            return Ok(Output { stdout, stderr, elapsed });
         }
 
         Err(classify(&self.program, status.code(), &stderr))
@@ -251,10 +343,14 @@ fn classify(program: &str, code: Option<i32>, stderr: &str) -> ConvertError {
 fn first_line(s: &str) -> String {
     let line = s.lines().find(|l| !l.trim().is_empty()).unwrap_or("(no output)");
     let line = line.trim();
-    if line.len() > 200 {
-        format!("{}…", &line[..200])
-    } else {
-        line.to_string()
+    // Truncate by CHARACTER, not by byte. `line.len()` is a byte count, and
+    // slicing at a byte index inside a multi-byte character panics — in the
+    // error-reporting path, which is the worst place to panic. Engine stderr
+    // carries non-ASCII in filenames and localized messages, and the U+FFFD
+    // that `from_utf8_lossy` emits for invalid bytes is itself three bytes.
+    match line.char_indices().nth(200) {
+        Some((cut, _)) => format!("{}…", &line[..cut]),
+        None => line.to_string(),
     }
 }
 
@@ -266,6 +362,70 @@ mod tests {
     fn runs_and_captures_output() {
         let out = External::new("echo").arg("hello").run().expect("echo");
         assert_eq!(String::from_utf8_lossy(&out.stdout).trim(), "hello");
+    }
+
+    #[test]
+    fn output_larger_than_the_pipe_buffer_does_not_hang() {
+        // An OS pipe holds a fixed amount — 64 KiB on Linux. If nothing drains
+        // it while the child runs, the child blocks on write, never exits, and
+        // the timeout fires: a real engine bug reported as a fake timeout.
+        //
+        // Every engine here writes more than this. `echo hello` cannot catch
+        // it, which is why the bug survived until CodeRabbit flagged it.
+        const N: usize = 400_000;
+        let out = External::new("sh")
+            .arg("-c")
+            .arg(format!("yes ABCDEFGH | head -c {N}"))
+            .timeout(Duration::from_secs(20))
+            .run()
+            .expect("large output must not be reported as a timeout");
+        assert_eq!(out.stdout.len(), N, "output was truncated");
+    }
+
+    #[test]
+    fn scratch_refuses_a_pre_existing_path_and_is_owner_only() {
+        let a = Scratch::new("racetest").expect("scratch");
+        let b = Scratch::new("racetest").expect("scratch");
+        assert_ne!(a.path(), b.path(), "two scratch dirs collided");
+
+        // Nobody else may read what an engine writes here.
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            let mode = std::fs::metadata(a.path()).unwrap().permissions().mode();
+            assert_eq!(mode & 0o077, 0, "scratch dir is group/world accessible");
+        }
+
+        // An already-occupied path must never be adopted: that was the hole.
+        let squatted = a.path().join("victim");
+        std::fs::create_dir(&squatted).unwrap();
+        assert!(
+            std::fs::create_dir(&squatted).is_err(),
+            "create_dir must fail on an existing path — the property Scratch relies on"
+        );
+    }
+
+    #[test]
+    fn long_non_ascii_stderr_truncates_without_panicking() {
+        // Byte 200 lands inside the 3-byte '€', so a byte-indexed slice panics.
+        let line = format!("{}{}", "a".repeat(199), "€".repeat(20));
+        let got = first_line(&line);
+        assert!(got.ends_with('…'), "expected truncation, got {got:?}");
+        // 200 characters kept, plus the ellipsis.
+        assert_eq!(got.chars().count(), 201);
+    }
+
+    #[test]
+    fn large_stderr_alone_does_not_hang() {
+        // A verbose engine fills stderr without writing any stdout at all.
+        const N: usize = 400_000;
+        let out = External::new("sh")
+            .arg("-c")
+            .arg(format!("yes ABCDEFGH | head -c {N} >&2"))
+            .timeout(Duration::from_secs(20))
+            .run()
+            .expect("large stderr must not be reported as a timeout");
+        assert_eq!(out.stderr.len(), N, "stderr was truncated");
     }
 
     #[test]

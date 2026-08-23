@@ -89,10 +89,25 @@ pub fn ssim(a: &DynamicImage, b: &DynamicImage) -> Option<f64> {
     let win = 8u32;
     let stride = 4u32;
 
-    let mut y = 0;
-    while y + win <= h {
-        let mut x = 0;
-        while x + win <= w {
+    // Window origins along one axis, including a terminal window flush with the
+    // far edge. Without it, `while p + win <= d` leaves up to `stride - 1`
+    // trailing rows and columns unscored: a 9x9 image evaluates only the window
+    // at 0, so a conversion could rewrite the last row and still score 1.0.
+    //
+    // These scores land in receipts and in the published registry, so an
+    // unmeasured strip is an overstated fidelity claim, not a rounding detail.
+    let origins = |d: u32| -> Vec<u32> {
+        let mut v: Vec<u32> = (0..).map(|k| k * stride).take_while(|p| p + win <= d).collect();
+        let last = d - win; // d >= win is guaranteed by the check above
+        if v.last() != Some(&last) {
+            v.push(last);
+        }
+        v
+    };
+    let xs = origins(w);
+
+    for &y in &origins(h) {
+        for &x in &xs {
             let (mut sa, mut sb) = (0.0f64, 0.0f64);
             for j in 0..win {
                 for i in 0..win {
@@ -121,9 +136,7 @@ pub fn ssim(a: &DynamicImage, b: &DynamicImage) -> Option<f64> {
                 / ((ma * ma + mb * mb + c1) * (va + vb + c2));
             total += s;
             windows += 1;
-            x += stride;
         }
-        y += stride;
     }
     if windows == 0 { None } else { Some(total / windows as f64) }
 }
@@ -156,6 +169,33 @@ pub fn bit_depth(img: &DynamicImage) -> u8 {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_change_in_the_last_column_is_not_invisible() {
+        // 9x9: the strided loop alone reaches only the window at (0,0), so
+        // column 8 and row 8 were never compared and any change there scored a
+        // perfect 1.0. Sizes chosen so (d - win) is not a multiple of stride.
+        for (w, h) in [(9u32, 9u32), (13, 11), (10, 9)] {
+            let base = image::RgbImage::from_fn(w, h, |x, y| {
+                image::Rgb([((x * 7 + y * 13) % 256) as u8, 40, 200])
+            });
+            let mut altered = base.clone();
+            // Rewrite the final column and row only.
+            for y in 0..h {
+                altered.put_pixel(w - 1, y, image::Rgb([255, 255, 255]));
+            }
+            for x in 0..w {
+                altered.put_pixel(x, h - 1, image::Rgb([0, 0, 0]));
+            }
+
+            let a = DynamicImage::ImageRgb8(base);
+            let b = DynamicImage::ImageRgb8(altered);
+            let s = ssim(&a, &b).expect("same geometry, both >= 8x8");
+            assert!(s < 0.999, "{w}x{h}: edge change scored {s:.6} — border unmeasured");
+            // And an image must still be identical to itself.
+            assert!((ssim(&a, &a).unwrap() - 1.0).abs() < 1e-9);
+        }
+    }
 
     fn specimen(name: &str) -> DynamicImage {
         let p = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))

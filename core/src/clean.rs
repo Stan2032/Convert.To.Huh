@@ -108,7 +108,7 @@ fn clean_pdf(input: &[u8], dpi: u32) -> Result<PdfCleanResult, ConvertError> {
 
     // 3. Build a fresh PDF. Nothing is copied from the original — every object
     //    here is constructed from scratch around the rendered images.
-    let pdf = build_pdf(&jpegs)?;
+    let pdf = build_pdf(&jpegs, dpi)?;
     let removed = vec![
         format!("all PDF structure ({} page(s) rebuilt from pixels)", jpegs.len()),
         "document metadata (title, author, producer, creation tool)".into(),
@@ -118,9 +118,17 @@ fn clean_pdf(input: &[u8], dpi: u32) -> Result<PdfCleanResult, ConvertError> {
 }
 
 /// Minimal PDF containing one image per page. No structure is inherited.
-fn build_pdf(jpegs: &[Vec<u8>]) -> Result<Vec<u8>, ConvertError> {
+///
+/// `dpi` is the resolution the pages were rendered at, and is required: PDF user
+/// space is measured in points (72 per inch), while the rendered JPEGs are
+/// measured in pixels. Writing pixel counts into `/MediaBox` silently rescales
+/// the document — at 150 dpi a page comes back 2.08x larger in each dimension.
+fn build_pdf(jpegs: &[Vec<u8>], dpi: u32) -> Result<Vec<u8>, ConvertError> {
     let mut objs: Vec<(usize, Vec<u8>)> = Vec::new();
     let page_count = jpegs.len();
+    // Pixels -> points. `max(1)` because a zero here would be a division by
+    // zero rather than a merely wrong page size.
+    let to_points = 72.0 / dpi.max(1) as f64;
 
     // Object numbering: 1 catalog, 2 pages, then 2 objects per page
     // (page dict, content stream) plus 1 image each.
@@ -132,7 +140,10 @@ fn build_pdf(jpegs: &[Vec<u8>]) -> Result<Vec<u8>, ConvertError> {
     ));
 
     for (i, jpg) in jpegs.iter().enumerate() {
-        let (w, h) = jpeg_dimensions(jpg)?;
+        let (px_w, px_h) = jpeg_dimensions(jpg)?;
+        // The page is sized in points; the image stays sized in pixels.
+        let w = px_w as f64 * to_points;
+        let h = px_h as f64 * to_points;
         let page_id = 3 + i * 3;
         let content_id = page_id + 1;
         let image_id = page_id + 2;
@@ -140,20 +151,20 @@ fn build_pdf(jpegs: &[Vec<u8>]) -> Result<Vec<u8>, ConvertError> {
         objs.push((
             page_id,
             format!(
-                "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {w} {h}] /Contents {content_id} 0 R \
+                "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {w:.2} {h:.2}] /Contents {content_id} 0 R \
                  /Resources << /XObject << /Im0 {image_id} 0 R >> >> >>"
             )
             .into_bytes(),
         ));
 
-        let content = format!("q {w} 0 0 {h} 0 0 cm /Im0 Do Q");
+        let content = format!("q {w:.2} 0 0 {h:.2} 0 0 cm /Im0 Do Q");
         let mut cs = format!("<< /Length {} >>\nstream\n", content.len()).into_bytes();
         cs.extend_from_slice(content.as_bytes());
         cs.extend_from_slice(b"\nendstream");
         objs.push((content_id, cs));
 
         let mut img = format!(
-            "<< /Type /XObject /Subtype /Image /Width {w} /Height {h} /ColorSpace /DeviceRGB \
+            "<< /Type /XObject /Subtype /Image /Width {px_w} /Height {px_h} /ColorSpace /DeviceRGB \
              /BitsPerComponent 8 /Filter /DCTDecode /Length {} >>\nstream\n",
             jpg.len()
         )
@@ -282,6 +293,23 @@ mod tests {
             .unwrap_or(false)
     }
 
+    /// Width and height from the first `/MediaBox` in a PDF, in points.
+    fn pdf_media_box(pdf: &[u8]) -> Option<(f64, f64)> {
+        let at = pdf.windows(10).position(|w| w == b"/MediaBox ")? + 10;
+        let rest = &pdf[at..];
+        let end = rest.iter().position(|&b| b == b']')?;
+        let text = String::from_utf8_lossy(&rest[..end]);
+        let nums: Vec<f64> = text
+            .trim_start_matches('[')
+            .split_whitespace()
+            .filter_map(|t| t.parse().ok())
+            .collect();
+        match nums[..] {
+            [x0, y0, x1, y1] => Some((x1 - x0, y1 - y0)),
+            _ => None,
+        }
+    }
+
     #[test]
     fn raster_path_strips_passengers_and_keeps_content() {
         let src = specimen("corpus/raster/png-with-passengers.png");
@@ -305,6 +333,16 @@ mod tests {
 
         assert_eq!(r.strategy, "render-and-rebuild");
         assert_eq!(r.invocations.len(), 2, "should use two independent parsers");
+
+        // The cleaned page must be the same PHYSICAL size as the original.
+        // Writing render pixels straight into /MediaBox made a 200x100pt page
+        // come back as 417x209pt — a 2.08x enlargement, exactly 150/72.
+        // Rendering rounds to whole pixels, so allow a point either way.
+        let media = pdf_media_box(&out).expect("cleaned PDF has a MediaBox");
+        assert!(
+            (media.0 - 200.0).abs() <= 1.0 && (media.1 - 100.0).abs() <= 1.0,
+            "page resized to {media:?}pt; the 200x100pt original should survive"
+        );
 
         for marker in [
             &b"JavaScript"[..], b"OpenAction", b"PAYLOAD-EXECUTED",

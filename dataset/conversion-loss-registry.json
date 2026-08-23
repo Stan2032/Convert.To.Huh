@@ -965,6 +965,7 @@
     "engines": 8,
     "edges_total": 24,
     "edges_verified": 23,
-    "edges_claimed": 1
+    "edges_claimed": 1,
+    "edges_refuted": 0
   }
 }

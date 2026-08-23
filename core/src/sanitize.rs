@@ -66,6 +66,21 @@ fn png_passengers(bytes: &[u8]) -> Vec<Passenger> {
         let tag = &bytes[i + 4..i + 8];
         let name = String::from_utf8_lossy(tag).to_string();
 
+        // The declared length is attacker-controlled and is not yet known to be
+        // real: this runs BEFORE any decode, so a crafted file reaches it.
+        //
+        // On wasm32 (ADR-0002) `usize` is 32 bits, and a declared length of
+        // 0xFFFFFFF4 makes `12 + len` wrap to exactly 0 — the cursor stops
+        // advancing and the loop never ends. In a debug build it panics first.
+        // A length merely larger than the file is milder but still wrong: it
+        // inflates `passenger_bytes` past the size of the input.
+        let Some(next) = i.checked_add(12).and_then(|n| n.checked_add(len)) else {
+            break;
+        };
+        if next > bytes.len() && tag != b"IEND" {
+            break;
+        }
+
         // Critical chunks are structure; ancillary chunks are cargo.
         let ancillary = tag[0].is_ascii_lowercase();
         if ancillary {
@@ -80,12 +95,12 @@ fn png_passengers(bytes: &[u8]) -> Vec<Passenger> {
             out.push(Passenger {
                 kind: "ancillary_chunk".into(),
                 label: name.clone(),
-                bytes: len + 12, // length + type + data + CRC
+                bytes: len.saturating_add(12), // length + type + data + CRC
                 note: note.into(),
             });
         }
 
-        i += 12 + len;
+        i = next;
         if tag == b"IEND" {
             // Everything past the end-of-image marker is invisible to decoders
             // and preserved by any byte-level copy. A file can be entirely
@@ -244,6 +259,37 @@ mod tests {
         let (twice, r2) = sanitize(&once, "image/png", "image/png", 85).unwrap();
         assert_eq!(once, twice, "second pass changed the bytes");
         assert!(r2.passengers.is_empty(), "clean file reported passengers");
+    }
+
+    #[test]
+    fn a_lying_chunk_length_neither_hangs_nor_overcounts() {
+        // 0xFFFFFFF4 is the value that makes `12 + len` wrap to 0 on a 32-bit
+        // usize, which is what wasm32 gives us (ADR-0002). The scan must stop,
+        // not spin, and must not claim more passenger bytes than the file has.
+        for declared in [0xFFFF_FFF4u32, 0xFFFF_FFFF, 5_000_000] {
+            let mut png = b"\x89PNG\r\n\x1a\n".to_vec();
+            png.extend_from_slice(&declared.to_be_bytes());
+            png.extend_from_slice(b"tEXt");
+            png.extend_from_slice(b"short");
+
+            let found = png_passengers(&png);
+            let total: usize = found.iter().map(|p| p.bytes).sum();
+            assert!(
+                total <= png.len(),
+                "declared {declared:#x}: claimed {total} passenger bytes from a \
+                 {}-byte file",
+                png.len()
+            );
+        }
+    }
+
+    #[test]
+    fn truncated_png_is_scanned_without_panicking() {
+        // Every prefix of a real specimen: no slice may go out of bounds.
+        let src = specimen("png-with-passengers.png");
+        for cut in (0..src.len()).step_by(7) {
+            let _ = png_passengers(&src[..cut]);
+        }
     }
 
     #[test]

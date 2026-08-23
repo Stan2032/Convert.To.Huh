@@ -58,6 +58,12 @@ pub struct Hop {
     pub isolation: String,
     pub estimated_ms: u64,
     pub verification_status: String,
+    /// The registry's pinned version for `engine`, carried here so a receipt
+    /// can name the engine it actually used. Receipts previously recorded
+    /// huh-core's own crate version for every engine, which made them
+    /// unreproducible in the one field that most needed to be right (ADR-0013:
+    /// loss belongs to `(engine, version, invocation, from, to)`).
+    pub engine_version: String,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -341,6 +347,9 @@ impl<'a> Planner<'a> {
                 isolation: engine.map(|x| x.security.isolation.clone()).unwrap_or_default(),
                 estimated_ms: e.base_ms,
                 verification_status: e.status.clone(),
+                engine_version: engine
+                    .map(|x| x.version_pin.clone())
+                    .unwrap_or_else(|| "unknown".into()),
             });
         }
         // Compose policies the same way as the vector: the FIRST hop to destroy

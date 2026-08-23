@@ -168,7 +168,7 @@ pub fn execute(plan: &Plan, input: &[u8], quality: u8) -> Result<(Vec<u8>, Recei
         engine_versions: plan
             .hops
             .iter()
-            .map(|h| format!("{}@{}", h.engine, env!("CARGO_PKG_VERSION")))
+            .map(|h| format!("{}@{}", h.engine, h.engine_version))
             .collect(),
         contains_synthesis: plan.totals.contains_synthesis,
         declared_loss: declared.clone(),

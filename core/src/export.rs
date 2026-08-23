@@ -95,6 +95,11 @@ pub struct Counts {
     pub edges_total: usize,
     pub edges_verified: usize,
     pub edges_claimed: usize,
+    /// Tested and found not to work. Counted separately because `claimed` was
+    /// computed as `total - verified`, which silently filed every refuted edge
+    /// under `claimed` — the opposite of what it means. Latent only because no
+    /// refuted edge exists yet, and CONTRIBUTING.md asks for exactly those.
+    pub edges_refuted: usize,
 }
 
 fn describe(prop: &str) -> &'static str {
@@ -223,13 +228,16 @@ pub fn build(reg: &Registry) -> Dataset {
         })
         .collect();
 
-    let verified = edges.iter().filter(|e| e.verification == "verified").count();
+    // Count each status on its own. Deriving one from the others is what put
+    // refuted edges in the claimed bucket.
+    let count_of = |s: &str| edges.iter().filter(|e| e.verification == s).count();
     let counts = Counts {
         formats: formats.len(),
         engines: engines.len(),
         edges_total: edges.len(),
-        edges_verified: verified,
-        edges_claimed: edges.len() - verified,
+        edges_verified: count_of("verified"),
+        edges_claimed: count_of("claimed"),
+        edges_refuted: count_of("refuted"),
     };
 
     Dataset {
@@ -280,8 +288,21 @@ mod tests {
     fn verified_and_claimed_are_distinguishable() {
         // The single most important thing a consumer must be able to tell.
         let d = build(&registry());
-        assert_eq!(d.counts.edges_verified + d.counts.edges_claimed, d.counts.edges_total);
+        assert_eq!(
+            d.counts.edges_verified + d.counts.edges_claimed + d.counts.edges_refuted,
+            d.counts.edges_total,
+            "every edge must land in exactly one status bucket"
+        );
         assert!(d.counts.edges_verified > 0, "no verified edges to publish");
+
+        // The buckets must be counted, not inferred. This assertion previously
+        // read `verified + claimed == total`, which is true whether or not
+        // refuted edges are misfiled — the test encoded the bug it should have
+        // caught. Recount from the edges themselves.
+        let by_status = |s: &str| d.edges.iter().filter(|e| e.verification == s).count();
+        assert_eq!(d.counts.edges_verified, by_status("verified"));
+        assert_eq!(d.counts.edges_claimed, by_status("claimed"));
+        assert_eq!(d.counts.edges_refuted, by_status("refuted"));
         for e in &d.edges {
             assert!(
                 matches!(e.verification.as_str(), "verified" | "claimed" | "refuted"),
