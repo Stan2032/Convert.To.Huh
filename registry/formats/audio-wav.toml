@@ -4,7 +4,8 @@ kinds      = ["AudioPCM"]
 extensions = ["wav", "wave"]
 mime_types = ["audio/wav", "audio/x-wav", "audio/vnd.wave"]
 puid       = "fmt/141"
-puid_verified = false
+puid_verified = true
+puid_name  = "Waveform Audio (PCMWAVEFORMAT)"
 spec_url   = "https://learn.microsoft.com/en-us/windows/win32/xaudio2/resource-interchange-file-format--riff"
 
 preserves = ["signal_fidelity", "audio_channels", "sample_rate", "bit_depth", "time", "metadata"]
@@ -25,6 +26,17 @@ container_of  = []
 
 [notes]
 text = """
+PUID VERIFIED against PRONOM 2026-08-23: fmt/141, "Waveform Audio
+(PCMWAVEFORMAT)". Note the name — PRONOM identifies the PCMWAVEFORMAT *variant*,
+not WAV in general, which is the version-versus-format distinction recorded in
+docs/RESEARCH.md §2.2. A WAVE_FORMAT_EXTENSIBLE file is still a WAV and is not
+this PUID.
+
+PRONOM's signature is richer than ours can express: it pins the `fmt ` chunk
+contents (`52494646{4}57415645666D7420100000000100...`), so it verifies the
+format chunk really describes PCM rather than merely finding RIFF/WAVE. Ours
+checks the two container markers only.
+
 RIFF-based, so it needs the same two-signature AND treatment as AVI and WebP:
 `RIFF` at offset 0 is shared with those, and the form type at offset 8 is what
 actually discriminates. See image-webp.toml for the other half of that lesson.

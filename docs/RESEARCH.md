@@ -1370,6 +1370,57 @@ one engine would be worse than leaving it open.
   consulted for them.
 
 
+### 14.5 Second audio engine: one agreement, one disagreement
+
+§14.4 flagged that every audio measurement came from ffmpeg alone, and that the
+alpha finding only became trustworthy at three engines. **SoX 14.4.2** added as
+the second. It produced one result of each kind, which is the useful outcome.
+
+**Agreement — stereo downmix.** ffmpeg and SoX produce mono output differing by
+**0.0% of signal RMS** on a specimen carrying different tones per channel. Both
+average. `downmix_average` is therefore a genuine convention rather than one
+engine's habit — unlike alpha flattening, where three engines split two-to-one.
+
+Worth stating plainly because it is the easier finding to forget: **cross-engine
+agreement is a result.** A registry that only records divergence would imply
+every property is contested, which is not what the measurements say.
+
+**Disagreement — bit depth.** 16-bit to 8-bit on quiet content:
+
+| Invocation | SNR |
+|---|---|
+| `ffmpeg -c:a pcm_u8` | 3.8 dB |
+| `ffmpeg -dither_method 0 -c:a pcm_u8` | 3.8 dB (flag had no visible effect) |
+| `sox -b 8 -e unsigned-integer` | 5.2 dB |
+| `sox -D -b 8 -e unsigned-integer` | **11.1 dB** |
+
+Dither explains SoX's own 5.9 dB spread — it trades SNR for the removal of
+correlated distortion, which is the intended bargain and confirms the flag does
+what it claims. It does **not** explain the 7.3 dB gap between `sox -D` and
+ffmpeg.
+
+**That cause is unknown, and is recorded as unknown.** Candidate explanations —
+different rounding to offset-binary `u8`, an ffmpeg dither the flag did not
+disable, different scaling — were not tested, and asserting one would be exactly
+the guess this dossier exists to avoid.
+
+**Design implication.** `bit_depth = degraded` is under-specified in precisely
+the way `alpha = lost` was before ADR-0012: it says the property was reduced, not
+*how*. It wants a policy vocabulary — `dither`, `truncate`, `round` are the
+obvious candidates.
+
+**Deliberately not adding one yet.** ADR-0012 requires a policy to be measured
+rather than assumed, and rule 7 requires the vocabulary to be defined before a
+value can be used. Writing `dither` against the SoX edge would claim an
+understanding of the ffmpeg gap that nobody here has. The measurement is
+recorded; the label waits for the explanation.
+
+**Also worth noting:** the specimen is quiet content, where 8-bit quantisation is
+catastrophic. On loud content both engines score around 50 dB and would look
+identical. This divergence is only visible because the corpus was built to
+exercise the property, which is the §14.1 lesson arriving a second time.
+
+
 ## Sources
 
 - [Convert To It](https://converttoit.com/) · [Grokipedia: Convert to it](https://grokipedia.com/page/Convert_to_it) · [Convert To It API](https://converttoit.com/api)

@@ -154,7 +154,7 @@
         "metadata"
       ],
       "puid": "fmt/279",
-      "puid_verified": false
+      "puid_verified": true
     },
     {
       "id": "audio/mpeg",
@@ -177,7 +177,7 @@
         "metadata"
       ],
       "puid": "fmt/134",
-      "puid_verified": false
+      "puid_verified": true
     },
     {
       "id": "audio/wav",
@@ -203,7 +203,7 @@
         "metadata"
       ],
       "puid": "fmt/141",
-      "puid_verified": false
+      "puid_verified": true
     },
     {
       "id": "image/bmp",
@@ -473,6 +473,15 @@
       "license": "LGPL-2.1-or-later",
       "build_profiles": [
         "lgpl",
+        "gpl"
+      ]
+    },
+    {
+      "id": "sox",
+      "name": "SoX — Sound eXchange",
+      "version_pin": ">=14.4,<15",
+      "license": "GPL-2.0-or-later",
+      "build_profiles": [
         "gpl"
       ]
     },
@@ -820,6 +829,47 @@
     },
     {
       "from": "audio/wav",
+      "to": "audio/wav",
+      "from_kind": "AudioPCM",
+      "to_kind": "AudioPCM",
+      "engine": "sox",
+      "invocation": "sox IN OUT remix 1,2",
+      "operation": "Transform",
+      "loss": {
+        "audio_channels": "lost",
+        "bit_depth": "preserved",
+        "metadata": "lost",
+        "sample_rate": "preserved",
+        "signal_fidelity": "degraded",
+        "time": "preserved"
+      },
+      "loss_policy": {
+        "audio_channels": "downmix_average"
+      },
+      "verification": "verified",
+      "generational": false
+    },
+    {
+      "from": "audio/wav",
+      "to": "audio/wav",
+      "from_kind": "AudioPCM",
+      "to_kind": "AudioPCM",
+      "engine": "sox",
+      "invocation": "sox IN -b 8 -e unsigned-integer OUT",
+      "operation": "Transform",
+      "loss": {
+        "audio_channels": "preserved",
+        "bit_depth": "degraded",
+        "metadata": "lost",
+        "sample_rate": "preserved",
+        "signal_fidelity": "degraded",
+        "time": "preserved"
+      },
+      "verification": "verified",
+      "generational": true
+    },
+    {
+      "from": "audio/wav",
       "to": "text/plain",
       "from_kind": "AudioPCM",
       "to_kind": "Text",
@@ -839,9 +889,9 @@
   ],
   "counts": {
     "formats": 14,
-    "engines": 7,
-    "edges_total": 19,
-    "edges_verified": 18,
+    "engines": 8,
+    "edges_total": 21,
+    "edges_verified": 20,
     "edges_claimed": 1
   }
 }
