@@ -430,3 +430,57 @@ fn gif_and_jpeg_lose_opposite_things() {
     assert_eq!(gif.totals.loss.get("color_depth"), Some(LossValue::Lost));
     assert_eq!(gif.totals.loss.get("alpha"), Some(LossValue::Degraded));
 }
+
+/// A costlier route carrying a capability must not be pruned by a cheaper one
+/// that lacks it.
+///
+/// Dijkstra's visited set assumes two arrivals at the same node are
+/// interchangeable. Engine `requires`/`provides` break that assumption: the
+/// real search state is (node, capabilities carried). Keyed by node alone, the
+/// cheap capability-less arrival at `mid` recorded the best cost and the
+/// capable arrival was discarded, so the edge out of `mid` requiring that
+/// capability became unreachable and planning returned None with nothing to
+/// say why.
+///
+/// No shipped edge declares `provides` yet, but registry/edges/whisper-cpp.toml
+/// already REQUIRES `wav_16khz_mono`, so this goes live with the first edge
+/// that supplies one.
+#[test]
+fn a_capability_carrying_route_is_not_pruned_by_a_cheaper_one() {
+    let mut formats = BTreeMap::new();
+    for f in [
+        fmt("start", &["geometry"]),
+        fmt("mid", &["geometry"]),
+        fmt("end", &["geometry"]),
+    ] {
+        formats.insert(f.id.clone(), f);
+    }
+    let mut engines = BTreeMap::new();
+    engines.insert("e".to_string(), engine("e"));
+
+    let keep = [("geometry", LossValue::Preserved)];
+    // Cheap, but supplies nothing.
+    let cheap = edge("start", "mid", &keep, 1);
+    // Expensive, but supplies what the last hop needs.
+    let mut capable = edge("start", "mid", &keep, 50);
+    capable.provides = vec!["normalised".into()];
+    // Only traversable with that capability in hand.
+    let mut gated = edge("mid", "end", &keep, 1);
+    gated.requires = vec!["normalised".into()];
+
+    let reg = Registry {
+        version: "test".into(),
+        formats,
+        engines,
+        edges: vec![cheap, capable, gated],
+    };
+
+    let planner = Planner::new(&reg, &Policy::default());
+    let plan = planner.plan("start", "end");
+    assert!(
+        plan.is_some(),
+        "a valid route exists through the capability-providing edge, but the \
+         planner found none — the cheaper capability-less route pruned it"
+    );
+    assert_eq!(plan.unwrap().hops.len(), 2, "expected the two-hop capable route");
+}

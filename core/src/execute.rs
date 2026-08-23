@@ -35,6 +35,11 @@ pub struct Receipt {
     pub target_format: String,
     pub hops: Vec<String>,
     pub engine_versions: Vec<String>,
+    /// The encoder quality this run used. It is an argument to `execute` rather
+    /// than part of the plan, and it changes the output — so a receipt without
+    /// it cannot reproduce the file it describes, which is the receipt's only
+    /// job. Every execution-affecting input belongs here.
+    pub quality: u8,
     pub contains_synthesis: bool,
     pub declared_loss: crate::loss::LossVector,
     pub measurements: Vec<Measurement>,
@@ -170,6 +175,7 @@ pub fn execute(plan: &Plan, input: &[u8], quality: u8) -> Result<(Vec<u8>, Recei
             .iter()
             .map(|h| format!("{}@{}", h.engine, h.engine_version))
             .collect(),
+        quality,
         contains_synthesis: plan.totals.contains_synthesis,
         declared_loss: declared.clone(),
         measurements,

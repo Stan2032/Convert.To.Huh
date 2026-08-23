@@ -52,7 +52,47 @@ independence is not a side effect of losslessness; it is the definition of it.**
 
 If two lossless routes produced different content, at least one of them was not
 lossless. So the more strictly losslessness is enforced, the more completely the
-path is erased. The measurement above is a special case of a theorem.
+path is erased.
+
+> **CORRECTION 2026-08-23 — the theorem is about content, not bytes.**
+>
+> This section originally ended "the measurement above is a special case of a
+> theorem", which claimed more than the argument supports. Losslessness fixes
+> the **content**. It does not fix the **serialization**: a lossless encoder may
+> write the same pixels many valid ways, and byte-identity additionally requires
+> that the same encoder, version and settings produced the file.
+>
+> Measured, because asserting it here would repeat the original mistake — three
+> lossless PNG encodings of one image, `vips pngsave` at default and at
+> `--compression 0` against the original:
+>
+> | File | SHA-256 (first 16) |
+> |---|---|
+> | `rgb-photo.png` | `2c24e144484680f5` |
+> | `vips pngsave` | `24480df09460b76b` |
+> | `vips pngsave --compression 0` | `d3b2e1e80f30b7a4` |
+>
+> Three different files. `vips subtract` between the last two gives min and max
+> both exactly `0.000000` — identical pixels, different bytes.
+>
+> **The decision does not change, and the argument against the cipher is
+> unaffected** — it only ever needed content to be path-independent, which is
+> what the theorem actually proves. Keying on the path requires the output to
+> depend on the path; lossless routes agree on content, so nothing is left to
+> key on. The seven byte-identical routes in the table above are a stronger
+> empirical fact that also required a fixed encoder, and they remain true as a
+> measurement of this toolchain rather than as a corollary of losslessness.
+>
+> The canonicalizer conclusion also survives intact, and is if anything stated
+> more precisely by the distinction: output is a function of
+> `(content, encoder, settings)` and **not** of the route taken. That is exactly
+> the property a sanitizer needs — everything not reconstructed from parsed
+> content is gone, whichever way the file arrived.
+>
+> Raised in review. The habit that produced the error is worth naming: the
+> sentence generalised a measurement into a theorem, which is the same move
+> ADR-0013 caught ADR-0012 making, and the same one the fidelity harness made in
+> `RESEARCH.md §13.8`.
 
 Stated as the tension that kills the idea:
 

@@ -262,6 +262,26 @@ impl Registry {
         let mut formats = BTreeMap::new();
         for p in read_toml_dir(&reg.join("formats"))? {
             let f: Format = toml::from_str(&p.1).map_err(|e| format!("{}: {e}", p.0))?;
+            // A malformed magic makes `hex_matches` return false, which reads
+            // as "this format does not match" rather than "this signature is
+            // broken". The file then falls back to extension-based detection,
+            // and ground rule 1 says the extension is never authoritative. The
+            // ZIP signature bug already cost this project real time in exactly
+            // that shape, so a bad signature must fail loudly at load.
+            for (i, s) in f.signatures.iter().enumerate() {
+                if s.magic.len() % 2 != 0 {
+                    return Err(format!(
+                        "{}: signature {i} magic `{}` has an odd number of hex digits",
+                        p.0, s.magic
+                    ));
+                }
+                if s.magic.is_empty() || !s.magic.chars().all(|c| c.is_ascii_hexdigit()) {
+                    return Err(format!(
+                        "{}: signature {i} magic `{}` is not hexadecimal",
+                        p.0, s.magic
+                    ));
+                }
+            }
             formats.insert(f.id.clone(), f);
         }
 

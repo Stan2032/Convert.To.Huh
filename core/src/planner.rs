@@ -7,7 +7,7 @@
 use crate::loss::{LossValue, LossVector};
 use crate::registry::{Edge, Registry};
 use serde::Serialize;
-use std::collections::{BinaryHeap, HashMap};
+use std::collections::{BTreeSet, BinaryHeap, HashMap};
 
 /// Per-hop base cost — prefers shorter routes, all else equal.
 const DEPTH_COST: f64 = 1.0;
@@ -200,16 +200,36 @@ impl<'a> Planner<'a> {
         banned_nodes: &[String],
         seed: &[usize],
     ) -> Option<(Vec<usize>, f64)> {
+        // The search state is (node, capabilities carried so far), not node
+        // alone. Engine `requires`/`provides` make two routes to the same node
+        // non-interchangeable: a cheap route arriving without capability `c`
+        // would otherwise record the best cost for that node and prune a
+        // costlier route that arrives WITH `c`, making every edge out of the
+        // node that requires `c` unreachable. `plan` would then return None
+        // while a valid route existed, with nothing to indicate why.
+        //
+        // Latent today — no shipped edge declares `provides` — but
+        // registry/edges/whisper-cpp.toml already requires `wav_16khz_mono`, so
+        // it goes live with the first edge that supplies one.
+        let capabilities = |seed: &[usize], path: &[usize]| -> BTreeSet<String> {
+            seed.iter()
+                .chain(path.iter())
+                .flat_map(|&p| self.reg.edges[p].provides.iter().cloned())
+                .collect()
+        };
+
         let mut heap = BinaryHeap::new();
-        let mut best: HashMap<String, f64> = HashMap::new();
+        let mut best: HashMap<(String, BTreeSet<String>), f64> = HashMap::new();
+        let start = capabilities(seed, &[]);
         heap.push(QNode { cost: 0.0, node: from.to_string(), path: vec![] });
-        best.insert(from.to_string(), 0.0);
+        best.insert((from.to_string(), start), 0.0);
 
         while let Some(QNode { cost, node, path }) = heap.pop() {
             if node == to {
                 return Some((path, cost));
             }
-            if cost > *best.get(&node).unwrap_or(&f64::INFINITY) {
+            let here = capabilities(seed, &path);
+            if cost > *best.get(&(node.clone(), here.clone())).unwrap_or(&f64::INFINITY) {
                 continue;
             }
             for &ei in self.adjacency.get(&node).map(|v| v.as_slice()).unwrap_or(&[]) {
@@ -223,21 +243,15 @@ impl<'a> Planner<'a> {
                 // Engine input constraints are edges, not assumptions: only
                 // traverse if everything this edge requires has been provided
                 // by the route so far (including the seed/root path).
-                if !e.requires.is_empty() {
-                    let provided: Vec<&str> = seed
-                        .iter()
-                        .chain(path.iter())
-                        .flat_map(|&p| self.reg.edges[p].provides.iter().map(|s| s.as_str()))
-                        .collect();
-                    if !e.requires.iter().all(|r| provided.contains(&r.as_str())) {
-                        continue;
-                    }
+                if !e.requires.is_empty() && !e.requires.iter().all(|r| here.contains(r)) {
+                    continue;
                 }
                 let next_cost = cost + edge_cost(e);
-                if next_cost < *best.get(&e.to).unwrap_or(&f64::INFINITY) {
-                    best.insert(e.to.clone(), next_cost);
-                    let mut np = path.clone();
-                    np.push(ei);
+                let mut np = path.clone();
+                np.push(ei);
+                let key = (e.to.clone(), capabilities(seed, &np));
+                if next_cost < *best.get(&key).unwrap_or(&f64::INFINITY) {
+                    best.insert(key, next_cost);
                     heap.push(QNode { cost: next_cost, node: e.to.clone(), path: np });
                 }
             }
