@@ -49,6 +49,10 @@
       "description": "Links, form fields, scripts, and other active behaviour."
     },
     {
+      "id": "signal_fidelity",
+      "description": "Whether the sample values themselves survived, as distinct from how many there are or how wide each one is. This is the property lossy compression destroys. Measured with a domain metric — SSIM for raster, band energy or SNR for audio."
+    },
+    {
       "id": "audio_channels",
       "description": "Channel count and layout, e.g. stereo or surround."
     },
@@ -129,6 +133,53 @@
       "puid_verified": true
     },
     {
+      "id": "audio/flac",
+      "name": "Free Lossless Audio Codec",
+      "kinds": [
+        "AudioPCM"
+      ],
+      "extensions": [
+        "flac"
+      ],
+      "mime_types": [
+        "audio/flac",
+        "audio/x-flac"
+      ],
+      "preserves": [
+        "signal_fidelity",
+        "audio_channels",
+        "sample_rate",
+        "bit_depth",
+        "time",
+        "metadata"
+      ],
+      "puid": "fmt/279",
+      "puid_verified": false
+    },
+    {
+      "id": "audio/mpeg",
+      "name": "MPEG-1/2 Audio Layer III (MP3)",
+      "kinds": [
+        "AudioPCM"
+      ],
+      "extensions": [
+        "mp3"
+      ],
+      "mime_types": [
+        "audio/mpeg",
+        "audio/mp3"
+      ],
+      "preserves": [
+        "signal_fidelity",
+        "audio_channels",
+        "sample_rate",
+        "time",
+        "metadata"
+      ],
+      "puid": "fmt/134",
+      "puid_verified": false
+    },
+    {
       "id": "audio/wav",
       "name": "Waveform Audio File Format",
       "kinds": [
@@ -144,6 +195,7 @@
         "audio/vnd.wave"
       ],
       "preserves": [
+        "signal_fidelity",
         "audio_channels",
         "sample_rate",
         "bit_depth",
@@ -151,7 +203,7 @@
         "metadata"
       ],
       "puid": "fmt/141",
-      "puid_verified": true
+      "puid_verified": false
     },
     {
       "id": "image/bmp",
@@ -168,6 +220,7 @@
         "image/x-ms-bmp"
       ],
       "preserves": [
+        "signal_fidelity",
         "geometry",
         "color_depth",
         "color_profile",
@@ -190,6 +243,7 @@
         "image/gif"
       ],
       "preserves": [
+        "signal_fidelity",
         "geometry",
         "alpha",
         "time",
@@ -214,6 +268,7 @@
         "image/jpeg"
       ],
       "preserves": [
+        "signal_fidelity",
         "geometry",
         "color_depth",
         "color_profile",
@@ -235,6 +290,7 @@
         "image/png"
       ],
       "preserves": [
+        "signal_fidelity",
         "geometry",
         "color_depth",
         "color_profile",
@@ -285,6 +341,7 @@
         "image/tiff"
       ],
       "preserves": [
+        "signal_fidelity",
         "geometry",
         "color_depth",
         "color_profile",
@@ -308,6 +365,7 @@
         "image/webp"
       ],
       "preserves": [
+        "signal_fidelity",
         "geometry",
         "color_depth",
         "color_profile",
@@ -431,21 +489,40 @@
   ],
   "edges": [
     {
-      "from": "video/x-msvideo",
-      "to": "audio/wav",
-      "from_kind": "VideoStream",
+      "from": "audio/wav",
+      "to": "audio/mpeg",
+      "from_kind": "AudioPCM",
       "to_kind": "AudioPCM",
       "engine": "ffmpeg",
-      "operation": "Extract",
+      "invocation": "ffmpeg -i IN -c:a libmp3lame -b:a 64k OUT",
+      "operation": "Transcode",
+      "loss": {
+        "audio_channels": "preserved",
+        "metadata": "lost",
+        "sample_rate": "preserved",
+        "signal_fidelity": "degraded",
+        "time": "preserved"
+      },
+      "verification": "verified",
+      "generational": true
+    },
+    {
+      "from": "audio/wav",
+      "to": "audio/flac",
+      "from_kind": "AudioPCM",
+      "to_kind": "AudioPCM",
+      "engine": "ffmpeg",
+      "invocation": "ffmpeg -i IN -c:a flac OUT",
+      "operation": "Transcode",
       "loss": {
         "audio_channels": "preserved",
         "bit_depth": "preserved",
-        "geometry": "lost",
-        "metadata": "degraded",
+        "metadata": "lost",
         "sample_rate": "preserved",
+        "signal_fidelity": "preserved",
         "time": "preserved"
       },
-      "verification": "claimed",
+      "verification": "verified",
       "generational": false
     },
     {
@@ -454,33 +531,20 @@
       "from_kind": "AudioPCM",
       "to_kind": "AudioPCM",
       "engine": "ffmpeg",
+      "invocation": "ffmpeg -i IN -ac 1 OUT",
       "operation": "Transform",
       "loss": {
-        "audio_channels": "degraded",
+        "audio_channels": "lost",
         "bit_depth": "preserved",
         "metadata": "lost",
-        "sample_rate": "degraded",
+        "sample_rate": "preserved",
+        "signal_fidelity": "degraded",
         "time": "preserved"
       },
-      "verification": "claimed",
-      "generational": false
-    },
-    {
-      "from": "video/x-msvideo",
-      "to": "image/png",
-      "from_kind": "VideoStream",
-      "to_kind": "Raster",
-      "engine": "ffmpeg",
-      "operation": "Extract",
-      "loss": {
-        "audio_channels": "lost",
-        "color_profile": "degraded",
-        "geometry": "preserved",
-        "metadata": "lost",
-        "sample_rate": "lost",
-        "time": "lost"
+      "loss_policy": {
+        "audio_channels": "downmix_average"
       },
-      "verification": "claimed",
+      "verification": "verified",
       "generational": false
     },
     {
@@ -495,7 +559,8 @@
         "color_depth": "degraded",
         "color_profile": "preserved",
         "geometry": "preserved",
-        "metadata": "lost"
+        "metadata": "lost",
+        "signal_fidelity": "degraded"
       },
       "loss_policy": {
         "alpha": "discard_channel"
@@ -666,7 +731,8 @@
         "color_depth": "degraded",
         "color_profile": "preserved",
         "geometry": "preserved",
-        "metadata": "lost"
+        "metadata": "lost",
+        "signal_fidelity": "degraded"
       },
       "loss_policy": {
         "alpha": "composite_black"
@@ -684,10 +750,11 @@
       "operation": "Transcode",
       "loss": {
         "alpha": "preserved",
-        "color_depth": "degraded",
+        "color_depth": "preserved",
         "color_profile": "preserved",
         "geometry": "preserved",
-        "metadata": "lost"
+        "metadata": "lost",
+        "signal_fidelity": "degraded"
       },
       "verification": "verified",
       "generational": true
@@ -723,7 +790,8 @@
         "color_depth": "degraded",
         "color_profile": "preserved",
         "geometry": "preserved",
-        "metadata": "lost"
+        "metadata": "lost",
+        "signal_fidelity": "preserved"
       },
       "verification": "verified",
       "generational": false
@@ -741,7 +809,8 @@
         "color_depth": "degraded",
         "color_profile": "preserved",
         "geometry": "preserved",
-        "metadata": "lost"
+        "metadata": "lost",
+        "signal_fidelity": "degraded"
       },
       "loss_policy": {
         "alpha": "composite_white"
@@ -769,10 +838,10 @@
     }
   ],
   "counts": {
-    "formats": 12,
+    "formats": 14,
     "engines": 7,
     "edges_total": 19,
-    "edges_verified": 15,
-    "edges_claimed": 4
+    "edges_verified": 18,
+    "edges_claimed": 1
   }
 }

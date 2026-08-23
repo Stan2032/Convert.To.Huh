@@ -4,20 +4,19 @@ kinds      = ["AudioPCM"]
 extensions = ["wav", "wave"]
 mime_types = ["audio/wav", "audio/x-wav", "audio/vnd.wave"]
 puid       = "fmt/141"
-puid_verified = true
-puid_name  = "Waveform Audio (PCMWAVEFORMAT)"
-spec_url   = "https://www.loc.gov/preservation/digital/formats/fdd/fdd000001.shtml"
+puid_verified = false
+spec_url   = "https://learn.microsoft.com/en-us/windows/win32/xaudio2/resource-interchange-file-format--riff"
 
-preserves = ["audio_channels", "sample_rate", "bit_depth", "time", "metadata"]
+preserves = ["signal_fidelity", "audio_channels", "sample_rate", "bit_depth", "time", "metadata"]
 
 [[signatures]]
 offset = 0
-magic  = "52494646"
+magic  = "52494646"      # "RIFF"
 weight = "weak"
 
 [[signatures]]
 offset = 8
-magic  = "57415645"
+magic  = "57415645"      # "WAVE" — the form type is the discriminator
 weight = "decisive"
 
 [detection]
@@ -26,16 +25,14 @@ container_of  = []
 
 [notes]
 text = """
-Load-bearing well beyond its own merits: whisper.cpp consumes only standard WAV,
-so every ASR route passes through a normalization hop to 16 kHz mono WAV
-(docs/RESEARCH.md §3.6). That constraint is modelled as an edge `requires`
-rather than hidden inside the adapter — the planner has to be able to see it in
-order to insert the hop.
-PRONOM VERIFIED 2026-08-20. PRONOM's signature goes considerably further than
-ours — `52494646{4}57415645666D7420100000000100{14-*}64617461` — requiring the
-`fmt ` chunk with PCM parameters and a `data` chunk. That specificity is why
-fmt/141 is named PCMWAVEFORMAT: non-PCM WAV variants are different PUIDs. Our
-RIFF+WAVE pair matches all of them, which is what a converter wants.
-PRONOM's MIME is `audio/x-wav`; ours lists that plus the IANA-registered
-`audio/vnd.wave`.
+RIFF-based, so it needs the same two-signature AND treatment as AVI and WebP:
+`RIFF` at offset 0 is shared with those, and the form type at offset 8 is what
+actually discriminates. See image-webp.toml for the other half of that lesson.
+
+PUID recorded as fmt/141 but NOT verified — `tools/verify_pronom.py` has not
+been run against it. Treat as unconfirmed until it has been.
+
+Uncompressed PCM, so `signal_fidelity = preserved` is achievable here, which is
+what makes it the reference format for measuring what lossy codecs destroy
+(docs/RESEARCH.md §14).
 """

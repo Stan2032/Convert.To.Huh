@@ -110,6 +110,7 @@ fn describe(prop: &str) -> &'static str {
         "metadata" => "Descriptive and embedded data: authorship, timestamps, EXIF, GPS, comments.",
         "fonts" => "Embedded font programs, and whether glyphs render as the author intended.",
         "interactivity" => "Links, form fields, scripts, and other active behaviour.",
+        "signal_fidelity" => "Whether the sample values themselves survived, as distinct from how many there are or how wide each one is. This is the property lossy compression destroys. Measured with a domain metric — SSIM for raster, band energy or SNR for audio.",
         "audio_channels" => "Channel count and layout, e.g. stereo or surround.",
         "sample_rate" => "Audio samples per second.",
         "bit_depth" => "Bits per audio sample.",

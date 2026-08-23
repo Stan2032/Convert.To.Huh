@@ -8,7 +8,7 @@ puid_verified = true
 puid_name  = "Graphics Interchange Format 89a"
 spec_url   = "https://www.w3.org/Graphics/GIF/spec-gif89a.txt"
 
-preserves = ["geometry", "alpha", "time", "metadata"]
+preserves = ["signal_fidelity", "geometry", "alpha", "time", "metadata"]
 
 [[signatures]]
 offset = 0

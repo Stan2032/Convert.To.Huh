@@ -1,83 +1,27 @@
-# Capabilities of FFmpeg (LGPL build). Owner: capability-cartographer.
+# Capabilities of FFmpeg. Owner: capability-cartographer.
+#
+# The first AUDIO edges in this registry, and the reason ADR-0014 exists: the
+# property vocabulary had no word for what a lossy codec destroys, and audio
+# made that impossible to paper over (docs/RESEARCH.md §14).
+#
+# Every edge records its invocation (ADR-0013).
 
 [[edge]]
-engine    = "ffmpeg"
-op        = "Extract"
-from      = "video/x-msvideo"
-to        = "audio/wav"
-from_kind = "VideoStream"
-to_kind   = "AudioPCM"
+engine     = "ffmpeg"
+invocation = "ffmpeg -i IN -c:a libmp3lame -b:a 64k OUT"
+op         = "Transcode"
+from       = "audio/wav"
+to         = "audio/mpeg"
+from_kind  = "AudioPCM"
+to_kind    = "AudioPCM"
 
 [edge.loss]
-geometry       = "lost"
-time           = "preserved"
-audio_channels = "preserved"
-sample_rate    = "preserved"
-bit_depth      = "preserved"
-metadata       = { value = "degraded", note = "container metadata dropped; stream metadata retained" }
-generational   = false
-
-[edge.cost]
-time_model   = "linear_duration"
-memory_model = "streaming"
-base_ms      = 50
-
-[edge.constraints]
-max_input_bytes = 21474836480
-requires        = []
-
-[edge.verification]
-status = "claimed"
-note   = "geometry=lost is the whole point of an Extract: the video is discarded and the audio survives intact. Hop 1 of the AVI->PDF transcript route."
-
-
-[[edge]]
-engine    = "ffmpeg"
-op        = "Transform"
-from      = "audio/wav"
-to        = "audio/wav"
-from_kind = "AudioPCM"
-to_kind   = "AudioPCM"
-
-[edge.loss]
-audio_channels = { value = "degraded", note = "downmixed to mono" }
-sample_rate    = { value = "degraded", from = 48000, to = 16000 }
-bit_depth      = "preserved"
-time           = "preserved"
-metadata       = "lost"
-generational   = false
-
-[edge.cost]
-time_model   = "linear_duration"
-memory_model = "streaming"
-base_ms      = 30
-
-[edge.constraints]
-max_input_bytes = 21474836480
-requires        = []
-provides        = ["wav_16khz_mono"]
-
-[edge.verification]
-status = "claimed"
-note   = "The normalization hop whisper.cpp requires (RESEARCH §3.6). It exists as a first-class edge, with `provides`, so the planner INSERTS it rather than the ASR adapter silently doing it. That visibility is the difference between a planner and a pile of shell scripts: the user sees that their audio was downmixed and resampled before transcription."
-
-
-[[edge]]
-engine    = "ffmpeg"
-op        = "Extract"
-from      = "video/x-msvideo"
-to        = "image/png"
-from_kind = "VideoStream"
-to_kind   = "Raster"
-
-[edge.loss]
-time           = "lost"
-geometry       = "preserved"
-color_profile  = { value = "degraded", note = "limited->full range conversion is lossy and frequently wrong" }
-audio_channels = "lost"
-sample_rate    = "lost"
-metadata       = "lost"
-generational   = false
+signal_fidelity = "degraded"
+audio_channels  = "preserved"
+sample_rate     = "preserved"
+time            = "preserved"
+metadata        = "lost"
+generational    = true
 
 [edge.cost]
 time_model   = "linear_duration"
@@ -85,9 +29,127 @@ memory_model = "streaming"
 base_ms      = 40
 
 [edge.constraints]
-max_input_bytes = 21474836480
+max_input_bytes = 2147483648
 requires        = []
 
 [edge.verification]
-status = "claimed"
-note   = "Frame sampling: one input, many outputs. Sampling policy (every Nth frame, keyframes only, scene detection) is a hop parameter and is exactly what distinguishes the contact-sheet, frame-per-page and storyboard plans in content-model.md §4. `time = lost` because the frames are stills; a route that keeps timecodes must Assemble them into a DocTree to carry that information."
+status      = "verified"
+specimens   = ["corpus/audio/highfreq-mono.wav", "corpus/audio/stereo-distinct.wav"]
+verified_at = "2026-08-22"
+verified_by = "capability-cartographer"
+
+[edge.verification.measured]
+tool                = "corpus/generate_audio.py + ffprobe band-energy analysis"
+engine_build        = "ffmpeg 6.1.1"
+metric              = "band energy retained vs the WAV original"
+band_1khz_retained  = 0.903
+band_15khz_retained = 0.902
+note = """
+THE EDGE THAT FORCED ADR-0014. Every property the vocabulary tracked came back
+clean — channels 1 to 1, sample rate 44100 to 44100, duration unchanged — while
+~10% of the signal energy was gone from both measured bands.
+
+`bit_depth` could not express it, because MP3 has no fixed sample width and the
+property does not apply at all; ffprobe reports bits_per_sample = 0. So the loss
+had nowhere to be recorded. That is the same hole found in raster (§13.7), from
+a different domain with a different metric, which is what justified adding
+`signal_fidelity` to a closed vocabulary.
+
+The FLAC edge below is the control: 100.0% retention on the same specimen
+through the same harness. Without it, 90.3% could have been the measuring
+instrument rather than the codec — a mistake this project has already made once
+(§13.8).
+"""
+
+
+[[edge]]
+engine     = "ffmpeg"
+invocation = "ffmpeg -i IN -c:a flac OUT"
+op         = "Transcode"
+from       = "audio/wav"
+to         = "audio/flac"
+from_kind  = "AudioPCM"
+to_kind    = "AudioPCM"
+
+[edge.loss]
+signal_fidelity = "preserved"
+audio_channels  = "preserved"
+sample_rate     = "preserved"
+bit_depth       = "preserved"
+time            = "preserved"
+metadata        = "lost"
+generational    = false
+
+[edge.cost]
+time_model   = "linear_duration"
+memory_model = "streaming"
+base_ms      = 35
+
+[edge.constraints]
+max_input_bytes = 2147483648
+requires        = []
+
+[edge.verification]
+status      = "verified"
+specimens   = ["corpus/audio/highfreq-mono.wav"]
+verified_at = "2026-08-22"
+verified_by = "capability-cartographer"
+
+[edge.verification.measured]
+tool                = "ffprobe band-energy analysis"
+engine_build        = "ffmpeg 6.1.1"
+metric              = "band energy retained vs the WAV original"
+band_15khz_retained = 1.0
+note = "Lossless, and serving as the control that makes the MP3 measurement above credible."
+
+
+[[edge]]
+engine     = "ffmpeg"
+invocation = "ffmpeg -i IN -ac 1 OUT"
+op         = "Transform"
+from       = "audio/wav"
+to         = "audio/wav"
+from_kind  = "AudioPCM"
+to_kind    = "AudioPCM"
+
+[edge.loss]
+audio_channels  = { value = "lost", policy = "downmix_average" }
+signal_fidelity = "degraded"
+sample_rate     = "preserved"
+bit_depth       = "preserved"
+time            = "preserved"
+metadata        = "lost"
+generational    = false
+
+[edge.cost]
+time_model   = "linear_duration"
+memory_model = "streaming"
+base_ms      = 20
+
+[edge.constraints]
+max_input_bytes = 2147483648
+requires        = []
+
+[edge.verification]
+status      = "verified"
+specimens   = ["corpus/audio/stereo-distinct.wav"]
+verified_at = "2026-08-22"
+verified_by = "capability-cartographer"
+
+[edge.verification.measured]
+tool         = "ffprobe channel count"
+engine_build = "ffmpeg 6.1.1"
+channels     = "2 -> 1"
+note = """
+The specimen carries DIFFERENT tones in left and right (A4 and E5), because
+downmixing identical channels is not observably lossy — the audio equivalent of
+testing alpha with a fully opaque image (corpus/generate_audio.py).
+
+`audio_channels` carries a `policy` of `downmix_average`, the audio analogue of
+alpha's `composite_black` (ADR-0012): saying the channels are gone does not say
+what replaced them, and averaging is one choice among several. Whether other
+engines pick differently is UNMEASURED — do not assume this generalises.
+
+`signal_fidelity = degraded` because a listener no longer hears what was in the
+original stereo field, even though each sample is still full precision.
+"""

@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-Thirteen binding decisions. An ADR constrains what may be built; if your work
+Fourteen binding decisions. An ADR constrains what may be built; if your work
 requires violating one, **stop and revisit the ADR first** rather than working
 around it. Reversal means a new ADR that supersedes the old one and states what
 changed our mind — never a quiet edit.
@@ -24,6 +24,7 @@ preference wearing a decision's clothes.
 | [0011](0011-the-registry-is-the-deliverable.md) | The registry is the deliverable | accepted |
 | [0012](0012-lost-needs-a-policy-qualifier.md) | `lost` needs a policy qualifier | accepted |
 | [0013](0013-loss-belongs-to-the-invocation.md) | Loss belongs to the invocation, not the engine | accepted |
+| [0014](0014-signal-fidelity-is-a-property.md) | `signal_fidelity` is a tracked property | accepted |
 
 ## Which ones bite most often
 

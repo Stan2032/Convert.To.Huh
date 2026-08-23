@@ -1,0 +1,44 @@
+id         = "audio/mpeg"
+name       = "MPEG-1/2 Audio Layer III (MP3)"
+kinds      = ["AudioPCM"]
+extensions = ["mp3"]
+mime_types = ["audio/mpeg", "audio/mp3"]
+puid       = "fmt/134"
+puid_verified = false
+spec_url   = "https://www.iso.org/standard/22412.html"
+
+preserves = ["signal_fidelity", "audio_channels", "sample_rate", "time", "metadata"]
+
+[[signatures]]
+offset = 0
+magic  = "494433"        # "ID3" tag
+weight = "strong"
+group  = 0
+
+[[signatures]]
+offset = 0
+magic  = "FFFB"          # MPEG-1 Layer III frame sync, no CRC
+weight = "weak"
+group  = 0
+
+[detection]
+priority_over = []
+container_of  = []
+
+[notes]
+text = """
+`preserves` deliberately OMITS `bit_depth`: MP3 has no fixed sample width, so
+the property does not apply rather than being lost. ffprobe reports
+bits_per_sample = 0 for MP3, which is the encoder saying the same thing.
+
+That distinction is exactly what motivated ADR-0014. Measuring
+highfreq-mono.wav to MP3 at 64k, every tracked property came back preserved or
+not-applicable while ~10% of the signal energy was gone. `bit_depth` could not
+express it because it does not apply here at all.
+
+Detection is genuinely weak. The two signatures are alternatives: an ID3 tag or
+a raw frame sync. Frame sync is two bytes and appears in plenty of unrelated
+binaries, and files exist with neither at offset 0 (leading garbage before the
+first frame is common in the wild). A structural check that walks frame headers
+is the real answer and we do not have one.
+"""

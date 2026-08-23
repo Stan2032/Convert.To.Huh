@@ -5,7 +5,7 @@ extensions = ["webp"]
 mime_types = ["image/webp"]
 spec_url   = "https://developers.google.com/speed/webp/docs/riff_container"
 
-preserves = ["geometry", "color_depth", "color_profile", "alpha", "time", "metadata"]
+preserves = ["signal_fidelity", "geometry", "color_depth", "color_profile", "alpha", "time", "metadata"]
 
 [[signatures]]
 offset = 0

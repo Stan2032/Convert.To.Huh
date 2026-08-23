@@ -8,7 +8,7 @@ puid_verified = true
 puid_name  = "Portable Network Graphics 1.2"
 spec_url   = "https://www.w3.org/TR/png-3/"
 
-preserves = ["geometry", "color_depth", "color_profile", "alpha", "metadata"]
+preserves = ["signal_fidelity", "geometry", "color_depth", "color_profile", "alpha", "metadata"]
 
 [[signatures]]
 offset = 0

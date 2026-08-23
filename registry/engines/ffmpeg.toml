@@ -29,6 +29,13 @@ wasm   = true
 
 [notes]
 text = """
+MEASURED BUILD 2026-08-22: ffmpeg 6.1.1 (Ubuntu 7:6.1.1-3ubuntu5). The audio
+edges in registry/edges/ffmpeg.toml were verified against this build. Note the
+version_pin above does not currently include it — see the licensing note, since
+GPL dependency sets change between majors and the pin is a licensing statement
+as much as a compatibility one.
+
+
 VERSION PIN CORRECTED 2026-08-20. This manifest originally pinned ">=7.1,<8",
 which excluded every currently shipping release — ffmpeg.org lists 9.0.1, 8.1.2
 and 8.0.3. Exactly the class of plausible-but-wrong data the PUID audit turned

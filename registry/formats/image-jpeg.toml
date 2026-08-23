@@ -8,7 +8,7 @@ puid_verified = true
 puid_name  = "JPEG File Interchange Format 1.01"
 spec_url   = "https://www.w3.org/Graphics/JPEG/itu-t81.pdf"
 
-preserves = ["geometry", "color_depth", "color_profile", "metadata"]
+preserves = ["signal_fidelity", "geometry", "color_depth", "color_profile", "metadata"]
 
 [[signatures]]
 offset = 0

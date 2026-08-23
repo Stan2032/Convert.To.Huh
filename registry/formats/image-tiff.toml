@@ -8,7 +8,7 @@ puid_verified = true
 puid_name  = "Tagged Image File Format"
 spec_url   = "https://www.loc.gov/preservation/digital/formats/fdd/fdd000022.shtml"
 
-preserves = ["geometry", "color_depth", "color_profile", "alpha", "layers", "metadata"]
+preserves = ["signal_fidelity", "geometry", "color_depth", "color_profile", "alpha", "layers", "metadata"]
 
 [[signatures]]
 offset = 0

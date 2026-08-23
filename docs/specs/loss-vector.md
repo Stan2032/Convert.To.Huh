@@ -31,6 +31,7 @@ The vector is indexed by property. Each entry is one of `preserved`,
 | `metadata` | EXIF, XMP, document properties | most transcodes, deliberately or not |
 | `fonts` | Embedded font programs | format lacking font embedding |
 | `interactivity` | Links, forms, scripts, annotations | flattening, print-style export |
+| `signal_fidelity` | Whether the sample values themselves survived — the property lossy compression destroys | PNG → JPEG; WAV → MP3 |
 | `audio_channels` | Channel count and layout | 5.1 → stereo downmix |
 | `sample_rate` | Audio temporal resolution | 48 kHz → 44.1 kHz |
 | `bit_depth` | Audio amplitude resolution | 24-bit → 16-bit |

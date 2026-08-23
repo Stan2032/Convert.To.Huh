@@ -1,0 +1,28 @@
+id         = "audio/flac"
+name       = "Free Lossless Audio Codec"
+kinds      = ["AudioPCM"]
+extensions = ["flac"]
+mime_types = ["audio/flac", "audio/x-flac"]
+puid       = "fmt/279"
+puid_verified = false
+spec_url   = "https://xiph.org/flac/format.html"
+
+preserves = ["signal_fidelity", "audio_channels", "sample_rate", "bit_depth", "time", "metadata"]
+
+[[signatures]]
+offset = 0
+magic  = "664C6143"      # "fLaC"
+weight = "decisive"
+
+[detection]
+priority_over = []
+container_of  = []
+
+[notes]
+text = """
+Lossless by construction, and measured as such: 100.0% band energy retained
+against the WAV original on highfreq-mono, versus 90.3% for MP3 at 64k
+(docs/RESEARCH.md §14). That pairing is what makes the measurement credible —
+without a lossless control, a 90% figure could have been the measuring
+instrument rather than the codec.
+"""

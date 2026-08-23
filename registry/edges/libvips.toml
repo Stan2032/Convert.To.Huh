@@ -15,8 +15,9 @@ from_kind  = "Raster"
 to_kind    = "Raster"
 
 [edge.loss]
-alpha         = { value = "lost", policy = "composite_black" }
-color_depth   = { value = "degraded", from = 16, to = 8 }
+alpha           = { value = "lost", policy = "composite_black" }
+signal_fidelity = "degraded"
+color_depth     = { value = "degraded", from = 16, to = 8 }
 geometry      = "preserved"
 color_profile = "preserved"
 metadata      = "lost"
@@ -79,9 +80,10 @@ from_kind  = "Raster"
 to_kind    = "Raster"
 
 [edge.loss]
-alpha         = "preserved"
-color_depth   = "degraded"
-geometry      = "preserved"
+alpha           = "preserved"
+signal_fidelity = "degraded"
+color_depth     = "preserved"
+geometry        = "preserved"
 color_profile = "preserved"
 metadata      = "lost"
 generational  = true
@@ -174,9 +176,10 @@ from_kind  = "Raster"
 to_kind    = "Raster"
 
 [edge.loss]
-alpha         = "preserved"
-color_depth   = { value = "degraded", from = 16, to = 8 }
-geometry      = "preserved"
+alpha           = "preserved"
+signal_fidelity = "preserved"
+color_depth     = { value = "degraded", from = 16, to = 8 }
+geometry        = "preserved"
 color_profile = "preserved"
 metadata      = "lost"
 generational  = false
@@ -234,8 +237,9 @@ from_kind  = "Raster"
 to_kind    = "Raster"
 
 [edge.loss]
-alpha         = { value = "lost", policy = "composite_white" }
-color_depth   = { value = "degraded", from = 16, to = 8 }
+alpha           = { value = "lost", policy = "composite_white" }
+signal_fidelity = "degraded"
+color_depth     = { value = "degraded", from = 16, to = 8 }
 geometry      = "preserved"
 color_profile = "preserved"
 metadata      = "lost"

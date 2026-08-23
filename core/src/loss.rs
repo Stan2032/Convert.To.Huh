@@ -13,7 +13,7 @@ use std::collections::BTreeMap;
 pub const PROPERTIES: &[&str] = &[
     "geometry", "color_depth", "color_profile", "alpha", "time", "layers",
     "text_as_text", "structure", "metadata", "fonts", "interactivity",
-    "audio_channels", "sample_rate", "bit_depth", "precision", "topology",
+    "signal_fidelity", "audio_channels", "sample_rate", "bit_depth", "precision", "topology",
     "materials", "rigging", "provenance",
 ];
 
