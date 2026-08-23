@@ -26,7 +26,7 @@ nothing about which hop to fix.
 
 **Planning latency** against a realistic registry. Yen's k-shortest-paths
 degrades on dense subgraphs, and the graph grows with every engine added.
-Today's registry is 8 formats; the design targets thousands.
+Today's registry is 14 formats; the design targets thousands.
 
 ## Known numbers to hold the system against
 

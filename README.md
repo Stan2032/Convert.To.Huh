@@ -1,145 +1,179 @@
 # Convert.To.Huh
 
-> A universal file converter that treats "convert this AVI to a PDF" as a
-> question worth answering properly, rather than a joke or an error.
+**Every file conversion costs you something. Nobody writes down what.**
 
-**Status: Phase 1 works.** `PNG → JPEG` converts end to end — detected from
-content, planned over the graph, executed, and measured against the fidelity the
-registry claimed. Everything else is still design.
+Convert a PNG to a JPEG and you lose transparency. Convert a PDF to images and
+the text stops being text. Convert a WAV to an MP3 and detail disappears. These
+are well known to the people who hit them and written down nowhere you can
+query.
+
+This project measures those costs and publishes them as data.
+
+📦 **[`dataset/conversion-loss-registry.json`](dataset/conversion-loss-registry.json)** — CC0, free to use, no attribution required.
+
+---
+
+## The one-paragraph version
+
+[PRONOM](https://www.nationalarchives.gov.uk/PRONOM/) is the standard database
+for *identifying* files — ~2,000 format signatures, used by archives worldwide.
+It tells you **what a file is**. Nothing tells you **what converting it costs**.
+This is an attempt at that missing database, plus the tool that produces it by
+running real conversions against real files and measuring the results.
+
+## Who this is for
+
+**If you build software that converts files** — you can look up what a
+conversion destroys before you ship it, instead of finding out from a bug
+report. Filter on `verification == "verified"` and you get measurements, not
+guesses.
+
+```python
+import json
+d = json.load(open("conversion-loss-registry.json"))
+
+for e in d["edges"]:
+    if e["from"] == "image/png" and e["to"] == "image/jpeg":
+        print(e["engine"], e.get("invocation"), e["loss"])
+
+# image-rs  None                    {'alpha': 'lost', 'signal_fidelity': 'degraded', ...}
+# libvips   vips jpegsave IN OUT    {'alpha': 'lost', 'signal_fidelity': 'degraded', ...}
+```
+
+**If you run an archive or library** — the digital preservation field discusses
+conversion loss constantly, in prose. This is the same knowledge in a form you
+can compute with when choosing a preservation format.
+
+**If you need to clean a file you don't trust** — `huh clean` rebuilds a file
+from its content and tells you what it removed *and what that cost you*. See
+below.
+
+**If you are just curious what your tools do to your files** — most of the
+findings here surprised the people measuring them.
+
+## Two things you can actually run
+
+### `huh clean` — strip what shouldn't be there
+
+A file can be **completely valid** and still carry things you never see: text
+metadata naming you and your machine, private chunks decoders skip, data
+appended after the end-of-image marker, or in a PDF, code set to run when the
+document opens.
 
 ```console
-$ huh convert corpus/raster/rgba-gradient.png out.jpg
+$ huh clean report.pdf clean.pdf
+detected application/pdf (by signature, confidence 1.00)
+strategy render-and-rebuild (1090 -> 9287 bytes)
+  ran: pdftoppm -r 150 -png in.pdf page
+  ran: vips jpegsave page-1.png page-1.jpg --Q 90
+
+removed:
+  - all PDF structure (1 page(s) rebuilt from pixels)
+  - document metadata (title, author, producer, creation tool)
+  - any /OpenAction, /JavaScript, /EmbeddedFile or annotation
+
+properties destroyed: text_as_text, structure, interactivity, metadata, fonts
+```
+
+It doesn't scan for threats. It parses the content, throws the container away,
+and builds a new one — so anything that wasn't content doesn't make the trip,
+including attacks nobody has catalogued yet.
+
+**The second half of that output is the part nobody else gives you.** The file
+is now safe *and* you can no longer search it or copy from it. Tools that hide
+that cost are lying by omission.
+
+> ⚠️ For real hostile-document work, use
+> **[Dangerzone](https://dangerzone.rocks/)** — it does this with far better
+> isolation (a gVisor sandbox inside a container). This is a reference
+> implementation for generating registry data, not a replacement.
+
+### `huh convert` — convert, and be told the price
+
+```console
+$ huh convert logo.png logo.jpg
 detected image/png (by signature, confidence 1.00)
-route:   image/png --image-rs[Transcode]--> image/jpeg
-cost:    3.70
-effect:  Loses transparency and metadata. Reduces colour depth.
-         Keeps colour accuracy and resolution.
-
-wrote out.jpg (2833 bytes, 8.0% of input) in 1 ms
-SSIM vs original: 0.9950
-  alpha        declared=lost         measured=lost
-  geometry     declared=preserved    measured=preserved
-  color_depth  declared=degraded     measured=not-exercised
+route:   image/png --libvips[Transcode]--> image/jpeg
+effect:  Loses transparency and metadata — transparent areas become black.
+         Reduces colour depth and fine detail. Keeps colour accuracy and resolution.
 ```
 
-That last block is the point of the project. The registry *claimed* those
-losses; the run *measured* them. When they disagree, it exits non-zero and says
-so — a registry bug, not a conversion failure.
+That "transparent areas become black" is measured, not assumed — and it is
+engine-specific. The same conversion through ImageMagick keeps whatever colour
+was underneath instead. Both are correct; they look completely different.
 
-See [ROADMAP.md](ROADMAP.md) for what Phase 1 falsified and what is next.
+## What makes this different from just… knowing things
 
-## The idea
+Everything here is **measured against a real file, or marked as unverified.**
 
-The commercial converters are **lookup tables**: a map from (source format,
-target format) to a command line. That works until you want breadth — a thousand
-formats is a million pairs — and it has no answer at all for conversions that
-cross domains.
+Every entry carries a `verification` field:
 
-The best open-source converter, [convert.to.it](https://convert.to.it/), already
-went further and runs Dijkstra over a format graph. So pathfinding is not the
-novel part here; it is the baseline. What is missing from every one of them is
-any account of **what a conversion costs you** — see
-[`docs/RESEARCH.md §1.6`](docs/RESEARCH.md) for a source-level comparison.
-
-Convert.To.Huh is a **planner over a typed graph**. Formats and the content
-kinds they carry are nodes. Engine capabilities are typed, weighted edges. A
-conversion request is a pathfinding problem whose answer is a ranked set of
-*plans*, each annotated with exactly what it will cost you.
-
-Ask for `AVI → PDF` and you get four defensible answers, not a guess:
-
-| Plan | What you get |
+| Value | Meaning |
 |---|---|
-| **Contact sheet** | Frames sampled at 1 fps, tiled onto pages — the video at a glance |
-| **Frame per page** | Every keyframe, full size |
-| **Transcript** | The audio transcribed by a speech model and typeset. *Machine-generated — marked as such* |
-| **Storyboard** | One frame per detected scene, with timecodes |
+| `verified` | Run against a real specimen and measured. Trust it. |
+| `claimed` | Copied from documentation, **not tested**. A hint, not a fact. |
+| `refuted` | Tested and found not to work. |
 
-The system ranks them, explains each one in plain language, and asks. "Huh?" is
-the correct reaction to the request. Resolving it is the product.
+The discipline exists because the data is wrong surprisingly often. In this
+repository the checks have caught **five** errors in hand-written entries,
+several written minutes earlier by the person who wrote the spec.
 
-## Three ideas the design rests on
+And once, memorably, the *measuring instrument itself* was wrong — a fidelity
+score of 0.9950 that turned out to be scoring an unstated assumption rather than
+the conversion. It reached a pull request description and two decision records
+before a conversion that mathematically could not lose anything scored 0.47 and
+gave it away. Both are written up in full rather than quietly fixed.
 
-**Loss is a vector, not a scalar.** `quality: 0.8` cannot distinguish "kept
-every pixel, destroyed all text selectability" from "kept the text, halved the
-resolution." We track loss per property — transparency, semantic structure,
-colour profile, text-as-text, and fifteen more — and compose it along the chain,
-where `lost` is absorbing and inference is contaminating. Route explanations are
-*generated* from that vector, so they cannot drift from the truth.
+## Current scope — small, on purpose
 
-**Synthesis is never silent.** Some conversions require *inventing* information:
-speech-to-text, OCR, image tracing. Those outputs are estimates about the input,
-not re-expressions of it. They get their own operation class, their own loss
-value, and mandatory marking in the plan, the interface, the file metadata and
-the receipt. A user who receives a machine-written transcript that looks exactly
-like extracted text has been misled.
+**14 formats · 7 engines · 19 conversions (18 verified)**
 
-**Every engine is hostile and unreliable.** Ghostscript has repeatedly escaped
-the sandbox meant to contain it — one bug was exploited in the wild via EPS
-files disguised as JPEGs. ImageMagick delegates to Ghostscript by default.
-LibreOffice crashes on ordinary workloads and its own tooling declines to
-restart it. Isolation tier is a declared property of each engine, conversion
-sandboxes have no network at all, and refusing a decompression bomb is a normal
-outcome rather than an error.
+Images, PDF and audio. It grows by measurement, not assertion, which is slow
+deliberately. Coverage is not the goal; **trustworthy** coverage is.
 
-## Repository
+## The project's origin, since it explains the shape
 
-| Path | What it is |
+This began as a different idea: encrypting files by converting them, with the
+key derived from the *path* of conversions taken. Rather than assume, it was
+tested — and refuted three separate ways:
+
+1. **Seven different lossless routes produce byte-identical output.** The path
+   leaves no trace, so it cannot be a key.
+2. **Restricting to lossless conversions makes it worse, not better** — path
+   independence *is* what "lossless" means.
+3. **Changing medium repeatedly doesn't hide anything.** Three media changes
+   with every trail stripped, and the original comes back byte-identical in one
+   pass. ([Run it yourself](experiments/binary_waterfall.py).)
+
+That refutation is what revealed the useful property: conversion **reliably
+destroys history while preserving content**. Which is what a sanitizer needs,
+and what makes the loss data worth publishing.
+
+The negative results are kept in [`docs/adr/`](docs/adr/), not deleted. They are
+the most useful thing in the repository.
+
+## Contributing
+
+Measurements are the contribution. **Contradicting an existing entry with a
+measurement is the single most valuable thing you can send** — see
+[CONTRIBUTING.md](CONTRIBUTING.md).
+
+You do not need to know Rust. Adding a specimen and running a conversion is
+enough.
+
+## Layout
+
+| Path | What's in it |
 |---|---|
-| [`docs/RESEARCH.md`](docs/RESEARCH.md) | The evidence base. Every design decision cites it. |
-| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | The system design. |
-| [`docs/adr/`](docs/adr/) | Nine binding decisions, each with falsification conditions. |
-| [`docs/specs/`](docs/specs/) | Content model, loss vector, plan format, registry and engine schemas. |
-| [`registry/`](registry/) | Formats, engines and capability edges — the project's core asset. |
-| [`tools/`](tools/) | Dependency-free validators, run in CI. |
-| [`.claude/agents/`](.claude/agents/) | Fifteen specialist agents covering the work. |
+| [`dataset/`](dataset/) | **The deliverable.** CC0 data + schema docs. |
+| [`registry/`](registry/) | Source data: formats, engines, measured conversions. |
+| [`core/`](core/) | Rust: detector, planner, sanitizer, exporter. |
+| [`docs/adr/`](docs/adr/) | 14 binding decisions, each with what would change our mind. |
+| [`docs/RESEARCH.md`](docs/RESEARCH.md) | Evidence base — every finding has a source and an implication. |
+| [`experiments/`](experiments/) | Runnable refutations. |
+| [`corpus/`](corpus/) | Test specimens, generated by script rather than committed. |
 
-## Try it
+## Licence
 
-```bash
-python3 corpus/generate.py                       # specimens are generated, not committed
-cargo build --manifest-path core/Cargo.toml --release
-export PATH="$PWD/core/target/release:$PATH"
-
-huh graph                                        # what the registry knows
-huh detect corpus/raster/rgba-gradient.png       # content-first identification
-huh plan image/png image/jpeg                    # a plan, as inspectable JSON
-huh convert corpus/raster/rgb-photo.png out.jpg --receipt r.json
-./tools/verify_edges.sh                          # measure every edge on every specimen
-```
-
-And the checks:
-
-```bash
-python3 tools/validate_registry.py --self-test   # check the checker (11 fixtures)
-python3 tools/validate_registry.py               # check the registry
-python3 tools/validate_agents.py                 # check the agent definitions
-python3 tools/check_links.py                     # check the cross-references
-cargo test --manifest-path core/Cargo.toml --release
-```
-
-The registry validator caught two genuine modelling errors in its own seed data
-on first run. Both are documented in [`registry/README.md`](registry/README.md),
-because that is the argument for keeping the registry as checked data rather
-than as good intentions.
-
-## Prior art, credited
-
-The graph idea is not new. NCSA's Polyglot proposed an "I/O-Graph" of tool
-capabilities searched by shortest path, with edge weights encoding information
-retained, around fifteen years ago. It was never executed as a polished product
-with a real loss model. This project adopts that structure and extends it with
-typed content kinds, loss as a vector, measured verification of every capability
-claim, and inference edges the original did not contemplate.
-
-The immediate inspiration is [convert.to.it](https://convert.to.it/)
-(`p2r3/convert`, GPL-2.0), which does browser-local WebAssembly conversion and
-makes the striking claim that it converts between *any* formats — "What if you
-_really_ need to convert an AVI video to a PDF document?"
-
-Having read its source, three of its ideas are adopted here directly:
-path-dependent penalties that suppress nonsense category sequences, runtime
-dead-end learning that reroutes around a hop that just failed, and a penalized
-"accepts anything" escape hatch so the system returns *something*. What it does
-not do — and what this project is actually for — is tell you what the conversion
-cost you.
+Code **MIT**. Data **CC0** — measurements of how software behaves are facts, and
+facts shouldn't carry conditions.

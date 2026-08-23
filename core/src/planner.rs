@@ -343,7 +343,16 @@ impl<'a> Planner<'a> {
                 verification_status: e.status.clone(),
             });
         }
-        let rationale = total_loss.explain();
+        // Compose policies the same way as the vector: the FIRST hop to destroy
+        // a property decides what replaced it, since later hops see it already
+        // gone.
+        let mut policies: std::collections::BTreeMap<String, String> = Default::default();
+        for &ei in path {
+            for (k, v) in &self.reg.edges[ei].loss_policy {
+                policies.entry(k.clone()).or_insert_with(|| v.clone());
+            }
+        }
+        let rationale = total_loss.explain_with(&policies);
         Plan {
             registry_version: self.reg.version.clone(),
             source: from.to_string(),

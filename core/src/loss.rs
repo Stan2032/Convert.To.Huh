@@ -98,6 +98,14 @@ impl LossVector {
     /// Plain-language rationale, GENERATED from the vector — never hand-written
     /// (invariant 8). If a plan cannot be explained, it cannot be ranked.
     pub fn explain(&self) -> String {
+        self.explain_with(&BTreeMap::new())
+    }
+
+    /// As `explain`, but naming what REPLACED each lost property where a policy
+    /// was measured (ADR-0012). "Loses transparency" and "loses transparency,
+    /// which becomes black" are very different warnings to a user converting a
+    /// logo, and the second is the one the data can actually support.
+    pub fn explain_with(&self, policy: &BTreeMap<String, String>) -> String {
         fn human(p: &str) -> &str {
             match p {
                 "alpha" => "transparency",
@@ -105,6 +113,7 @@ impl LossVector {
                 "color_profile" => "colour accuracy",
                 "color_depth" => "colour depth",
                 "geometry" => "resolution",
+                "signal_fidelity" => "fine detail",
                 "structure" => "document structure",
                 "time" => "timing",
                 "audio_channels" => "audio channels",
@@ -132,7 +141,29 @@ impl LossVector {
             ));
         }
         let lost = self.props_with(LossValue::Lost);
-        if !lost.is_empty() { parts.push(format!("Loses {}", list(&lost))); }
+        if !lost.is_empty() {
+            let mut sentence = format!("Loses {}", list(&lost));
+            // Name replacements, so "transparency is lost" cannot be mistaken
+            // for "transparency is simply absent".
+            let mut notes: Vec<String> = Vec::new();
+            for p in &lost {
+                if let Some(pol) = policy.get(*p) {
+                    let phrase = match pol.as_str() {
+                        "composite_black" => "transparent areas become black".to_string(),
+                        "composite_white" => "transparent areas become white".to_string(),
+                        "discard_channel" => "transparent areas keep whatever colour was beneath".to_string(),
+                        "premultiplied" => "colours are multiplied by their transparency".to_string(),
+                        "downmix_average" => "channels are averaged together".to_string(),
+                        other => format!("{}: {other}", human(p)),
+                    };
+                    notes.push(phrase);
+                }
+            }
+            if !notes.is_empty() {
+                sentence.push_str(&format!(" — {}", notes.join("; ")));
+            }
+            parts.push(sentence);
+        }
         let deg = self.props_with(LossValue::Degraded);
         if !deg.is_empty() { parts.push(format!("Reduces {}", list(&deg))); }
         let kept = self.props_with(LossValue::Preserved);
