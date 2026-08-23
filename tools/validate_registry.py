@@ -229,6 +229,18 @@ def check_engines(engines: dict[str, dict], f: Findings) -> dict[str, dict]:
                            f"component, so the `lgpl` build profile cannot be claimed without "
                            f"a component-level audit (ADR-0007)")
 
+        # Rule 12. `lgpl` means "safe to distribute in a proprietary product"
+        # (ADR-0007), and the planner prunes on this field BEFORE search — so a
+        # wrong `lgpl` does not fail loudly, it quietly ships a route that must
+        # not exist. An unverified licence may therefore claim `gpl`, which is
+        # self-host only, but never `lgpl`. Being wrong in that direction is the
+        # one mistake here that cannot be taken back after a release.
+        if not lic.get("verified") and "lgpl" in lic.get("build_profiles", []):
+            f.error(fname, "[license] claims the `lgpl` build profile while "
+                           "verified = false: an unaudited licence may claim `gpl` "
+                           "(self-host only) but not `lgpl` (safe to distribute) "
+                           "— registry-schema.md rule 12")
+
         sec = doc.get("security", {})
         hostility = sec.get("hostility")
         if hostility not in HOSTILITY:
@@ -289,6 +301,55 @@ LOSS_POLICIES = {
 }
 
 
+VERSION_IN_BUILD = re.compile(r"(\d+(?:\.\d+)*)")
+PIN_CLAUSE = re.compile(r"(>=|<=|>|<|==|=)\s*(\d+(?:\.\d+)*)")
+
+
+def _ver(s: str) -> tuple[int, ...]:
+    return tuple(int(p) for p in s.split("."))
+
+
+def _cmp(a: tuple[int, ...], b: tuple[int, ...]) -> int:
+    """Compare version tuples of unequal length by zero-padding the shorter."""
+    n = max(len(a), len(b))
+    a += (0,) * (n - len(a))
+    b += (0,) * (n - len(b))
+    return (a > b) - (a < b)
+
+
+def build_outside_pin(build: str, pin: str) -> str | None:
+    """Rule 11. The build an edge was measured on must satisfy its engine's pin.
+
+    A verified edge is a promise that someone ran this conversion and watched
+    what happened. If the build they used is excluded by the engine's own
+    version_pin, a consumer who resolves the engine by that pin and then trusts
+    `status = "verified"` is relying on evidence from software they will never
+    run. Every ffmpeg edge was in exactly that state.
+
+    Deliberately tolerant about spelling: `engine_build` is free text written by
+    whoever ran the measurement ("ffmpeg 6.1.1", "vips-8.15.1", "SoX v14.4.2"),
+    so the first dotted-number run is taken as the version. When no version can
+    be read from either side the rule stays quiet rather than guessing.
+    """
+    bm = VERSION_IN_BUILD.search(build)
+    clauses = PIN_CLAUSE.findall(pin)
+    if not bm or not clauses:
+        return None
+    v = _ver(bm.group(1))
+    for op, raw in clauses:
+        bound = _ver(raw)
+        c = _cmp(v, bound)
+        ok = {
+            ">=": c >= 0, ">": c > 0,
+            "<=": c <= 0, "<": c < 0,
+            "==": c == 0, "=": c == 0,
+        }[op]
+        if not ok:
+            return (f"measured on `{build}`, which its engine's version_pin "
+                    f"`{pin}` excludes ({op}{raw})")
+    return None
+
+
 def check_edges(edge_files: dict[str, dict], formats: dict[str, dict],
                 engines: dict[str, dict], f: Findings) -> int:
     count = 0
@@ -313,6 +374,15 @@ def check_edges(edge_files: dict[str, dict], formats: dict[str, dict],
                                f"{seen[key]} — registry-schema.md rule 9")
             else:
                 seen[key] = where
+
+            # Rule 10 lives in check_readme_scope; rule 11 is here because it
+            # needs both the edge and its engine.
+            build = (edge.get("verification", {}).get("measured", {}) or {}).get("engine_build")
+            pin = engines.get(engine, {}).get("version_pin") if engine in engines else None
+            if build and pin:
+                problem = build_outside_pin(build, pin)
+                if problem:
+                    f.error(where, f"{problem} — registry-schema.md rule 11")
 
             op = edge.get("op")
             if op not in OPS:
@@ -625,6 +695,31 @@ SELF_TESTS: list[tuple[str, str, str]] = [
 
 ENGINE_SELF_TESTS: list[tuple[str, str, str]] = [
     (
+        "unverified licence claiming the lgpl profile",
+        """
+        id="e"
+        name="E"
+        version_pin=">=1,<2"
+        [license]
+        spdx="SomethingCustom"
+        build_profiles=["lgpl","gpl"]
+        patent_exposure="none"
+        verified=false
+        checked="2026-01-01"
+        [security]
+        hostility="moderate"
+        isolation="gvisor"
+        network=false
+        [resources]
+        memory_model="streaming"
+        concurrency="thread-safe"
+        default_timeout_s=60
+        [runtimes]
+        native=true
+        """,
+        "rule 12",
+    ),
+    (
         "lgpl profile claimed despite GPL-3 component",
         """
         id="e"
@@ -799,6 +894,24 @@ def self_test() -> int:
             {"engine": "e", "verification": {"status": "claimed"}},
         ]}
     }
+    # Rule 11 compares two free-text fields, so it also sits outside the TOML
+    # fixture harness. The spellings below are the ones actually in the registry.
+    for name, build, pin, expect_problem in [
+        ("build below the pin's lower bound", "ffmpeg 6.1.1", ">=8.0,<10", True),
+        ("build above the pin's upper bound", "ffmpeg 10.2", ">=6.1,<10", True),
+        ("build inside the pin", "ffmpeg 6.1.1", ">=6.1,<10", False),
+        ("hyphenated build spelling", "vips-8.15.1", ">=8.15,<9", False),
+        ("build with a v prefix", "SoX v14.4.2", ">=14.4,<15", False),
+        ("two-component build against three-component bound", "image 0.25", ">=0.25,<0.26", False),
+        ("unparseable build is not guessed at", "some engine, nightly", ">=1,<2", False),
+    ]:
+        got = build_outside_pin(build, pin)
+        ok = (got is not None) == expect_problem
+        print(f"  [{'PASS' if ok else 'FAIL'}] rule 11: {name}")
+        if not ok:
+            failures += 1
+            print(f"         build={build!r} pin={pin!r} -> {got!r}")
+
     for name, text, expect in [
         ("scope line undercounting the registry",
          "**3 formats · 9 engines · 19 conversions (18 verified)**", "is stale"),
@@ -812,7 +925,7 @@ def self_test() -> int:
             failures += 1
             print(f"         expected {expect!r}, got: {got!r}")
 
-    total = len(SELF_TESTS) + len(ENGINE_SELF_TESTS) + 1 + 3
+    total = len(SELF_TESTS) + len(ENGINE_SELF_TESTS) + 1 + 3 + 7
     print(f"\nself-test: {total - failures}/{total} passed")
     return 1 if failures else 0
 

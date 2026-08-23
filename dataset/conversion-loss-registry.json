@@ -424,7 +424,7 @@
     {
       "id": "ffmpeg",
       "name": "FFmpeg",
-      "version_pin": ">=8.0,<10",
+      "version_pin": ">=6.1,<10",
       "license": "LGPL-2.1-or-later",
       "build_profiles": [
         "lgpl"
@@ -453,7 +453,6 @@
       "version_pin": ">=6.9,<8",
       "license": "ImageMagick",
       "build_profiles": [
-        "lgpl",
         "gpl"
       ]
     },
@@ -829,7 +828,7 @@
       "operation": "Transcode",
       "loss": {
         "alpha": "preserved",
-        "color_depth": "preserved",
+        "color_depth": "degraded",
         "color_profile": "preserved",
         "geometry": "preserved",
         "metadata": "lost",

@@ -5,11 +5,26 @@ homepage    = "https://imagemagick.org"
 
 [license]
 spdx            = "ImageMagick"
-build_profiles  = ["lgpl", "gpl"]
+build_profiles  = ["gpl"]
 patent_exposure = "codec-dependent"
 verified        = false
-checked         = "2026-08-21"
-note = "ImageMagick's own licence is Apache-2.0-like but DELEGATES pull in others; a build-level audit is required before trusting build_profiles."
+checked         = "2026-08-23"
+note = """
+ImageMagick's own licence is Apache-2.0-like but DELEGATES pull in others; a
+build-level audit is required before trusting build_profiles.
+
+NARROWED to ["gpl"] on 2026-08-23. This entry claimed `lgpl` while saying in the
+same breath that an audit was needed before its profiles could be trusted — the
+note contradicted the data next to it. Under ADR-0007 `lgpl` means "safe to
+distribute in a proprietary product", and the planner prunes on this field before
+search, so an unaudited `lgpl` admitted ImageMagick into exactly the profile
+where being wrong is unrecoverable.
+
+registry/engines/libreoffice.toml had already reasoned this out for the same
+situation and reached the opposite conclusion: "a wrong `build_profiles` value
+produces routes we must not ship." This entry now follows the precedent it
+should have followed at the time. Raised in review; rule 12 now enforces it.
+"""
 
 [security]
 hostility   = "high"

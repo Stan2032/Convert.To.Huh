@@ -284,6 +284,46 @@ by the invocation. Writing the vocabulary while the mechanism was still unknown
 would have encoded the wrong distinction permanently. See `RESEARCH.md §14.6`.
 
 
+## Evidence must come from a build you actually ship (rule 11)
+
+An edge's `verification.measured.engine_build` must satisfy its engine's
+`version_pin`. CI rejects the pair otherwise (**rule 11**).
+
+`verified` is a promise that someone ran this conversion and watched what
+happened. If the build they used is excluded by the engine's own pin, a consumer
+who resolves the engine by that pin and then trusts `verified` is relying on
+evidence from software they will never run. That is not a hypothetical: all four
+FFmpeg edges were measured on 6.1.1 under a pin of `>=8.0,<10`, so *every*
+verified FFmpeg edge rested on an out-of-pin build while reading as confirmed.
+
+The check is deliberately tolerant about spelling, because `engine_build` is
+free text written by whoever ran the measurement — `ffmpeg 6.1.1`,
+`vips-8.15.1`, `SoX v14.4.2` all parse. The first dotted-number run is the
+version. If no version can be read from either side, the rule stays quiet rather
+than guessing.
+
+Either end may move to satisfy it: widen the pin to cover what was measured, or
+re-measure on an in-pin build. Widening is a licensing statement as well as a
+compatibility one, so it needs the same care as any other registry claim.
+
+## An unaudited licence cannot claim `lgpl` (rule 12)
+
+An engine whose `license.verified` is `false` may declare the `gpl` build
+profile but not `lgpl` (**rule 12**).
+
+The two profiles are not symmetric. `gpl` means self-host only; `lgpl` means
+safe to distribute inside a proprietary product (ADR-0007). The planner prunes
+on this field *before* search, so a wrong `lgpl` never surfaces as an error — it
+silently yields a route that should not have existed, in a shipped artifact.
+Every other kind of wrong entry here costs a measurement; this one costs a
+licence violation, and it cannot be taken back after a release.
+
+`registry/engines/libreoffice.toml` reasoned this out first and narrowed itself
+to `gpl`, noting that "a wrong `build_profiles` value produces routes we must not
+ship". `imagemagick.toml` then claimed `lgpl` while stating in the same block
+that an audit was required before its profiles could be trusted. Rule 12 is that
+precedent, enforced.
+
 ## Coverage claims are data, not prose (rule 10)
 
 The README states the registry's size in its own words:

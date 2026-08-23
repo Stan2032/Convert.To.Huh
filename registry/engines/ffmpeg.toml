@@ -1,6 +1,6 @@
 id          = "ffmpeg"
 name        = "FFmpeg"
-version_pin = ">=8.0,<10"
+version_pin = ">=6.1,<10"
 homepage    = "https://ffmpeg.org/"
 
 [license]
@@ -30,10 +30,24 @@ wasm   = true
 [notes]
 text = """
 MEASURED BUILD 2026-08-22: ffmpeg 6.1.1 (Ubuntu 7:6.1.1-3ubuntu5). The audio
-edges in registry/edges/ffmpeg.toml were verified against this build. Note the
-version_pin above does not currently include it — see the licensing note, since
-GPL dependency sets change between majors and the pin is a licensing statement
-as much as a compatibility one.
+edges in registry/edges/ffmpeg.toml were verified against this build.
+
+PIN WIDENED 2026-08-23 to include it, from ">=8.0,<10". The old pin excluded the
+only build anyone here has ever measured, so all four verified ffmpeg edges rested
+on evidence from outside their own engine's declared range — a consumer resolving
+by version_pin and then trusting `status = "verified"` got a guarantee nothing
+supported. Raised in review; the reasoning below had already written its own
+refutation: "a pin nobody has built against is a guess with a version number on
+it". That is what ">=8.0" was.
+
+The earlier note argued the pin is a licensing statement as much as a
+compatibility one, because GPL dependency sets change between majors. That still
+holds and is why the upper bound stays at <10, but it is an argument for
+verifying a range, not for claiming one. 6.1.1 as shipped by Ubuntu is the LGPL
+build this manifest describes.
+
+Rule 11 now rejects any edge whose engine_build falls outside its engine's pin,
+so the two cannot drift apart again.
 
 
 VERSION PIN CORRECTED 2026-08-20. This manifest originally pinned ">=7.1,<8",

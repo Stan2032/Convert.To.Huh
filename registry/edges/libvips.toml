@@ -82,7 +82,7 @@ to_kind    = "Raster"
 [edge.loss]
 alpha           = "preserved"
 signal_fidelity = "degraded"
-color_depth     = "preserved"
+color_depth     = { value = "degraded", from = 16, to = 8 }
 geometry        = "preserved"
 color_profile = "preserved"
 metadata      = "lost"
@@ -99,31 +99,45 @@ requires        = []
 
 [edge.verification]
 status      = "verified"
-specimens   = ["corpus/raster/rgb-photo.png", "corpus/raster/rgba-gradient.png"]
-verified_at = "2026-08-21"
+specimens   = [
+  "corpus/raster/rgb-photo.png",
+  "corpus/raster/rgba-gradient.png",
+  "corpus/raster/gray16.png",
+]
+verified_at = "2026-08-23"
 verified_by = "capability-cartographer"
 
 [edge.verification.measured]
-tool         = "core/examples/libvips_edges.rs"
-engine_build = "vips-8.15.1"
-ssim_photo   = 0.8362
-bytes_photo  = 1942
+tool           = "core/examples/libvips_edges.rs; vipsheader for the depth check"
+engine_build   = "vips-8.15.1"
+ssim_photo     = 0.8362
+bytes_photo    = 1942
+depth_observed = "gray16.png is ushort/grey16 in, uchar out"
 note = """
 THE DEFAULT IS LOSSY, and badly so: SSIM 0.8362 on rgb-photo at 1,942 bytes.
 image-rs writes the same pair LOSSLESS at SSIM 1.0 and 37,098 bytes. A consumer
 reading "PNG to WebP" from the image-rs edge and then running libvips in their
 own pipeline would silently get visibly degraded output.
 
-`vips webpsave --lossless` produces 15,512 bytes at SSIM 1.0. That is a separate
-edge and should be added; it is not recorded here because this entry documents
-what the DEFAULT invocation does. See ADR-0013.
+`vips webpsave --lossless` is a separate edge, recorded below: 15,512 bytes at
+SSIM 1.0, one flag apart from this one. See ADR-0013.
 
-KNOWN IMPRECISION: `color_depth = degraded` is carrying two different meanings
-here. WebP is 8-bit, so 16-bit input genuinely loses colour depth — that part is
-correct. But the LOSSY QUANTISATION at SSIM 0.8362 is not colour-depth loss at
-all, and the closed vocabulary has no property for it (docs/RESEARCH.md §13.7).
-The label is the closest available, not the right one. A `signal_fidelity`
-property is proposed and not yet adopted.
+`color_depth` and `signal_fidelity` record two different things here, and the
+distinction is the whole point of ADR-0014:
+  - `color_depth = degraded {16 -> 8}` — WebP is 8-bit. Measured directly with
+    vipsheader: gray16.png goes in as `ushort`/`grey16` and comes out `uchar`.
+  - `signal_fidelity = degraded` — the lossy quantisation at SSIM 0.8362, which
+    is not colour-depth loss at all and had nowhere to live before ADR-0014.
+
+CORRECTED 2026-08-23. This edge previously claimed `color_depth = preserved`
+while the `--lossless` edge below claimed `degraded {16 -> 8}` for the same
+engine and the same format pair — WebP does not change bit depth based on a
+compression flag, so both could not be right. The cause was that this edge's
+specimen list omitted gray16.png, so 16-bit input was never exercised, and the
+untested assumption was published as `verified`. gray16.png is now measured
+here. Its note also still described `signal_fidelity` as "proposed and not yet
+adopted" months after ADR-0014 adopted it, and described the `--lossless` edge
+as missing after it had been added. Raised in review.
 """
 
 
