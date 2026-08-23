@@ -1467,6 +1467,80 @@ specimen lesson for the third time.
    would have been a permanent vocabulary error.
 
 
+## 15. The pattern behind the policy qualifiers
+
+Three policy vocabularies now exist — `alpha`, `audio_channels`, `bit_depth` —
+and all three arrived the same way: engines disagreeing in a manner the four-value
+scale could not express. That looked like it might be the shape of the problem
+rather than three coincidences, so it was turned into a prediction and tested.
+
+### 15.1 The generalisation
+
+> When a property is destroyed or reduced, **something takes its place**, the
+> choice is not determined by the format, and implementations choose differently.
+> The loss value says *that* it happened. Only a policy says *what*.
+
+Stated that way it predicts where the next divergence will be found: any
+property whose destruction leaves a hole someone has to fill.
+
+### 15.2 The prediction, and the test
+
+GIF palettisation is the same shape — 16.7M colours reduced to 256 — so three
+engines should disagree about *how*. Measured with
+`core/examples/gif_dither.rs` on `rgb-photo.png`:
+
+| Engine | Bytes | SSIM | Adjacent-pixel changes | Texture retained |
+|---|---|---|---|---|
+| image-rs | 13,703 | 0.9105 | 16% | 17% |
+| **libvips** | **22,882** | 0.9065 | **56%** | **58%** |
+| ImageMagick | 14,774 | 0.8799 | 19% | 20% |
+
+**Confirmed.** libvips retains roughly three times the texture and writes 67%
+more bytes — the signature of error diffusion. image-rs and ImageMagick sit
+together, so **libvips is the outlier two-to-one, exactly as it was for alpha
+flattening.**
+
+### 15.3 A metric failure, found by accident
+
+The SSIM column does not separate them. All three land within 0.03 while doing
+visibly different things.
+
+That is not SSIM misbehaving — it is a spatial-window statistic, and dithering
+trades low-frequency banding for high-frequency noise, which such a statistic
+barely registers. **Fidelity scores cannot detect dithering, and cannot rank
+these engines.** Only the policy describes them.
+
+The instrument that *did* separate them — the rate at which horizontally
+adjacent pixels differ — was chosen after SSIM failed, not before. Worth
+recording because the first version of the harness classified all three as
+"flat palette map" using an SSIM threshold, which was wrong, and the second
+version used the original image's own 96% adjacent-change rate as a baseline,
+which was also wrong (palettisation always reduces it). **Third attempt.** The
+measuring instrument being harder to get right than the measurement is now a
+recurring theme — see §13.8.
+
+No automatic classification is emitted, because any absolute threshold would be
+invented rather than derived. The numbers are reported and compared to each
+other.
+
+### 15.4 What this does not license
+
+The obvious next move is to add `color_depth` policies for every engine, and
+then policies for `geometry`, `text_as_text`, `layers` and the rest on the same
+reasoning. **That would be the mistake §14.6 just demonstrated.**
+
+The `bit_depth` vocabulary was nearly written as `dither` while the mechanism
+was unexplained; the real cause was rounding, and dither turned out to be a
+separate axis already captured by the invocation. A vocabulary written from a
+pattern rather than from a measured mechanism encodes the pattern's assumptions
+permanently.
+
+So: the generalisation is recorded as a **prediction that has survived one
+test**, and each future policy still needs its own measurement and its own
+explanation before it is named. The pattern says where to look. It does not say
+what you will find.
+
+
 ## Sources
 
 - [Convert To It](https://converttoit.com/) · [Grokipedia: Convert to it](https://grokipedia.com/page/Convert_to_it) · [Convert To It API](https://converttoit.com/api)
