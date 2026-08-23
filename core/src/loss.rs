@@ -201,11 +201,47 @@ mod tests {
 
     #[test]
     fn synthesized_outranks_lost() {
-        let mut a = LossVector::new();
-        a.set("text_as_text", LossValue::Lost);
-        let mut b = LossVector::new();
-        b.set("text_as_text", LossValue::Synthesized);
-        assert_eq!(a.compose(&b).get("text_as_text"), Some(LossValue::Synthesized));
+        // Both spec rules match `lost o synthesized` and, read alone, disagree.
+        // Composition is a maximum over a total order, so the answer must not
+        // depend on which side the value arrives from.
+        for (first, second) in [
+            (LossValue::Lost, LossValue::Synthesized),
+            (LossValue::Synthesized, LossValue::Lost),
+        ] {
+            let mut a = LossVector::new();
+            a.set("text_as_text", first);
+            let mut b = LossVector::new();
+            b.set("text_as_text", second);
+            assert_eq!(
+                a.compose(&b).get("text_as_text"),
+                Some(LossValue::Synthesized),
+                "{first:?} o {second:?} must report the invented content"
+            );
+        }
+    }
+
+    #[test]
+    fn composition_is_order_independent_for_every_pair() {
+        // The property that makes a route's total loss well defined: a chain's
+        // vector must not depend on the order the hops are composed in.
+        let all = [
+            LossValue::Preserved,
+            LossValue::Degraded,
+            LossValue::Lost,
+            LossValue::Synthesized,
+        ];
+        for x in all {
+            for y in all {
+                let (mut a, mut b) = (LossVector::new(), LossVector::new());
+                a.set("alpha", x);
+                b.set("alpha", y);
+                assert_eq!(
+                    a.compose(&b).get("alpha"),
+                    b.compose(&a).get("alpha"),
+                    "{x:?} and {y:?} compose differently depending on order"
+                );
+            }
+        }
     }
 
     #[test]

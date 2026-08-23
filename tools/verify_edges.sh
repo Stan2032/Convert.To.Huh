@@ -28,6 +28,16 @@ for f in corpus/raster/*.png; do
   if ! "$HUH" convert "$f" "$OUT/$n.jpg" --quality "$Q" --receipt "$OUT/$n.json" >/dev/null 2>"$OUT/$n.err"; then
     if grep -q "CONTRADICTS" "$OUT/$n.err"; then fail=1; fi
   fi
+
+  # A conversion can fail without printing CONTRADICTS, in which case there is
+  # no receipt to read. Say so and fail: silently skipping a specimen and then
+  # reporting "every measurement agrees" is the worst outcome available here.
+  if [ ! -f "$OUT/$n.json" ]; then
+    printf "  %-22s %-10s %-9s %s\n" "$n" "NO-RECEIPT" "-" "conversion produced no receipt"
+    fail=1
+    continue
+  fi
+
   read -r ssim props < <(python3 - "$OUT/$n.json" <<'PY'
 import json, sys
 r = json.load(open(sys.argv[1]))
@@ -36,15 +46,31 @@ props = ",".join(f"{m['property']}={m['measured']}" for m in r["measurements"])
 print(f"{s:.4f}" if s is not None else "n/a", props)
 PY
 )
-  sz=$(stat -c%s "$OUT/$n.jpg")
+  sz=$(stat -c%s "$OUT/$n.jpg" 2>/dev/null || echo -)
   printf "  %-22s %-10s %-9s %s\n" "$n" "$ssim" "$sz" "$props"
-  ssim_sum=$(python3 -c "print($ssim_sum + $ssim)")
-  ssim_n=$((ssim_n+1))
-  ssim_min=$(python3 -c "print(min($ssim_min, $ssim))")
+
+  # `ssim` is legitimately "n/a" when the score is undefined — geometry changed,
+  # or the image is under 8x8 (core/src/fidelity.rs). Interpolating that text
+  # into python gives `print(0 + n/a)`, which raises and, under `set -e`, aborts
+  # the whole run with a traceback instead of the report it was asked for.
+  case "$ssim" in
+    ''|n/a)
+      ;;
+    *)
+      ssim_sum=$(python3 -c "print($ssim_sum + $ssim)")
+      ssim_n=$((ssim_n+1))
+      ssim_min=$(python3 -c "print(min($ssim_min, $ssim))")
+      ;;
+  esac
 done
 
 echo
-python3 -c "print(f'  mean SSIM {$ssim_sum/$ssim_n:.4f}   min SSIM {$ssim_min:.4f}   specimens {$ssim_n}')"
+if [ "$ssim_n" -gt 0 ]; then
+  python3 -c "print(f'  mean SSIM {$ssim_sum/$ssim_n:.4f}   min SSIM {$ssim_min:.4f}   specimens {$ssim_n}')"
+else
+  echo "  no comparable SSIM scores — nothing was measured"
+  fail=1
+fi
 echo
 if [ "$fail" -ne 0 ]; then
   echo "  RESULT: a measurement CONTRADICTS the registry — that is a registry bug"

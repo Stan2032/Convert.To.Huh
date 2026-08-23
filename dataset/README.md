@@ -47,13 +47,39 @@ claim is still information, but they carry no measurement behind them. Filter on
 
 Current counts are in the `counts` object of the dataset itself.
 
+### Check the evidence, don't just trust the label
+
+A `verified` edge ships the measurement that earned the label, in `specimens`
+and `measured`:
+
+```json
+"verification": "verified",
+"specimens": ["corpus/audio/highfreq-mono.wav", "corpus/audio/stereo-distinct.wav"],
+"measured": {
+  "engine_build": "ffmpeg 6.1.1",
+  "metric": "band energy retained vs the WAV original",
+  "band_1khz_retained": 0.903,
+  "band_15khz_retained": 0.902
+}
+```
+
+`measured` is deliberately **not** a fixed shape. The metric depends on the
+domain — SSIM for raster, band energy or SNR for audio — and forcing one schema
+would either exclude domains or invent comparability that does not exist. Always
+read `metric` before comparing two numbers; `engine_build` names the exact build
+the claim rests on, which is not always the same as the engine's `version_pin`.
+
+So `signal_fidelity: "degraded"` is a starting point, not the answer. Whether a
+10% band-energy loss matters is your decision, and you can only make it with the
+number in front of you.
+
 ## Structure
 
 | Key | Contents |
 |---|---|
 | `properties` | The closed vocabulary of preservable properties, with definitions. Loss vectors are only comparable because this list is fixed. |
 | `formats` | Format identity, extensions, MIME types, PRONOM PUID, and which properties the format *can* carry. |
-| `engines` | The software that performs conversions, with version pins and licences. |
+| `engines` | The software that performs conversions, with version pins and licences. `build_profiles` says which distribution profiles may ship it (`lgpl` = safe in a proprietary product, `gpl` = self-host only); `spdx_components`, `patent_exposure` and `license_verified` are there so you can apply your own policy rather than inherit ours. **`license_verified: false` means nobody read the licence text** — treat the profile as a guess. |
 | `edges` | One entry per `(engine, from, to)`. The same conversion through different engines is a **different edge**, because engines lose different things. |
 
 Each edge's `loss` maps a property to `preserved`, `degraded`, `lost`, or

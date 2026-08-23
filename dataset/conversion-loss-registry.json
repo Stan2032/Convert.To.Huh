@@ -428,14 +428,18 @@
       "license": "LGPL-2.1-or-later",
       "build_profiles": [
         "lgpl"
-      ]
+      ],
+      "patent_exposure": "h264-h265-mpegla",
+      "license_verified": true
     },
     {
       "id": "ghostscript",
       "name": "Ghostscript",
       "version_pin": ">=10.04,<11",
       "license": "AGPL-3.0-or-later",
-      "build_profiles": []
+      "build_profiles": [],
+      "patent_exposure": "none",
+      "license_verified": true
     },
     {
       "id": "image-rs",
@@ -445,7 +449,9 @@
       "build_profiles": [
         "lgpl",
         "gpl"
-      ]
+      ],
+      "patent_exposure": "none",
+      "license_verified": true
     },
     {
       "id": "imagemagick",
@@ -454,7 +460,9 @@
       "license": "ImageMagick",
       "build_profiles": [
         "gpl"
-      ]
+      ],
+      "patent_exposure": "codec-dependent",
+      "license_verified": false
     },
     {
       "id": "libreoffice",
@@ -463,7 +471,13 @@
       "license": "MPL-2.0",
       "build_profiles": [
         "gpl"
-      ]
+      ],
+      "spdx_components": [
+        "LGPL-3.0-or-later",
+        "GPL-3.0-or-later"
+      ],
+      "patent_exposure": "none",
+      "license_verified": true
     },
     {
       "id": "libvips",
@@ -473,7 +487,9 @@
       "build_profiles": [
         "lgpl",
         "gpl"
-      ]
+      ],
+      "patent_exposure": "none",
+      "license_verified": true
     },
     {
       "id": "sox",
@@ -482,7 +498,9 @@
       "license": "GPL-2.0-or-later",
       "build_profiles": [
         "gpl"
-      ]
+      ],
+      "patent_exposure": "codec-dependent",
+      "license_verified": false
     },
     {
       "id": "whisper.cpp",
@@ -492,7 +510,9 @@
       "build_profiles": [
         "lgpl",
         "gpl"
-      ]
+      ],
+      "patent_exposure": "none",
+      "license_verified": true
     }
   ],
   "edges": [
@@ -512,6 +532,18 @@
         "time": "preserved"
       },
       "verification": "verified",
+      "specimens": [
+        "corpus/audio/highfreq-mono.wav",
+        "corpus/audio/stereo-distinct.wav"
+      ],
+      "measured": {
+        "band_15khz_retained": 0.902,
+        "band_1khz_retained": 0.903,
+        "engine_build": "ffmpeg 6.1.1",
+        "metric": "band energy retained vs the WAV original",
+        "note": "THE EDGE THAT FORCED ADR-0014. Every property the vocabulary tracked came back\nclean — channels 1 to 1, sample rate 44100 to 44100, duration unchanged — while\n~10% of the signal energy was gone from both measured bands.\n\n`bit_depth` could not express it, because MP3 has no fixed sample width and the\nproperty does not apply at all; ffprobe reports bits_per_sample = 0. So the loss\nhad nowhere to be recorded. That is the same hole found in raster (§13.7), from\na different domain with a different metric, which is what justified adding\n`signal_fidelity` to a closed vocabulary.\n\nThe FLAC edge below is the control: 100.0% retention on the same specimen\nthrough the same harness. Without it, 90.3% could have been the measuring\ninstrument rather than the codec — a mistake this project has already made once\n(§13.8).\n",
+        "tool": "corpus/generate_audio.py + ffprobe band-energy analysis"
+      },
       "generational": true
     },
     {
@@ -531,6 +563,16 @@
         "time": "preserved"
       },
       "verification": "verified",
+      "specimens": [
+        "corpus/audio/highfreq-mono.wav"
+      ],
+      "measured": {
+        "band_15khz_retained": 1.0,
+        "engine_build": "ffmpeg 6.1.1",
+        "metric": "band energy retained vs the WAV original",
+        "note": "Lossless, and serving as the control that makes the MP3 measurement above credible.",
+        "tool": "ffprobe band-energy analysis"
+      },
       "generational": false
     },
     {
@@ -553,6 +595,15 @@
         "audio_channels": "downmix_average"
       },
       "verification": "verified",
+      "specimens": [
+        "corpus/audio/stereo-distinct.wav"
+      ],
+      "measured": {
+        "channels": "2 -> 1",
+        "engine_build": "ffmpeg 6.1.1",
+        "note": "The specimen carries DIFFERENT tones in left and right (A4 and E5), because\ndownmixing identical channels is not observably lossy — the audio equivalent of\ntesting alpha with a fully opaque image (corpus/generate_audio.py).\n\n`audio_channels` carries a `policy` of `downmix_average`, the audio analogue of\nalpha's `composite_black` (ADR-0012): saying the channels are gone does not say\nwhat replaced them, and averaging is one choice among several. Whether other\nengines pick differently is UNMEASURED — do not assume this generalises.\n\n`signal_fidelity = degraded` because a listener no longer hears what was in the\noriginal stereo field, even though each sample is still full precision.\n",
+        "tool": "ffprobe channel count"
+      },
       "generational": false
     },
     {
@@ -575,6 +626,16 @@
         "bit_depth": "truncate"
       },
       "verification": "verified",
+      "specimens": [
+        "corpus/audio/quiet-mono.wav"
+      ],
+      "measured": {
+        "dc_offset_counts": -0.4975,
+        "engine_build": "ffmpeg 6.1.1",
+        "note": "TRUNCATES where SoX rounds, introducing exactly half an LSB of DC offset — mean\noutput 127.5025 where offset-binary u8 centres on 128 (docs/RESEARCH.md §14.6).\n\nOn this specimen the signal peaks at 1.28 counts, so half a count is 39% of peak\nand dominates the 3.8 dB SNR. On loud content the same offset is inaudible and\nthe two engines would look identical. The divergence is real and its visibility\nis entirely a property of the specimen.\n\nThe `policy = \"truncate\"` qualifier here is the whole reason ADR-0012 exists:\nthis edge and the SoX one both report bit_depth = degraded, both correctly, and\none of them shifts your audio by half a count.\n",
+        "snr_db": 3.8,
+        "tool": "SNR and output histogram against the 16-bit original"
+      },
       "generational": true
     },
     {
@@ -597,6 +658,17 @@
         "color_depth": "dither_diffuse"
       },
       "verification": "verified",
+      "specimens": [
+        "corpus/raster/rgb-photo.png"
+      ],
+      "measured": {
+        "bytes": 22882,
+        "engine_build": "vips-8.15.1",
+        "note": "ERROR DIFFUSION, and the outlier again — three times the retained texture of the\nother two engines and 67% more bytes. libvips was also the odd one out on alpha\nflattening (ADR-0012), which is worth noting and not yet worth generalising from.\n\nThe SSIM here (0.9065) is LOWER than image-rs (0.9105) despite dithering being\ngenerally preferred by human viewers. Fidelity scores cannot detect dithering —\nall three engines land within 0.03 — so the policy is the only field that\ndistinguishes them. See §15.3.\n",
+        "ssim": 0.9065,
+        "texture_retained": 0.58,
+        "tool": "core/examples/gif_dither.rs"
+      },
       "generational": true
     },
     {
@@ -619,6 +691,18 @@
         "color_depth": "palette_nearest"
       },
       "verification": "verified",
+      "specimens": [
+        "corpus/raster/rgb-photo.png"
+      ],
+      "measured": {
+        "bytes": 14774,
+        "engine_build": "ImageMagick 6.9.12",
+        "note": "Nearest-palette, siding with image-rs against libvips two-to-one — the same\nsplit as alpha flattening. Uses 252 colours where the others use 255; the\nthree-colour difference is unexplained and not worth chasing until it matters.\n",
+        "palette_size": 252,
+        "ssim": 0.8799,
+        "texture_retained": 0.2,
+        "tool": "core/examples/gif_dither.rs"
+      },
       "generational": true
     },
     {
@@ -640,6 +724,22 @@
         "alpha": "discard_channel"
       },
       "verification": "verified",
+      "specimens": [
+        "corpus/raster/rgba-gradient.png",
+        "corpus/raster/rgb-photo.png",
+        "corpus/raster/gray16.png",
+        "corpus/raster/rgba-opaque.png"
+      ],
+      "measured": {
+        "alpha": "lost on rgba-gradient; not exercised by the other three",
+        "color_depth": "degraded 16->8 on gray16; not exercised by the 8-bit specimens",
+        "geometry": "preserved on all four",
+        "note": "Every measurement agrees with the declared vector, which is what earns the\n`verified` status — CI rule 5 refuses it without this block.\n\nTwo results worth keeping. `rgba-opaque` is the control: it HAS an alpha channel\nbut every pixel is opaque, so dropping alpha is not an observable loss and the\nharness reports `not-present-in-input` rather than `lost`. Distinguishing \"the\nformat supports it\" from \"this file uses it\" is what stops the harness\nmanufacturing agreement.\n\nAnd gray16.jpg came out at 197.9% of its PNG input — the JPEG is LARGER. A\n16-bit greyscale gradient is close to the best case for PNG's filters and close\nto the worst case for JPEG's DCT. \"Convert to JPEG to save space\" is not a law\nof nature, and the planner has no cost term that knows this yet.",
+        "specimens": 4,
+        "ssim_mean": 0.9966,
+        "ssim_min": 0.995,
+        "tool": "tools/verify_edges.sh 85"
+      },
       "generational": true
     },
     {
@@ -656,6 +756,15 @@
         "metadata": "lost"
       },
       "verification": "verified",
+      "specimens": [
+        "corpus/raster/rgb-photo.png"
+      ],
+      "measured": {
+        "note": "Lossless in the only sense that applies: PNG re-encodes the already-decoded\nJPEG pixels exactly, so SSIM against the JPEG it decoded is 1.0. It does NOT\nrecover what the original JPEG encode destroyed.\n\nThat distinction is exactly what the composition rules protect. On a\nPNG -> JPEG -> PNG round trip the total still reports alpha as `lost`, because\n`lost` is absorbing: arriving back at a format that supports transparency does\nnot bring the transparency back.",
+        "specimens": 1,
+        "ssim_mean": 1.0,
+        "tool": "round-trip via tools/verify_edges.sh"
+      },
       "generational": false
     },
     {
@@ -673,6 +782,19 @@
         "metadata": "lost"
       },
       "verification": "verified",
+      "specimens": [
+        "corpus/raster/gray16.png",
+        "corpus/raster/rgba-gradient.png",
+        "corpus/raster/rgb-photo.png",
+        "corpus/raster/rgba-opaque.png"
+      ],
+      "measured": {
+        "note": "THE ARCHIVAL TARGET, and the only one that earns that description on evidence.\nAcross the four specimens TIFF is the ONLY target that preserved 16-bit depth:\ngray16 came through with depth=preserved, while JPEG, GIF, BMP and WebP all\ndegraded it to 8-bit. Combined with SSIM 1.0 and intact alpha, this is the route\nto pick when fidelity is the whole point.\n\nThe cost is size: 110,802 bytes for the specimen WebP stores in 218, also\nlosslessly. That is a genuine user-facing trade-off — archival fidelity versus\nfile size — and it is the first one in this registry backed by measurement\nrather than intuition.",
+        "specimens": 4,
+        "ssim_mean": 1.0,
+        "ssim_min": 1.0,
+        "tool": "cargo run --example probe_edges"
+      },
       "generational": false
     },
     {
@@ -690,6 +812,19 @@
         "metadata": "lost"
       },
       "verification": "verified",
+      "specimens": [
+        "corpus/raster/gray16.png",
+        "corpus/raster/rgba-gradient.png",
+        "corpus/raster/rgb-photo.png",
+        "corpus/raster/rgba-opaque.png"
+      ],
+      "measured": {
+        "note": "The most surprising measured result in the registry. image-rs writes LOSSLESS\nWebP: SSIM 1.0000 on every specimen with alpha intact, at 218 bytes for the\nimage PNG needs 993 for and BMP needs 65,658 for. Roughly 4.5x smaller than PNG\nand 300x smaller than BMP, with no measured loss.\n\n`color_depth` is `degraded` rather than `preserved` because gray16 came back at\n8-bit. So WebP is lossless in the SSIM sense while still narrowing depth — which\nis precisely why loss is a vector and not a scalar (ADR-0004). A single quality\nnumber would have to call this either \"lossless\" or \"lossy\" and both would\nmislead.\n\nCaveat kept deliberately: four synthetic specimens is not a finding. Widen the\ncorpus before treating WebP as the default lossless target.",
+        "specimens": 4,
+        "ssim_mean": 1.0,
+        "ssim_min": 1.0,
+        "tool": "cargo run --example probe_edges"
+      },
       "generational": false
     },
     {
@@ -710,6 +845,20 @@
         "color_depth": "palette_nearest"
       },
       "verification": "verified",
+      "specimens": [
+        "corpus/raster/rgba-gradient.png",
+        "corpus/raster/rgb-photo.png",
+        "corpus/raster/rgba-opaque.png",
+        "corpus/raster/gray16.png"
+      ],
+      "measured": {
+        "note": "The counterpart to JPEG, and the reason this registry can offer a real choice:\nGIF and JPEG lose OPPOSITE things. JPEG keeps colour and discards transparency;\nGIF keeps transparency and destroys colour.\n\n`color_depth = \"lost\"` is forced by rule 4 — image/gif does not list\n`color_depth` in `preserves`, because a 256-entry palette cannot carry source\ncolour depth at all. The measurement backs that up harshly: SSIM 0.7992 on\nrgba-opaque and 0.8105 on the gradient, versus JPEG's 0.9950 on the same\nspecimens. This is the worst-scoring verified edge in the registry by a wide\nmargin, and it is CORRECT that it scores badly.\n\ngray16 scores 1.0000 only because a 64x64 greyscale ramp has few enough distinct\nvalues to survive palettisation — a reminder that a mean over four specimens\nhides more than it shows.",
+        "specimens": 4,
+        "ssim_mean": 0.88,
+        "ssim_min": 0.7992,
+        "texture_retained": 0.17,
+        "tool": "cargo run --example probe_edges; core/examples/gif_dither.rs"
+      },
       "generational": false
     },
     {
@@ -727,6 +876,19 @@
         "metadata": "lost"
       },
       "verification": "verified",
+      "specimens": [
+        "corpus/raster/rgba-gradient.png",
+        "corpus/raster/rgb-photo.png",
+        "corpus/raster/rgba-opaque.png",
+        "corpus/raster/gray16.png"
+      ],
+      "measured": {
+        "note": "Lossless and uncompressed. Loss-equivalent to WebP on every tracked property,\nwhich makes it the test case for alternative DEDUPLICATION: two routes offering\nthe same trade-off are one choice, and the planner should not present both.\n\nWhat distinguishes them is size, which the loss vector does not model:\n65,658 bytes versus WebP's 218 for the same image. A planner that ranked on\nfidelity alone would treat these as interchangeable. They are not. Recorded as\na known gap rather than quietly fixed with a fudge factor.",
+        "specimens": 4,
+        "ssim_mean": 1.0,
+        "ssim_min": 1.0,
+        "tool": "cargo run --example probe_edges"
+      },
       "generational": false
     },
     {
@@ -743,6 +905,15 @@
         "metadata": "lost"
       },
       "verification": "verified",
+      "specimens": [
+        "corpus/raster/rgba-gradient.png"
+      ],
+      "measured": {
+        "note": "Return leg into the PNG pivot, so GIF can reach every other raster target\nwithout its own edge to each. Lossless with respect to the GIF it decodes; it\ndoes not recover the colours palettisation destroyed. Composition keeps that\nvisible: a PNG -> GIF -> PNG round trip still reports color_depth as lost,\nbecause `lost` is absorbing.",
+        "specimens": 1,
+        "ssim_mean": 1.0,
+        "tool": "cargo run --example probe_edges (reverse direction)"
+      },
       "generational": false
     },
     {
@@ -760,6 +931,15 @@
         "metadata": "lost"
       },
       "verification": "verified",
+      "specimens": [
+        "corpus/raster/gray16.png"
+      ],
+      "measured": {
+        "note": "Return leg into the PNG pivot. Preserves depth, so TIFF -> PNG -> TIFF is genuinely round-trippable at 16-bit.",
+        "specimens": 1,
+        "ssim_mean": 1.0,
+        "tool": "cargo run --example probe_edges (reverse direction)"
+      },
       "generational": false
     },
     {
@@ -777,6 +957,15 @@
         "metadata": "lost"
       },
       "verification": "verified",
+      "specimens": [
+        "corpus/raster/rgba-gradient.png"
+      ],
+      "measured": {
+        "note": "Return leg into the PNG pivot.",
+        "specimens": 1,
+        "ssim_mean": 1.0,
+        "tool": "cargo run --example probe_edges (reverse direction)"
+      },
       "generational": false
     },
     {
@@ -794,6 +983,15 @@
         "metadata": "lost"
       },
       "verification": "verified",
+      "specimens": [
+        "corpus/raster/rgba-gradient.png"
+      ],
+      "measured": {
+        "note": "Return leg into the PNG pivot.",
+        "specimens": 1,
+        "ssim_mean": 1.0,
+        "tool": "cargo run --example probe_edges (reverse direction)"
+      },
       "generational": false
     },
     {
@@ -816,6 +1014,22 @@
         "alpha": "composite_black"
       },
       "verification": "verified",
+      "specimens": [
+        "corpus/raster/rgb-photo.png",
+        "corpus/raster/rgba-gradient.png",
+        "corpus/raster/rgba-hard-edge.png",
+        "corpus/raster/gray16.png",
+        "corpus/raster/rgba-opaque.png"
+      ],
+      "measured": {
+        "comparison_background": "stated per figure — see note",
+        "engine_build": "vips-8.15.1",
+        "note": "CORRECTED 2026-08-21 (docs/RESEARCH.md §13.8, §13.9). An earlier version of this\nblock recorded a single `ssim_alpha = 0.4686` from a comparison that read stored\nRGB and ignored alpha. That figure scored the comparison's own baseline, not the\nengine.\n\nFor an alpha-LOSING conversion the score depends entirely on which background\nthe original is composited onto before comparing, and the ranking against\nimage-rs REVERSES between the two: 0.4010 against white, 0.9933 against black.\nNeither is the engine's quality. Both are recorded, with the background named,\nbecause a score without its background is not reproducible.\n\nThe finding that stands independent of any metric is the policy: this\ninvocation composites transparency onto BLACK, established by pixel arithmetic\n(ADR-0012). `--background 255` composites onto white and is a separate edge\nbelow (ADR-0013).\n",
+        "ssim_alpha_vs_black": 0.9933,
+        "ssim_alpha_vs_white": 0.401,
+        "ssim_opaque": 0.9933,
+        "tool": "core/examples/cross_engine.rs"
+      },
       "generational": true
     },
     {
@@ -835,6 +1049,19 @@
         "signal_fidelity": "degraded"
       },
       "verification": "verified",
+      "specimens": [
+        "corpus/raster/rgb-photo.png",
+        "corpus/raster/rgba-gradient.png",
+        "corpus/raster/gray16.png"
+      ],
+      "measured": {
+        "bytes_photo": 1942,
+        "depth_observed": "gray16.png is ushort/grey16 in, uchar out",
+        "engine_build": "vips-8.15.1",
+        "note": "THE DEFAULT IS LOSSY, and badly so: SSIM 0.8362 on rgb-photo at 1,942 bytes.\nimage-rs writes the same pair LOSSLESS at SSIM 1.0 and 37,098 bytes. A consumer\nreading \"PNG to WebP\" from the image-rs edge and then running libvips in their\nown pipeline would silently get visibly degraded output.\n\n`vips webpsave --lossless` is a separate edge, recorded below: 15,512 bytes at\nSSIM 1.0, one flag apart from this one. See ADR-0013.\n\n`color_depth` and `signal_fidelity` record two different things here, and the\ndistinction is the whole point of ADR-0014:\n  - `color_depth = degraded {16 -> 8}` — WebP is 8-bit. Measured directly with\n    vipsheader: gray16.png goes in as `ushort`/`grey16` and comes out `uchar`.\n  - `signal_fidelity = degraded` — the lossy quantisation at SSIM 0.8362, which\n    is not colour-depth loss at all and had nowhere to live before ADR-0014.\n\nCORRECTED 2026-08-23. This edge previously claimed `color_depth = preserved`\nwhile the `--lossless` edge below claimed `degraded {16 -> 8}` for the same\nengine and the same format pair — WebP does not change bit depth based on a\ncompression flag, so both could not be right. The cause was that this edge's\nspecimen list omitted gray16.png, so 16-bit input was never exercised, and the\nuntested assumption was published as `verified`. gray16.png is now measured\nhere. Its note also still described `signal_fidelity` as \"proposed and not yet\nadopted\" months after ADR-0014 adopted it, and described the `--lossless` edge\nas missing after it had been added. Raised in review.\n",
+        "ssim_photo": 0.8362,
+        "tool": "core/examples/libvips_edges.rs; vipsheader for the depth check"
+      },
       "generational": true
     },
     {
@@ -853,6 +1080,17 @@
         "metadata": "lost"
       },
       "verification": "verified",
+      "specimens": [
+        "corpus/raster/rgba-gradient.png",
+        "corpus/raster/rgb-photo.png",
+        "corpus/raster/gray16.png"
+      ],
+      "measured": {
+        "engine_build": "vips-8.15.1",
+        "note": "Lossless on every specimen, alpha intact. Uncompressed by default and correspondingly large — 110,830 bytes for a 94,487-byte PNG.",
+        "ssim": 1.0,
+        "tool": "core/examples/libvips_edges.rs"
+      },
       "generational": false
     },
     {
@@ -872,6 +1110,21 @@
         "signal_fidelity": "preserved"
       },
       "verification": "verified",
+      "specimens": [
+        "corpus/raster/rgb-photo.png",
+        "corpus/raster/rgba-gradient.png",
+        "corpus/raster/rgba-hard-edge.png",
+        "corpus/raster/rgba-opaque.png",
+        "corpus/raster/gray16.png"
+      ],
+      "measured": {
+        "comparison_background": "white (irrelevant here — alpha is preserved, so the score is 1.0 against any background)",
+        "engine_build": "vips-8.15.1",
+        "note": "Genuinely lossless, alpha included: SSIM 1.0000 on every 8-bit specimen. The one\nexception is gray16 at 0.9997, which is not compression loss — WebP is 8-bit, so\n16-bit input is truncated, and `color_depth` records that.\n\nContrast the DEFAULT invocation above, which is lossy at SSIM 0.8362 on the same\nphoto. Same engine, same formats, one flag apart, 15,512 bytes versus 1,942.\nThis pair is the clearest argument in the registry for ADR-0013.\n\nThis edge is also what exposed the measurement bug in RESEARCH.md §13.8: it\noriginally scored 0.4691 on rgba-hard-edge, which is impossible for a lossless\nconversion and turned out to be the harness comparing premultiplied against\nnon-premultiplied stored RGB.\n",
+        "ssim": 1.0,
+        "ssim_16bit_input": 0.9997,
+        "tool": "core/examples/libvips_flags.rs"
+      },
       "generational": false
     },
     {
@@ -894,6 +1147,19 @@
         "alpha": "composite_white"
       },
       "verification": "verified",
+      "specimens": [
+        "corpus/raster/rgba-gradient.png",
+        "corpus/raster/rgba-hard-edge.png",
+        "corpus/raster/rgb-photo.png"
+      ],
+      "measured": {
+        "comparison_background": "white",
+        "engine_build": "vips-8.15.1",
+        "note": "The same engine and formats as the default jpegsave edge, differing only by\n`--background 255`, which composites transparency onto WHITE instead of black.\n\nScored against a white-composited original it reaches 0.9855 where the default\ninvocation reaches 0.4010. That is not evidence this invocation is better — it\nis evidence that the comparison background and the flattening policy have to\nagree, which is exactly why RESEARCH.md §13.9 says report the policy and never a\nwinner. Against a BLACK-composited original the ordering would reverse.\n",
+        "ssim_alpha": 0.9855,
+        "ssim_opaque": 0.9933,
+        "tool": "core/examples/libvips_flags.rs"
+      },
       "generational": true
     },
     {
@@ -916,6 +1182,16 @@
         "audio_channels": "downmix_average"
       },
       "verification": "verified",
+      "specimens": [
+        "corpus/audio/stereo-distinct.wav"
+      ],
+      "measured": {
+        "channels": "2 -> 1",
+        "engine_build": "SoX v14.4.2",
+        "note": "AGREES WITH FFMPEG EXACTLY. The two engines' mono output differs by 0.0% of\nsignal RMS on a specimen carrying different tones per channel — so both average\nthe channels, and `downmix_average` is a real convention rather than one\nengine's habit.\n\nWorth recording precisely because the alpha case went the other way (ADR-0012).\nCross-engine agreement is as much a finding as divergence, and is the easier one\nto forget to write down.\n",
+        "rms_diff_vs_ffmpeg": 0.0,
+        "tool": "cross-engine comparison against ffmpeg 6.1.1"
+      },
       "generational": false
     },
     {
@@ -938,6 +1214,16 @@
         "bit_depth": "round"
       },
       "verification": "verified",
+      "specimens": [
+        "corpus/audio/quiet-mono.wav"
+      ],
+      "measured": {
+        "engine_build": "SoX v14.4.2",
+        "note": "DISAGREES WITH FFMPEG, and not only because of dither.\n\n  ffmpeg default            3.8 dB\n  ffmpeg -dither_method 0   3.8 dB   (flag had no visible effect)\n  sox default               5.2 dB\n  sox -D (dither disabled) 11.1 dB\n\nDither explains sox's own 5.9 dB spread — it trades SNR for the removal of\ncorrelated distortion, which is the intended bargain. It does NOT explain the\n7.3 dB gap between sox -D and ffmpeg. That cause is UNKNOWN and deliberately not\nguessed at; see docs/RESEARCH.md §14.5.\n\nThe consequence for the schema is clear even though the cause is not:\n`bit_depth = degraded` is under-specified in exactly the way `alpha = lost` was\nbefore ADR-0012. It needs a policy vocabulary — `dither`, `truncate`, `round`\nare the obvious candidates — and that vocabulary should not be written until\nsomeone can explain the remaining gap, or it will encode a guess.\n\nSpecimen note: measured on QUIET content, where 8-bit quantisation is\ncatastrophic. The same conversion on loud content scores around 50 dB and the\nengines would look identical. A property is only measurable on a specimen that\nexercises it.\n",
+        "snr_db": 5.2,
+        "snr_db_nodither": 11.1,
+        "tool": "SNR against the 16-bit original"
+      },
       "generational": true
     },
     {

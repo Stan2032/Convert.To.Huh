@@ -233,7 +233,13 @@ fn engine(id: &str) -> Engine {
         id: id.into(),
         name: id.into(),
         version_pin: ">=1,<2".into(),
-        license: License { spdx: "MIT".into(), build_profiles: vec!["lgpl".into()] },
+        license: License {
+            spdx: "MIT".into(),
+            build_profiles: vec!["lgpl".into()],
+            spdx_components: vec![],
+            patent_exposure: "none".into(),
+            verified: true,
+        },
         security: Security { hostility: "moderate".into(), isolation: "wasm".into() },
         resources: Resources { memory_model: "streaming".into(), default_timeout_s: 30 },
         runtimes: Runtimes { native: true, wasm: true },
@@ -260,6 +266,8 @@ fn edge(from: &str, to: &str, loss: &[(&str, LossValue)], ms: u64) -> Edge {
         requires: vec![],
         provides: vec![],
         status: "verified".into(),
+        specimens: vec![],
+        measured: Default::default(),
     }
 }
 

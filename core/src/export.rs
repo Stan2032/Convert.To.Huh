@@ -45,6 +45,17 @@ pub struct EngineOut {
     pub license: String,
     /// Which distribution profiles may legally ship this engine.
     pub build_profiles: Vec<String>,
+    /// Licences of bundled components, which can be stricter than `license`
+    /// and are what actually decide profile eligibility (ADR-0007).
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub spdx_components: Vec<String>,
+    /// ADR-0007 treats patent exposure as first class; publishing
+    /// `build_profiles` without it asks consumers to trust our conclusion
+    /// instead of applying their own policy.
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub patent_exposure: String,
+    /// Whether the licence text was read, or the entry is an inference.
+    pub license_verified: bool,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -69,6 +80,17 @@ pub struct EdgeOut {
     /// `verified` means measured against a specimen. `claimed` means asserted
     /// and NOT yet tested — consumers should treat the two differently.
     pub verification: String,
+    /// The specimens the measurement ran against.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub specimens: Vec<String>,
+    /// The measurement behind `verification`: the engine build, the metric and
+    /// its value. Shapes differ by domain, deliberately (ADR-0014 requires each
+    /// `signal_fidelity` claim to name its metric, and SSIM does not apply to
+    /// audio). Published because an edge that says a property was degraded, and
+    /// will not say by how much or how anyone knows, is asking to be taken on
+    /// trust — which is the one thing this dataset exists not to do.
+    #[serde(skip_serializing_if = "std::collections::BTreeMap::is_empty")]
+    pub measured: std::collections::BTreeMap<String, serde_json::Value>,
     /// True when repeated lossy application compounds (re-encoding generations).
     pub generational: bool,
 }
@@ -207,6 +229,9 @@ pub fn build(reg: &Registry) -> Dataset {
             version_pin: e.version_pin.clone(),
             license: e.license.spdx.clone(),
             build_profiles: e.license.build_profiles.clone(),
+            spdx_components: e.license.spdx_components.clone(),
+            patent_exposure: e.license.patent_exposure.clone(),
+            license_verified: e.license.verified,
         })
         .collect();
 
@@ -224,6 +249,17 @@ pub fn build(reg: &Registry) -> Dataset {
             loss: e.loss.0.iter().map(|(k, v)| (k.clone(), v.as_str().to_string())).collect(),
             loss_policy: e.loss_policy.clone(),
             verification: e.status.clone(),
+            specimens: e.specimens.clone(),
+            // TOML values into JSON ones. Anything that will not convert is
+            // dropped rather than guessed at: a mangled measurement in a
+            // published dataset is worse than an absent one.
+            measured: e
+                .measured
+                .iter()
+                .filter_map(|(k, v)| {
+                    serde_json::to_value(v).ok().map(|j| (k.clone(), j))
+                })
+                .collect(),
             generational: e.generational,
         })
         .collect();

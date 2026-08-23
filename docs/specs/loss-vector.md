@@ -67,13 +67,36 @@ bit depth. Magnitudes are property-specific and defined in the registry schema.
 Loss composes along a chain, and **not by addition**. Per the adapter-chaining
 formulation (R§1.4), composition is a per-property join:
 
+Composition is the **maximum under a total order**, which is what makes it
+associative and order-independent:
+
 ```
-preserved  ∘ X          = X
-degraded   ∘ preserved  = degraded
-degraded   ∘ degraded   = degraded, magnitudes multiply
-lost       ∘ anything   = lost          (absorbing — you cannot un-lose)
-anything   ∘ synthesized = synthesized  (contaminating — inference wins)
+preserved  <  degraded  <  lost  <  synthesized
 ```
+
+```
+preserved  ∘ X           = X
+degraded   ∘ preserved   = degraded
+degraded   ∘ degraded    = degraded, magnitudes multiply
+lost       ∘ preserved   = lost          (absorbing — you cannot un-lose)
+lost       ∘ degraded    = lost
+lost       ∘ synthesized = synthesized   (contamination beats absorption)
+X          ∘ synthesized = synthesized   (contaminating — inference wins)
+```
+
+**`synthesized` outranks `lost`, in either operand order.** This case needs
+stating because the two headline rules — `lost` absorbs, `synthesized`
+contaminates — both match `lost ∘ synthesized` and, read alone, disagree about
+the answer. The tie is broken toward `synthesized` because the values answer
+different questions and one is more urgent: `lost` says the property is missing,
+while `synthesized` says *what is there was invented by a model*. A chain that
+destroys a property and then has a model invent a replacement must report the
+invention (ADR-0009), because presenting inferred content as recovered content
+is the failure this vocabulary exists to prevent. Reporting `lost` would be the
+safer-sounding answer and the more dangerous one.
+
+Enforced by `LossValue::rank` in `core/src/loss.rs`, and tested in both operand
+orders.
 
 Two consequences that matter:
 
