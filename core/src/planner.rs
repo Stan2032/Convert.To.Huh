@@ -64,6 +64,11 @@ pub struct Hop {
     /// unreproducible in the one field that most needed to be right (ADR-0013:
     /// loss belongs to `(engine, version, invocation, from, to)`).
     pub engine_version: String,
+    /// The exact call the edge was measured with. Carried into the plan because
+    /// execution must run THIS, not something equivalent-looking: it is half of
+    /// the edge's identity under ADR-0013, and the loss vector shown to the user
+    /// describes this invocation and no other.
+    pub invocation: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -364,6 +369,7 @@ impl<'a> Planner<'a> {
                 engine_version: engine
                     .map(|x| x.version_pin.clone())
                     .unwrap_or_else(|| "unknown".into()),
+                invocation: e.invocation.clone(),
             });
         }
         // Compose policies the same way as the vector: the FIRST hop to destroy

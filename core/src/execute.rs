@@ -39,6 +39,11 @@ pub struct Receipt {
     /// than part of the plan, and it changes the output — so a receipt without
     /// it cannot reproduce the file it describes, which is the receipt's only
     /// job. Every execution-affecting input belongs here.
+    ///
+    /// Applies to IN-PROCESS hops only. A subprocess engine is run exactly as
+    /// its edge's `invocation` records, because that string is what was
+    /// measured (ADR-0013); quality settings baked into it are not overridden
+    /// from here. Read this field together with `hops`.
     pub quality: u8,
     pub contains_synthesis: bool,
     pub declared_loss: crate::loss::LossVector,
@@ -54,6 +59,98 @@ pub fn sha256(bytes: &[u8]) -> String {
     format!("{:x}", h.finalize())
 }
 
+/// Run one hop THROUGH THE ENGINE THE PLANNER CHOSE.
+///
+/// Execution used to call the in-process encoder for every hop, whatever the
+/// plan said. Because the plan's loss vector and the receipt both come from the
+/// selected edge, that made the tool contradict its own dataset: planning a
+/// libvips PNG->JPEG hop printed "transparent areas become black"
+/// (`composite_black`, which is what libvips does) and then produced image-rs
+/// output, where a fully transparent pixel keeps the colour underneath. On
+/// `corpus/raster/rgba-gradient.png` the transparent corner came out
+/// `[254,254,130]` while real libvips gives `[0,0,0]`.
+///
+/// ADR-0012 exists precisely because that difference matters to whoever is
+/// converting a logo, and ADR-0013 makes `(engine, version, invocation)` part of
+/// an edge's identity. So the rule here is absolute: **run the engine named in
+/// the plan, or fail.** Silently substituting an engine is worse than refusing,
+/// because the receipt keeps claiming the one that was planned.
+fn run_hop(
+    hop: &crate::planner::Hop,
+    bytes: &[u8],
+    from_format: &str,
+    quality: u8,
+    budget: &Budget,
+) -> Result<Vec<u8>, ConvertError> {
+    match hop.engine.as_str() {
+        // In-process, no invocation to honour: image-rs IS this crate's encoder.
+        "image-rs" => {
+            let img = engines::decode(bytes, from_format, budget)?;
+            engines::encode(&img, &hop.to, quality)
+        }
+        "libvips" => run_libvips(hop, bytes, from_format),
+        other => Err(ConvertError::InputUnsupported(format!(
+            "plan selects engine `{other}`, which this build cannot execute. \
+             Refusing rather than substituting a different engine: the plan's \
+             loss vector and this receipt describe `{other}` (ADR-0013)."
+        ))),
+    }
+}
+
+/// Run libvips as the registry recorded it.
+///
+/// The edge's `invocation` is the recipe, not a description of one: running
+/// anything else would measure a different edge. `IN` and `OUT` are the only
+/// placeholders, substituted with scratch paths.
+fn run_libvips(
+    hop: &crate::planner::Hop,
+    bytes: &[u8],
+    from_format: &str,
+) -> Result<Vec<u8>, ConvertError> {
+    let Some(invocation) = hop.invocation.as_deref() else {
+        return Err(ConvertError::InputUnsupported(format!(
+            "the libvips edge {} -> {} records no invocation, so there is no \
+             way to run the call that was measured (ADR-0013, rule 8)",
+            hop.from, hop.to
+        )));
+    };
+
+    let scratch = crate::subprocess::Scratch::new("exec")?;
+    let in_path = scratch.join(&format!("in.{}", ext_for(from_format)));
+    let out_path = scratch.join(&format!("out.{}", ext_for(&hop.to)));
+    std::fs::write(&in_path, bytes)
+        .map_err(|e| ConvertError::Internal(format!("write hop input: {e}")))?;
+
+    let mut tokens = invocation.split_whitespace();
+    let program = tokens.next().unwrap_or("vips");
+    let mut cmd = crate::subprocess::External::new(program);
+    for t in tokens {
+        cmd = match t {
+            "IN" => cmd.path_arg(&in_path),
+            "OUT" => cmd.path_arg(&out_path),
+            other => cmd.arg(other),
+        };
+    }
+    cmd.run()?;
+
+    std::fs::read(&out_path)
+        .map_err(|e| ConvertError::Internal(format!("read hop output: {e}")))
+}
+
+/// File extension for a format id. Engines dispatch on it, so it has to be
+/// right here even though ground rule 1 forbids trusting it on INPUT.
+fn ext_for(format_id: &str) -> &'static str {
+    match format_id {
+        "image/jpeg" => "jpg",
+        "image/png" => "png",
+        "image/gif" => "gif",
+        "image/webp" => "webp",
+        "image/tiff" => "tif",
+        "image/bmp" => "bmp",
+        _ => "bin",
+    }
+}
+
 /// Execute a plan over raster hops, then measure what actually happened.
 pub fn execute(plan: &Plan, input: &[u8], quality: u8) -> Result<(Vec<u8>, Receipt), ConvertError> {
     let started = std::time::Instant::now();
@@ -67,8 +164,7 @@ pub fn execute(plan: &Plan, input: &[u8], quality: u8) -> Result<(Vec<u8>, Recei
     let mut hop_labels = Vec::new();
 
     for hop in &plan.hops {
-        let img = engines::decode(&current_bytes, &current_format, &budget)?;
-        let out = engines::encode(&img, &hop.to, quality)?;
+        let out = run_hop(hop, &current_bytes, &current_format, quality, &budget)?;
         hop_labels.push(format!("{} [{}] {} -> {}", hop.engine, hop.op, hop.from, hop.to));
         current_bytes = out;
         current_format = hop.to.clone();

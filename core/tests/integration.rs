@@ -266,6 +266,7 @@ fn edge(from: &str, to: &str, loss: &[(&str, LossValue)], ms: u64) -> Edge {
         requires: vec![],
         provides: vec![],
         status: "verified".into(),
+        confidence: None,
         specimens: vec![],
         measured: Default::default(),
     }
@@ -483,4 +484,67 @@ fn a_capability_carrying_route_is_not_pruned_by_a_cheaper_one() {
          planner found none — the cheaper capability-less route pruned it"
     );
     assert_eq!(plan.unwrap().hops.len(), 2, "expected the two-hop capable route");
+}
+
+/// Execution must run the engine the plan selected, not an equivalent-looking
+/// one.
+///
+/// `execute` used to call the in-process encoder for every hop regardless of
+/// `hop.engine`, while the plan's loss vector and the receipt both came from
+/// the selected edge. Planning a libvips PNG->JPEG hop therefore printed
+/// "transparent areas become black" — libvips' `composite_black` — and produced
+/// image-rs output, where a transparent pixel keeps the colour underneath.
+///
+/// Measured on rgba-gradient.png, whose corner is fully transparent over light
+/// yellow: image-rs gave [254,254,130], real libvips gives [0,0,0]. The user
+/// was told the opposite of what they got, which is the exact failure ADR-0012
+/// exists to prevent.
+#[test]
+fn the_engine_that_runs_is_the_engine_that_was_planned() {
+    let r = reg();
+    let p = Planner::new(&r, &Policy::default());
+    let plan = p.plan("image/png", "image/jpeg").expect("route exists");
+
+    let src = specimen("rgba-gradient.png");
+    let hop = &plan.hops[0];
+
+    // Skip only where the engine genuinely is not installed — a capability gap
+    // is not a broken build. Never silently fall back to another engine.
+    if hop.engine == "libvips" && !engine_present("vips") {
+        eprintln!("skipping: libvips not installed");
+        return;
+    }
+
+    let (out, receipt) = execute::execute(&plan, &src, 85).expect("conversion runs");
+
+    // The receipt names an engine; the bytes must have come from it.
+    assert!(
+        receipt.hops[0].starts_with(&hop.engine),
+        "receipt says {:?} but the plan selected {}",
+        receipt.hops[0],
+        hop.engine
+    );
+
+    if hop.engine == "libvips" {
+        // The transparent corner must follow libvips' composite_black policy,
+        // which is what the plan told the user would happen.
+        let img = image::load_from_memory(&out).expect("output decodes");
+        let rgb = img.to_rgb8();
+        let (w, h) = rgb.dimensions();
+        let corner = rgb.get_pixel(w - 1, h - 1).0;
+        assert!(
+            corner.iter().all(|&c| c < 24),
+            "transparent corner came out {corner:?}; the plan promised \
+             composite_black, so image-rs (discard_channel, ~[254,254,130]) ran \
+             instead of the planned engine"
+        );
+    }
+}
+
+fn engine_present(prog: &str) -> bool {
+    std::process::Command::new("which")
+        .arg(prog)
+        .output()
+        .map(|o| o.status.success())
+        .unwrap_or(false)
 }

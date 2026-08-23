@@ -176,6 +176,11 @@ pub struct Edge {
     pub requires: Vec<String>,
     pub provides: Vec<String>,
     pub status: String,
+    /// How much to trust synthesized content. ADR-0009 requires every
+    /// `Synthesize` edge to carry one, and validator rule 3 enforces that in the
+    /// source — but it was dropped here, so the published dataset showed a
+    /// synthesis edge with no way to judge it.
+    pub confidence: Option<f64>,
     /// Specimens the measurement ran against, carried through so the published
     /// dataset can say what the evidence was.
     pub specimens: Vec<String>,
@@ -228,6 +233,16 @@ fn parse_loss(
             ),
             _ => (None, None),
         };
+        // The same argument as for values, applied to keys: `alphaa = "lost"`
+        // would otherwise load fine and store a property nothing reads, leaving
+        // the edge silently claiming transparency is not applicable. The
+        // Python validator catches this, but the loader is a separate entry
+        // point and must not depend on CI having run first.
+        if !crate::loss::PROPERTIES.contains(&k.as_str()) {
+            return Err(format!(
+                "{where_}: unknown loss property `{k}` — loss-vector.md §2 is a closed list"
+            ));
+        }
         let lv = match s {
             Some("preserved") => LossValue::Preserved,
             Some("degraded") => LossValue::Degraded,
@@ -316,6 +331,7 @@ impl Registry {
                     } else {
                         r.verification.status
                     },
+                    confidence: r.confidence,
                     specimens: r.verification.specimens,
                     measured: r.verification.measured,
                 });
@@ -371,6 +387,15 @@ mod tests {
             loss(r#"alpha = { value = "lost", policy = "composite_black" }"#).expect("valid");
         assert_eq!(v.get("alpha"), Some(LossValue::Lost));
         assert_eq!(policy.get("alpha").map(String::as_str), Some("composite_black"));
+    }
+
+    #[test]
+    fn an_unknown_property_name_is_rejected() {
+        // Same reasoning as the value case: `alphaa` would store a property no
+        // consumer reads, leaving the edge claiming alpha is not applicable.
+        let e = loss(r#"alphaa = "lost""#).expect_err("must reject");
+        assert!(e.contains("alphaa"), "{e}");
+        assert!(e.contains("closed list"), "{e}");
     }
 
     #[test]

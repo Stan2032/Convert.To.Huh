@@ -1242,6 +1242,7 @@
         "time": "lost"
       },
       "verification": "claimed",
+      "confidence": 0.82,
       "generational": false
     }
   ],

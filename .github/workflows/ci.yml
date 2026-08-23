@@ -53,6 +53,18 @@ jobs:
         with:
           workspaces: core
 
+      # Execution dispatches to the engine the plan selected and REFUSES to
+      # substitute a different one, so the engines the registry names have to be
+      # here. Without them the raster tests fail (correctly) and the PDF
+      # cleaning tests skip themselves, which is how CI ended up never
+      # exercising the render-and-rebuild path at all.
+      - name: Install the engines the registry measures
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libvips-tools poppler-utils
+          vips --version
+          pdftoppm -v
+
       - name: Regenerate the corpus
         # Specimens are generated, not committed, so this also proves the
         # generator still produces what the tests expect.

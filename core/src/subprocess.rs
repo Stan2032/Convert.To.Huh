@@ -68,13 +68,9 @@ impl Scratch {
                 N.fetch_add(1, Ordering::Relaxed),
                 scratch_entropy()
             ));
-            match std::fs::create_dir(&path) {
-                Ok(()) => {
-                    restrict_to_owner(&path);
-                    return Ok(Scratch { path });
-                }
-                Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => continue,
-                Err(e) => return Err(ConvertError::Internal(format!("scratch dir: {e}"))),
+            match claim(&path)? {
+                Some(s) => return Ok(s),
+                None => continue, // occupied: try another name, never adopt it
             }
         }
         Err(ConvertError::Internal(
@@ -94,6 +90,43 @@ impl Scratch {
 impl Drop for Scratch {
     fn drop(&mut self) {
         let _ = std::fs::remove_dir_all(&self.path);
+    }
+}
+
+/// Take exclusive ownership of `path` as a scratch directory.
+///
+/// `Ok(Some(_))` — created by us, owner-only.
+/// `Ok(None)`    — something is already there. **Never adopted**: that path may
+///                 belong to another local user, as a directory or a symlink
+///                 pointing somewhere they can read.
+/// `Err(_)`      — the filesystem said something else went wrong.
+///
+/// Split out from `Scratch::new` so the refusal can be tested directly. The
+/// name carries unpredictable bits precisely so an attacker cannot arrange the
+/// collision, which also means a test cannot arrange one through `new`.
+fn claim(path: &Path) -> Result<Option<Scratch>, ConvertError> {
+    // Owner-only ATOMICALLY. `create_dir` applies the umask, so under a typical
+    // 022 the directory exists as 0755 until a later chmod lands — a window in
+    // a shared /tmp where another user can open it. `DirBuilder::mode` closes
+    // the window rather than narrowing it.
+    #[cfg(unix)]
+    let builder = {
+        use std::os::unix::fs::DirBuilderExt;
+        let mut b = std::fs::DirBuilder::new();
+        b.mode(0o700);
+        b
+    };
+    #[cfg(not(unix))]
+    let builder = std::fs::DirBuilder::new();
+
+    match builder.create(path) {
+        Ok(()) => {
+            // Still called, for platforms whose DirBuilder has no mode.
+            restrict_to_owner(path);
+            Ok(Some(Scratch { path: path.to_path_buf() }))
+        }
+        Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => Ok(None),
+        Err(e) => Err(ConvertError::Internal(format!("scratch dir: {e}"))),
     }
 }
 
@@ -396,15 +429,35 @@ mod tests {
             assert_eq!(mode & 0o077, 0, "scratch dir is group/world accessible");
         }
 
-        // An already-occupied path must never be adopted: that was the hole.
-        let squatted = a.path().join("victim");
-        std::fs::create_dir(&squatted).unwrap();
-        assert!(
-            std::fs::create_dir(&squatted).is_err(),
-            "create_dir must fail on an existing path — the property Scratch relies on"
-        );
-    }
+        // The actual regression: an occupied path must be REFUSED, not adopted.
+        // Tested through `claim`, because the unpredictable suffix that makes
+        // the collision hard for an attacker to arrange also makes it
+        // impossible for a test to arrange through `Scratch::new`.
+        let occupied = a.path().join("someone-elses");
+        std::fs::create_dir(&occupied).unwrap();
+        std::fs::write(occupied.join("their-file"), b"do not touch").unwrap();
 
+        assert!(
+            claim(&occupied).expect("an occupied path is not an error").is_none(),
+            "Scratch adopted a directory it did not create"
+        );
+        // And refusing must not have disturbed what was there.
+        assert!(occupied.join("their-file").exists(), "refusal deleted someone else's data");
+
+        // A free path is claimed, owner-only.
+        let fresh = a.path().join("fresh");
+        let got = claim(&fresh).expect("claimable").expect("should have been claimed");
+        assert_eq!(got.path(), fresh);
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            assert_eq!(
+                std::fs::metadata(&fresh).unwrap().permissions().mode() & 0o077,
+                0,
+                "claimed directory is group/world accessible"
+            );
+        }
+    }
     #[test]
     fn long_non_ascii_stderr_truncates_without_panicking() {
         // Byte 200 lands inside the 3-byte '€', so a byte-indexed slice panics.

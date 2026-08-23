@@ -120,6 +120,19 @@ fn png_passengers(bytes: &[u8]) -> Vec<Passenger> {
     out
 }
 
+/// Exact equality of decoded content: geometry and every RGBA sample.
+///
+/// Compared as RGBA8 so that a change in any channel counts, including one an
+/// alpha-ignoring or luma-only comparison would miss. Two images that differ
+/// only in how they were encoded are equal here, which is the intent — this
+/// asks whether the CONTENT survived the rebuild, not whether the bytes did.
+fn pixels_identical(a: &image::DynamicImage, b: &image::DynamicImage) -> bool {
+    if a.width() != b.width() || a.height() != b.height() {
+        return false;
+    }
+    a.to_rgba8().as_raw() == b.to_rgba8().as_raw()
+}
+
 fn passengers_for(format: &str, bytes: &[u8]) -> Vec<Passenger> {
     match format {
         "image/png" => png_passengers(bytes),
@@ -170,7 +183,20 @@ pub fn sanitize(
         properties_lost.push("color_depth".to_string());
     }
 
-    let content_preserved = content_ssim.map(|s| s > 0.9999).unwrap_or(false);
+    // `content_preserved` is a claim of EXACT equality, so it is decided by
+    // exact equality — not by an SSIM threshold.
+    //
+    // SSIM is a perceptual similarity metric computed on luma, so it is blind
+    // to changes that leave luminance alone (some chroma shifts) and can exceed
+    // 0.9999 on images that genuinely differ. Deciding this flag from it, and
+    // then calling the result "bit-faithful", is a stronger claim than the
+    // measurement supports — the same overreach ADR-0010 records for
+    // losslessness, in the one place a sanitizer must not overreach: telling
+    // someone their content survived.
+    //
+    // SSIM stays, reported as what it is: a similarity score, useful for saying
+    // HOW MUCH a lossy rebuild moved when the answer is not "not at all".
+    let content_preserved = pixels_identical(&img, &rebuilt);
 
     let summary = {
         let mut parts = Vec::new();
@@ -184,10 +210,16 @@ pub fn sanitize(
                 passenger_bytes
             ));
         }
-        match content_ssim {
-            Some(s) if s > 0.9999 => parts.push("image content is bit-faithful".into()),
-            Some(s) => parts.push(format!("image content changed (SSIM {s:.4})")),
-            None => parts.push("content could not be compared — geometry changed".into()),
+        // Say which question was answered. "Every pixel is identical" is an
+        // exact claim; an SSIM score is a similarity claim, and the two must not
+        // be worded as if they were the same evidence.
+        if content_preserved {
+            parts.push("every pixel is identical".into());
+        } else {
+            match content_ssim {
+                Some(s) => parts.push(format!("image content changed (SSIM {s:.4})")),
+                None => parts.push("content could not be compared — geometry changed".into()),
+            }
         }
         format!("{}.", parts.join("; "))
     };

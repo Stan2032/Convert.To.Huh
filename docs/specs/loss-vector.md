@@ -65,16 +65,14 @@ bit depth. Magnitudes are property-specific and defined in the registry schema.
 ## 4. Composition
 
 Loss composes along a chain, and **not by addition**. Per the adapter-chaining
-formulation (R§1.4), composition is a per-property join:
+formulation (R§1.4), composition is a per-property join — the **maximum under a
+total order**, which is what makes it associative and order-independent:
 
-Composition is the **maximum under a total order**, which is what makes it
-associative and order-independent:
-
-```
+```text
 preserved  <  degraded  <  lost  <  synthesized
 ```
 
-```
+```text
 preserved  ∘ X           = X
 degraded   ∘ preserved   = degraded
 degraded   ∘ degraded    = degraded, magnitudes multiply
@@ -111,8 +109,38 @@ Two consequences that matter:
 
 Generational loss is the exception to the simple join: repeated lossy
 `Transcode` hops on the same property degrade faster than the product of their
-individual ratios. Edges declare a `generational` flag; the composer applies an
-additional penalty when two flagged edges touch the same property in sequence.
+individual ratios. Edges declare a `generational` flag.
+
+### What is specified here and NOT yet implemented
+
+Two clauses above describe behaviour `core/` does not have. They are kept
+because they are the intended design, and flagged because a spec rule with no
+enforcement is a rumour — the same standard this repository applies in the other
+direction, where a rule living only in `tools/` is one nobody can find.
+
+| Clause | Status |
+|---|---|
+| The four-value join, including `synthesized` outranking `lost` | **implemented**, `LossValue::rank`, tested both orders |
+| "magnitudes multiply" for `degraded ∘ degraded` | **not implemented** |
+| A generational penalty applied *during composition* | **not implemented** |
+
+`LossVector` stores a `LossValue` per property and nothing else. The magnitudes
+that §3 defines — `ratio`, `from`/`to` — are parsed from the registry and then
+dropped by `registry::parse_loss`, so `compose` has no numbers to multiply.
+`generational` survives as a flat per-edge planner cost
+(`GENERATIONAL_PENALTY`), which is not the same thing: it cannot tell
+`flagged → unflagged → flagged` from `flagged → flagged → unflagged`, and the
+distinction is the entire point of the clause.
+
+Consequence worth stating plainly: **a two-hop chain that halves resolution
+twice reports `geometry = degraded`, not `degraded ×0.25`.** The direction of
+the answer is right and its magnitude is absent, so no consumer is misled about
+*what* was lost — but nobody should read a composed vector as carrying
+quantities it does not carry.
+
+Closing this needs magnitudes carried through `LossVector`, a canonical
+composition for them, and three-hop tests over both groupings, in one commit
+with the schema change. Raised in review; recorded rather than quietly dropped.
 
 ## 5. Declared vs measured
 

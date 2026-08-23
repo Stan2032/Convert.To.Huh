@@ -80,6 +80,12 @@ pub struct EdgeOut {
     /// `verified` means measured against a specimen. `claimed` means asserted
     /// and NOT yet tested — consumers should treat the two differently.
     pub verification: String,
+    /// How far to trust content a model invented. Required on every
+    /// `Synthesize` edge by ADR-0009 and enforced in the source by validator
+    /// rule 3 — but it was dropped between the loader and here, so the only
+    /// synthesis edge in the dataset published no way to judge its output.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub confidence: Option<f64>,
     /// The specimens the measurement ran against.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub specimens: Vec<String>,
@@ -186,6 +192,18 @@ pub fn integrity_problems(d: &Dataset) -> Vec<String> {
                 problems.push(format!("{id}: policy for `{prop}` but no loss entry for it"));
             }
         }
+
+        // ADR-0009: synthesis is never silent. Publishing invented content
+        // without saying how far to trust it is exactly the silence that ADR
+        // forbids, and the source-side rule could not catch it because the
+        // value was being dropped after validation, on the way out.
+        let synthesizes = e.operation == "Synthesize"
+            || e.loss.values().any(|v| v == "synthesized");
+        if synthesizes && e.confidence.is_none() {
+            problems.push(format!(
+                "{id}: synthesizes content but publishes no `confidence` (ADR-0009)"
+            ));
+        }
         if !d.formats.iter().any(|f| f.id == e.from) {
             problems.push(format!("{id}: `from` names a format not in the dataset"));
         }
@@ -249,6 +267,7 @@ pub fn build(reg: &Registry) -> Dataset {
             loss: e.loss.0.iter().map(|(k, v)| (k.clone(), v.as_str().to_string())).collect(),
             loss_policy: e.loss_policy.clone(),
             verification: e.status.clone(),
+            confidence: e.confidence,
             specimens: e.specimens.clone(),
             // TOML values into JSON ones. Anything that will not convert is
             // dropped rather than guessed at: a mangled measurement in a

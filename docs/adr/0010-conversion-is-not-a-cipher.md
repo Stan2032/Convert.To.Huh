@@ -97,13 +97,31 @@ path is erased.
 Stated as the tension that kills the idea:
 
 - For a route to be reversible, its hops must be **lossless**.
-- For a route to act as a key, the output must **depend on which route was
-  taken**.
-- Lossless hops are exactly those whose output does not depend on the route.
+- For a route to act as a key, **the recovered content** must depend on which
+  route was taken.
+- Lossless hops are exactly those whose recovered content does not depend on the
+  route.
 
 **Reversibility and key-dependence are mutually exclusive here.** No choice of
 formats escapes it, because the constraint is on the meaning of "lossless"
 rather than on any particular format's capabilities.
+
+The middle terms say *content*, not *bytes*, and that precision is load-bearing
+rather than pedantic — see the correction above. Lossless routes can and do
+differ in serialization, so a route does leave faint traces in a file's bytes
+(encoder quirks, filter choices, chunk order). That is not a rescue for the
+cipher, for two independent reasons:
+
+1. **It is not confidential.** Those traces are readable by anyone who opens the
+   file, so they identify the toolchain rather than hide anything from an
+   adversary. A key nobody can keep secret is not a key.
+2. **It is not what the scheme needed.** The proposal required the *decrypted
+   content* to be wrong without the path. Content is exactly what lossless
+   routes agree on, so the content comes back regardless — which is what the
+   seven-route measurement and `experiments/binary_waterfall.py` both show.
+
+Encoder-dependent bytes are a **fingerprint**, not a cipher: useful for saying
+which tool wrote a file, useless for keeping its contents from a reader.
 
 ### Changing MEDIUM repeatedly does not help either
 
