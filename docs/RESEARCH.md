@@ -1001,8 +1001,8 @@ PRONOM identifies *what a file is*, with ~2,000 signatures and an XML API. There
 is no equivalent for *what conversion costs you*. That is the asset this project
 is uniquely arranged to produce, because everything here already exists to
 generate it: a closed property vocabulary (ADR-0004), verified-not-claimed edges
-(rule 6), specimen-backed measurement, and a validator that has caught four
-genuine errors in hand-written data.
+(rule 6), specimen-backed measurement, and a validator that has repeatedly
+caught genuine errors in hand-written data (cases in `registry/README.md`).
 
 **Design implication:** the registry is the contribution; the CLI is the
 instrument that produces it. A verified loss registry would be useful to

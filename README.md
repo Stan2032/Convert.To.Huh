@@ -34,11 +34,20 @@ d = json.load(open("conversion-loss-registry.json"))
 
 for e in d["edges"]:
     if e["from"] == "image/png" and e["to"] == "image/jpeg":
-        print(e["engine"], e.get("invocation"), e["loss"])
-
-# image-rs  None                    {'alpha': 'lost', 'signal_fidelity': 'degraded', ...}
-# libvips   vips jpegsave IN OUT    {'alpha': 'lost', 'signal_fidelity': 'degraded', ...}
+        print(e["engine"], "|", e.get("invocation"), "|",
+              e["loss"]["alpha"], "->", e.get("loss_policy", {}).get("alpha"))
 ```
+```
+image-rs | None                                     | lost -> discard_channel
+libvips  | vips jpegsave IN OUT                     | lost -> composite_black
+libvips  | vips jpegsave IN OUT --background 255    | lost -> composite_white
+```
+
+Three rows for "PNG to JPEG", and the difference is the whole point. All three
+**correctly** report that transparency is lost; they disagree about what
+replaces it, so your logo comes out black, white, or with the channel simply
+dropped. Note the third row: same engine, same formats, one different flag.
+That is why loss is recorded against the *invocation*, not the engine.
 
 **If you run an archive or library** — the digital preservation field discusses
 conversion loss constantly, in prose. This is the same knowledge in a form you
@@ -115,8 +124,10 @@ Every entry carries a `verification` field:
 | `refuted` | Tested and found not to work. |
 
 The discipline exists because the data is wrong surprisingly often. In this
-repository the checks have caught **five** errors in hand-written entries,
-several written minutes earlier by the person who wrote the spec.
+repository the checks have repeatedly rejected hand-written entries — several
+written minutes earlier by the person who had just written the spec they broke.
+The cases are written up in [`registry/README.md`](registry/README.md),
+including one the checks **missed**.
 
 And once, memorably, the *measuring instrument itself* was wrong — a fidelity
 score of 0.9950 that turned out to be scoring an unstated assumption rather than

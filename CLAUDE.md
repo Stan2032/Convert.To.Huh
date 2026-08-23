@@ -55,11 +55,11 @@ These hold everywhere. Violating one is a bug regardless of what else works.
 | `docs/RESEARCH.md` | Evidence base. Findings carry sources **and design implications**. Cited as `R§n`. |
 | `docs/ARCHITECTURE.md` | System design and the invariants above. |
 | `dataset/` | **The deliverable.** CC0 conversion-loss data, emitted by `huh export`. |
-| `docs/adr/` | Eleven binding decisions. Superseded by new ADRs, never edited quietly. |
+| `docs/adr/` | Binding decisions. Superseded by new ADRs, never edited quietly. `docs/adr/README.md` indexes them. |
 | `docs/specs/` | Contracts, partly machine-enforced. |
 | `registry/` | Formats, engines, edges. The core asset. |
 | `tools/` | Validators. Dependency-free, run in CI. |
-| `.claude/agents/` | Fifteen specialist agents. `.claude/agents/README.md` maps work to owner. |
+| `.claude/agents/` | Specialist agents. `.claude/agents/README.md` maps work to owner. |
 
 ## Before you commit
 
