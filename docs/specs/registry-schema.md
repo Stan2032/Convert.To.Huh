@@ -227,7 +227,24 @@ engine. `vips webpsave` is **lossy** (SSIM 0.8362 on a photo) and
   a subprocess should not (**rule 8**, a warning rather than an error, because
   the validator cannot reliably tell the two apart).
 
-### `policy` — what replaced a lost property (ADR-0012)
+#### Which makes `invocation` part of the edge's identity (rule 9)
+
+An edge is identified by `(engine, from, to, invocation)`. **No two entries may
+share that tuple** — across the whole registry, not just within one file
+(**rule 9**). Two entries for the same tuple give a consumer no way to know
+which to believe, and the two will drift.
+
+Note what the rule does *not* forbid. Two entries differing only in
+`invocation` are the normal case and the reason the field exists: `vips
+webpsave` and `vips webpsave --lossless` are separate rows, and must be.
+
+This rule was written after the fact. A duplicate `image-rs png → gif` entry
+reached the published dataset, because the same edge was measured twice for
+different reasons — once for raster coverage, once for palettisation policy —
+and landed in two different files. It was found by loading
+`dataset/conversion-loss-registry.json` and grouping the edges the way a
+consumer would, not by any check here. Files are how the registry is *stored*;
+they are not a namespace.
 
 ```toml
 [edge.loss]
@@ -266,6 +283,24 @@ DC offset; SoX rounds to nearest), and dither is a separate axis already capture
 by the invocation. Writing the vocabulary while the mechanism was still unknown
 would have encoded the wrong distinction permanently. See `RESEARCH.md §14.6`.
 
+
+## Coverage claims are data, not prose (rule 10)
+
+The README states the registry's size in its own words:
+
+```
+**14 formats · 6 engines · 24 conversions (23 verified)**
+```
+
+CI recomputes those four numbers and rejects the line if it disagrees
+(**rule 10**), printing the corrected line to paste in. Engines are counted as
+those **carrying at least one edge**, not those merely described in
+`registry/engines/` — the line claims what has been measured, and an engine with
+a description and no edges has measured nothing.
+
+The rule exists because the line read `7 engines · 19 conversions` for some time
+against a registry holding 6 and 24. A wrong number in the README is worse than
+one in a TOML file: it is the number people repeat.
 
 ## Versioning
 

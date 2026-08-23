@@ -292,6 +292,12 @@ LOSS_POLICIES = {
 def check_edges(edge_files: dict[str, dict], formats: dict[str, dict],
                 engines: dict[str, dict], f: Findings) -> int:
     count = 0
+    # Rule 9. Two entries for the same (engine, from, to, invocation) give a
+    # consumer no way to know which to believe. Different INVOCATIONS are
+    # different edges and are expected (ADR-0013); an identical tuple is a
+    # duplicate. This rule exists because one slipped in and was caught by
+    # reading the published dataset, not by the checks.
+    seen: dict[tuple, str] = {}
     for fname, doc in edge_files.items():
         for i, edge in enumerate(doc.get("edge", [])):
             count += 1
@@ -300,6 +306,13 @@ def check_edges(edge_files: dict[str, dict], formats: dict[str, dict],
             engine = edge.get("engine")
             if engine not in engines:
                 f.error(where, f"unknown engine `{engine}`")
+
+            key = (engine, edge.get("from"), edge.get("to"), edge.get("invocation"))
+            if key in seen:
+                f.error(where, f"duplicate edge: same engine, from, to and invocation as "
+                               f"{seen[key]} — registry-schema.md rule 9")
+            else:
+                seen[key] = where
 
             op = edge.get("op")
             if op not in OPS:
@@ -432,6 +445,41 @@ SELF_TESTS: list[tuple[str, str, str]] = [
         status="claimed"
         """,
         "requires a `confidence` field",
+    ),
+    (
+        "two edges with identical engine, endpoints and invocation",
+        """
+        [[edge]]
+        engine="e"
+        op="Transcode"
+        from="a"
+        to="b"
+        from_kind="Raster"
+        to_kind="Raster"
+        [edge.loss]
+        geometry="preserved"
+        [edge.cost]
+        time_model="constant"
+        memory_model="streaming"
+        [edge.verification]
+        status="claimed"
+
+        [[edge]]
+        engine="e"
+        op="Transcode"
+        from="a"
+        to="b"
+        from_kind="Raster"
+        to_kind="Raster"
+        [edge.loss]
+        geometry="lost"
+        [edge.cost]
+        time_model="constant"
+        memory_model="streaming"
+        [edge.verification]
+        status="claimed"
+        """,
+        "duplicate edge",
     ),
     (
         "policy from outside the documented vocabulary",
@@ -742,12 +790,82 @@ def self_test() -> int:
             for e in f.errors:
                 print(f"         got: {e}")
 
-    total = len(SELF_TESTS) + len(ENGINE_SELF_TESTS) + 1
+    # Rule 10 compares prose against data, so it cannot use the TOML fixtures.
+    # Two edges, one engine, one verified — a scope line must read `1 engines ·
+    # 2 conversions (1 verified)` against it, whatever the README actually says.
+    scope_edges = {
+        "a.toml": {"edge": [
+            {"engine": "e", "verification": {"status": "verified"}},
+            {"engine": "e", "verification": {"status": "claimed"}},
+        ]}
+    }
+    for name, text, expect in [
+        ("scope line undercounting the registry",
+         "**3 formats · 9 engines · 19 conversions (18 verified)**", "is stale"),
+        ("scope line with no line to find", "no numbers here", "no scope line"),
+        ("scope line that matches", "**3 formats · 1 engines · 2 conversions (1 verified)**", None),
+    ]:
+        got = scope_problem(text, scope_edges, 3)
+        ok = (got is None) if expect is None else (got is not None and expect in got)
+        print(f"  [{'PASS' if ok else 'FAIL'}] {name}")
+        if not ok:
+            failures += 1
+            print(f"         expected {expect!r}, got: {got!r}")
+
+    total = len(SELF_TESTS) + len(ENGINE_SELF_TESTS) + 1 + 3
     print(f"\nself-test: {total - failures}/{total} passed")
     return 1 if failures else 0
 
 
 # ---------------------------------------------------------------------------
+
+SCOPE_RE = re.compile(
+    r"\*\*(\d+) formats · (\d+) engines · (\d+) conversions \((\d+) verified\)\*\*"
+)
+
+
+def check_readme_scope(edge_files: dict[str, dict], formats: dict[str, dict], f: Findings) -> None:
+    """Rule 10. The README's headline scope line must match the registry.
+
+    The README is where most people meet this project, and a coverage claim is
+    exactly the kind of number that goes stale silently — it did, reading
+    `7 engines · 19 conversions` while the registry held 6 and 24. Counting is
+    something a machine should do.
+
+    Engines are counted as those actually carrying an edge, not those merely
+    described in `registry/engines/`: the line is a claim about what has been
+    measured.
+    """
+    readme = REGISTRY.parent / "README.md"
+    if not readme.is_file():
+        return
+    problem = scope_problem(readme.read_text(encoding="utf-8"), edge_files, len(formats))
+    if problem is None:
+        return
+    (f.warn if problem.startswith("no scope line") else f.error)("README.md", problem)
+
+
+def scope_problem(text: str, edge_files: dict[str, dict], n_formats: int) -> str | None:
+    """The comparison behind rule 10, split out so the self-test can reach it."""
+    m = SCOPE_RE.search(text)
+    if not m:
+        return "no scope line found — rule 10 cannot check coverage claims"
+
+    edges = [e for doc in edge_files.values() for e in doc.get("edge", [])]
+    actual = (
+        n_formats,
+        len({e.get("engine") for e in edges if e.get("engine")}),
+        len(edges),
+        sum(1 for e in edges if e.get("verification", {}).get("status") == "verified"),
+    )
+    if tuple(int(g) for g in m.groups()) == actual:
+        return None
+    return (
+        f"scope line is stale (rule 10) — says `{m.group(0)}`, should say "
+        f"`**{actual[0]} formats · {actual[1]} engines · {actual[2]} conversions "
+        f"({actual[3]} verified)**`"
+    )
+
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -768,7 +886,9 @@ def main() -> int:
 
     formats = check_formats(load_dir(REGISTRY / "formats", f), f)
     engines = check_engines(load_dir(REGISTRY / "engines", f), f)
-    n_edges = check_edges(load_dir(REGISTRY / "edges", f), formats, engines, f)
+    edge_files = load_dir(REGISTRY / "edges", f)
+    n_edges = check_edges(edge_files, formats, engines, f)
+    check_readme_scope(edge_files, formats, f)
 
     print(f"checked {len(formats)} formats, {len(engines)} engines, {n_edges} edges")
 

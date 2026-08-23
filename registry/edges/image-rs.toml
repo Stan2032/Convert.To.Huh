@@ -224,11 +224,12 @@ from_kind = "Raster"
 to_kind   = "Raster"
 
 [edge.loss]
-geometry      = "preserved"
-color_depth   = "lost"
-alpha         = { value = "degraded", note = "1-bit only: fully transparent or fully opaque" }
-metadata      = "lost"
-generational  = false
+geometry        = "preserved"
+color_depth     = { value = "lost", policy = "palette_nearest" }
+signal_fidelity = "degraded"
+alpha           = { value = "degraded", note = "1-bit only: fully transparent or fully opaque" }
+metadata        = "lost"
+generational    = false
 
 [edge.cost]
 time_model   = "linear_pixels"
@@ -246,10 +247,11 @@ verified_at = "2026-08-20"
 verified_by = "capability-cartographer"
 
 [edge.verification.measured]
-tool      = "cargo run --example probe_edges"
-specimens = 4
-ssim_mean = 0.8800
-ssim_min  = 0.7992
+tool             = "cargo run --example probe_edges; core/examples/gif_dither.rs"
+specimens        = 4
+ssim_mean        = 0.8800
+ssim_min         = 0.7992
+texture_retained = 0.17
 note = """
 The counterpart to JPEG, and the reason this registry can offer a real choice:
 GIF and JPEG lose OPPOSITE things. JPEG keeps colour and discards transparency;

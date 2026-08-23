@@ -12,51 +12,15 @@
 # as `alpha = lost, policy = composite_black` in ADR-0012: the property is gone,
 # and the policy says what stands in for it.
 
-[[edge]]
-engine     = "image-rs"
-op         = "Transcode"
-from       = "image/png"
-to         = "image/gif"
-from_kind  = "Raster"
-to_kind    = "Raster"
-
-[edge.loss]
-color_depth     = { value = "lost", policy = "palette_nearest" }
-signal_fidelity = "degraded"
-alpha           = "degraded"
-geometry        = "preserved"
-color_profile   = "lost"
-metadata        = "lost"
-generational    = true
-
-[edge.cost]
-time_model   = "linear_pixels"
-memory_model = "whole-file"
-base_ms      = 25
-
-[edge.constraints]
-max_input_bytes = 536870912
-requires        = []
-
-[edge.verification]
-status      = "verified"
-specimens   = ["corpus/raster/rgb-photo.png", "corpus/raster/rgba-gradient.png"]
-verified_at = "2026-08-23"
-verified_by = "capability-cartographer"
-
-[edge.verification.measured]
-tool             = "core/examples/gif_dither.rs"
-engine_build     = "image 0.25"
-bytes            = 13703
-ssim             = 0.9105
-texture_retained = 0.17
-note = """
-Nearest-palette mapping: 17% of the original's adjacent-pixel texture survives,
-against 58% for libvips on the same specimen. `alpha = degraded` rather than
-`lost` because GIF carries 1-bit transparency — partial alpha becomes fully
-opaque or fully transparent, which is a reduction rather than a removal.
-"""
-
+# image-rs is NOT repeated here. Its png -> gif edge already lived in
+# registry/edges/image-rs.toml from the earlier raster work, with four specimens
+# and richer notes; the palettisation policy measured in §15 was merged into it
+# rather than duplicated. A consumer reading two entries for the same
+# (engine, from, to, invocation) has no way to know which one to believe.
+#
+# The duplicate existed briefly and was caught by reading the published dataset
+# as an outsider would, not by the validator — which had no rule against it.
+# Rule 9 now does.
 
 [[edge]]
 engine     = "libvips"

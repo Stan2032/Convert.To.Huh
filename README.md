@@ -126,10 +126,13 @@ gave it away. Both are written up in full rather than quietly fixed.
 
 ## Current scope — small, on purpose
 
-**14 formats · 7 engines · 19 conversions (18 verified)**
+**14 formats · 6 engines · 24 conversions (23 verified)**
 
 Images, PDF and audio. It grows by measurement, not assertion, which is slow
 deliberately. Coverage is not the goal; **trustworthy** coverage is.
+
+(That line is checked against the registry by CI, because it went stale once
+already while nobody noticed.)
 
 ## The project's origin, since it explains the shape
 

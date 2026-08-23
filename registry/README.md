@@ -63,3 +63,18 @@ written the spec:
 
 Neither was a false positive. This is the argument for keeping the registry as
 checked data rather than as code comments and good intentions.
+
+### And once it was not enough
+
+`image-rs png → gif` was measured twice, months apart and for different reasons
+— once for raster coverage, once for palettisation policy — and the second
+measurement was filed in a new file instead of merged into the existing entry.
+Two rows for one edge, disagreeing in their notes, **published in the dataset**.
+
+The validator had nothing to say, because every rule it owned was per-file, and
+each entry was individually valid. It was found by loading the published JSON
+and grouping edges by `(engine, from, to, invocation)` — reading the deliverable
+as a stranger would, rather than checking the sources as their author.
+
+Rule 9 now rejects it. The transferable part is not the rule: it is that
+**validating the inputs is not the same as reading the output.** Do both.
