@@ -249,6 +249,7 @@ silently becomes a new category.
 | `alpha` | `composite_black`, `composite_white`, `discard_channel`, `premultiplied` |
 | `audio_channels` | `downmix_average`, `take_first`, `downmix_weighted` |
 | `bit_depth` | `round`, `truncate` |
+| `color_depth` | `dither_diffuse`, `palette_nearest`, `truncate` |
 
 Extending a list is a documentation change plus a validator change, in the same
 commit. Adding a policy to a property that has no vocabulary yet is an error —

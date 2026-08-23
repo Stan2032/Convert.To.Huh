@@ -388,6 +388,22 @@ fn main() -> ExitCode {
 
         "export" => {
             let dataset = export::build(&reg);
+
+            // Refuse to publish something structurally broken. A consumer
+            // cannot tell a checked dataset from an unchecked one, so the
+            // check has to happen here rather than being left to a habit.
+            let problems = export::integrity_problems(&dataset);
+            if !problems.is_empty() {
+                eprintln!("refusing to export: {} integrity problem(s)", problems.len());
+                for p in problems.iter().take(10) {
+                    eprintln!("  x {p}");
+                }
+                eprintln!("\nThis is a REGISTRY bug. Run tools/validate_registry.py for the \
+                           full rule set — this check covers only what a consumer of the \
+                           published data depends on.");
+                return ExitCode::from(4);
+            }
+
             let json = serde_json::to_string_pretty(&dataset).unwrap();
             match opt(&args, "--out") {
                 Some(path) => {

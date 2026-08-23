@@ -47,7 +47,7 @@ pub struct EngineOut {
     pub build_profiles: Vec<String>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct EdgeOut {
     pub from: String,
     pub to: String,
@@ -121,6 +121,55 @@ fn describe(prop: &str) -> &'static str {
         "provenance" => "Recorded history of the file's origin and prior processing.",
         _ => "See docs/specs/loss-vector.md.",
     }
+}
+
+/// Structural problems that must never reach a published dataset.
+///
+/// The exporter is the last gate before data leaves this repository, and it was
+/// briefly not acting like one: an invalid registry exported cleanly, because
+/// validation lived only in `tools/validate_registry.py` and nothing made
+/// `huh export` consult it. A consumer cannot tell a checked dataset from an
+/// unchecked one, so the export must refuse rather than warn.
+///
+/// This deliberately does NOT reimplement the Python validator — that would be
+/// two sources of truth. It checks the handful of invariants a *consumer*
+/// depends on, and the full rule set stays in one place.
+pub fn integrity_problems(d: &Dataset) -> Vec<String> {
+    let mut problems = Vec::new();
+    let known: std::collections::BTreeSet<&str> = PROPERTIES.iter().copied().collect();
+
+    for e in &d.edges {
+        let id = format!("{} -> {} via {}", e.from, e.to, e.engine);
+
+        if !matches!(e.verification.as_str(), "verified" | "claimed" | "refuted") {
+            problems.push(format!("{id}: unknown verification `{}`", e.verification));
+        }
+        for (prop, val) in &e.loss {
+            if !known.contains(prop.as_str()) {
+                problems.push(format!("{id}: unknown property `{prop}`"));
+            }
+            if !matches!(val.as_str(), "preserved" | "degraded" | "lost" | "synthesized") {
+                problems.push(format!("{id}: unknown loss value `{val}` for `{prop}`"));
+            }
+        }
+        // A policy describing a property the edge does not mention is
+        // meaningless to a consumer trying to interpret it.
+        for prop in e.loss_policy.keys() {
+            if !e.loss.contains_key(prop) {
+                problems.push(format!("{id}: policy for `{prop}` but no loss entry for it"));
+            }
+        }
+        if !d.formats.iter().any(|f| f.id == e.from) {
+            problems.push(format!("{id}: `from` names a format not in the dataset"));
+        }
+        if !d.formats.iter().any(|f| f.id == e.to) {
+            problems.push(format!("{id}: `to` names a format not in the dataset"));
+        }
+        if !d.engines.iter().any(|g| g.id == e.engine) {
+            problems.push(format!("{id}: engine not in the dataset"));
+        }
+    }
+    problems
 }
 
 pub fn build(reg: &Registry) -> Dataset {
@@ -240,6 +289,36 @@ mod tests {
                 e.verification
             );
         }
+    }
+
+    #[test]
+    fn the_real_dataset_has_no_integrity_problems() {
+        let d = build(&registry());
+        let problems = integrity_problems(&d);
+        assert!(problems.is_empty(), "published dataset is broken: {problems:#?}");
+    }
+
+    #[test]
+    fn integrity_check_actually_catches_things() {
+        // A gate nothing proves fires is not a gate. `huh export` silently
+        // published a dataset from a failing registry once already.
+        let mut d = build(&registry());
+
+        let mut bad = d.edges[0].clone();
+        bad.verification = "probably-fine".into();
+        d.edges.push(bad);
+        assert!(integrity_problems(&d).iter().any(|p| p.contains("unknown verification")));
+
+        let mut orphan = d.edges[0].clone();
+        orphan.loss.clear();
+        orphan.loss_policy.insert("alpha".into(), "composite_black".into());
+        d.edges.push(orphan);
+        assert!(integrity_problems(&d).iter().any(|p| p.contains("no loss entry")));
+
+        let mut dangling = d.edges[0].clone();
+        dangling.to = "image/entirely-made-up".into();
+        d.edges.push(dangling);
+        assert!(integrity_problems(&d).iter().any(|p| p.contains("not in the dataset")));
     }
 
     #[test]

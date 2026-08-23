@@ -283,6 +283,9 @@ LOSS_POLICIES = {
     # invocation (`sox` vs `sox -D`) under ADR-0013 — see RESEARCH.md §14.6,
     # where `dither` was very nearly written here and would have been wrong.
     "bit_depth": {"round", "truncate"},
+    # Measured on three engines via examples/gif_dither.rs (§15.2), not inferred
+    # from the pattern in §15.1 — that distinction is the whole of §15.4.
+    "color_depth": {"dither_diffuse", "palette_nearest", "truncate"},
 }
 
 
