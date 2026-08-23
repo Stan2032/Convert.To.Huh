@@ -63,7 +63,7 @@ from_kind  = "AudioPCM"
 to_kind    = "AudioPCM"
 
 [edge.loss]
-bit_depth       = { value = "degraded", from = 16, to = 8 }
+bit_depth       = { value = "degraded", from = 16, to = 8, policy = "round" }
 signal_fidelity = "degraded"
 audio_channels  = "preserved"
 sample_rate     = "preserved"

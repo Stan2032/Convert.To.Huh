@@ -1399,26 +1399,72 @@ correlated distortion, which is the intended bargain and confirms the flag does
 what it claims. It does **not** explain the 7.3 dB gap between `sox -D` and
 ffmpeg.
 
-**That cause is unknown, and is recorded as unknown.** Candidate explanations —
-different rounding to offset-binary `u8`, an ffmpeg dither the flag did not
-disable, different scaling — were not tested, and asserting one would be exactly
-the guess this dossier exists to avoid.
+**Cause found — see §14.6.** It was one of the candidates listed here when this
+section was first written: rounding to offset-binary `u8`. Left in place rather
+than rewritten, because the sequence matters — the measurement was recorded as
+unexplained first, and the explanation had to be earned.
 
 **Design implication.** `bit_depth = degraded` is under-specified in precisely
 the way `alpha = lost` was before ADR-0012: it says the property was reduced, not
 *how*. It wants a policy vocabulary — `dither`, `truncate`, `round` are the
 obvious candidates.
 
-**Deliberately not adding one yet.** ADR-0012 requires a policy to be measured
-rather than assumed, and rule 7 requires the vocabulary to be defined before a
-value can be used. Writing `dither` against the SoX edge would claim an
-understanding of the ffmpeg gap that nobody here has. The measurement is
-recorded; the label waits for the explanation.
+**The label waited for the explanation, and got it** — §14.6. `dither` would
+have been the wrong label, which is the point of having waited.
 
 **Also worth noting:** the specimen is quiet content, where 8-bit quantisation is
 catastrophic. On loud content both engines score around 50 dB and would look
 identical. This divergence is only visible because the corpus was built to
 exercise the property, which is the §14.1 lesson arriving a second time.
+
+
+### 14.6 The 7.3 dB gap explained: half an LSB
+
+§14.5 recorded an unexplained 7.3 dB difference between ffmpeg and SoX on
+16-to-8-bit reduction, and refused to label it. Running it down took two
+measurements.
+
+**Histogram of the written bytes.** The specimen peaks at ±327 in 16-bit, which
+is ±1.28 counts in 8-bit — the signal barely spans two quantisation levels.
+
+| Engine | Distinct values | Most common |
+|---|---|---|
+| ffmpeg | 4 | 128 (12,640), **127 (12,600)**, 129, 126 |
+| sox | 5 | 127, 129, 128, 130, 126 — visibly dithered |
+| `sox -D` | 3 | 129 (16,420), 127 (16,360), 128 (11,320) |
+
+ffmpeg's two most common values are 128 and 127 in near-equal proportion. SoX's
+are symmetric about 128. That asymmetry is the tell.
+
+**Mean of the output.** In offset-binary `u8` a sine centred on zero must land on
+128; any drift is a DC offset the conversion introduced.
+
+| Engine | Mean | Offset from 128 |
+|---|---|---|
+| ffmpeg | 127.5025 | **−0.4975** |
+| sox | 128.0010 | +0.0010 |
+| `sox -D` | 128.0014 | +0.0014 |
+
+**ffmpeg truncates; SoX rounds to nearest.** Half an LSB of DC offset, exactly.
+
+On a signal peaking at 1.28 counts that offset is **39% of peak**, which is why
+it dominates SNR here and would be invisible on loud content — the §14.1
+specimen lesson for the third time.
+
+**Design implications, and one correction to my own reasoning.**
+
+1. `bit_depth` gets a policy vocabulary after all: **`round`** and **`truncate`**.
+   Both are now measured rather than assumed, so rule 7 is satisfied.
+2. **`dither` would have been the wrong label.** §14.5 named it as the leading
+   candidate. Dither is real — it accounts for SoX's own 5.9 dB internal spread —
+   but it is a *separate axis* from rounding, and it is already captured by the
+   invocation (`sox` versus `sox -D`) under ADR-0013. Had the vocabulary been
+   written when the gap was still unexplained, it would have encoded the wrong
+   distinction and every subsequent entry would have inherited it.
+3. That is the concrete argument for the rule this project keeps applying:
+   **record the measurement immediately, and the label only once the mechanism
+   is understood.** The cost of waiting was one section; the cost of guessing
+   would have been a permanent vocabulary error.
 
 
 ## Sources

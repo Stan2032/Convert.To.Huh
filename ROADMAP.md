@@ -20,16 +20,14 @@ already caught itself being wrong.
 
 ## Known gaps, in the order they'd bite
 
-1. **`bit_depth` needs a policy vocabulary, and the evidence is incomplete.**
-   ffmpeg and SoX differ by 7.3 dB on 16-to-8-bit reduction with dither disabled
-   on both, and nobody has explained why (§14.5). The vocabulary should not be
-   written until someone can — otherwise it encodes a guess. Running that gap
-   down is the single most useful open task.
+1. **A third audio engine.** ffmpeg truncates and SoX rounds on bit-depth
+   reduction (§14.6); a third would show which is the outlier, as ImageMagick
+   did for alpha. GStreamer is the obvious candidate.
 2. **Audio specimens are synthetic pure tones** — the easy case for a perceptual
    codec. The 90.3% retention figure is optimistic, not representative.
-3. **A third audio engine** would settle whether ffmpeg or SoX is the outlier on
-   bit depth, the way ImageMagick settled the alpha question. GStreamer is the
-   obvious candidate.
+3. **Real audio content, not pure tones.** Every audio specimen is synthetic,
+   which is the easy case for a perceptual codec — the 90.3% MP3 retention figure
+   is optimistic rather than representative.
 4. **The planner ignores `loss_policy` when ranking.** Two conversions that both
    report `alpha = lost` are treated as equivalent, even though one turns
    transparency black and the other doesn't. The explanation now says which, but

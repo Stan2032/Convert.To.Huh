@@ -153,3 +153,56 @@ engines pick differently is UNMEASURED — do not assume this generalises.
 `signal_fidelity = degraded` because a listener no longer hears what was in the
 original stereo field, even though each sample is still full precision.
 """
+
+
+[[edge]]
+engine     = "ffmpeg"
+invocation = "ffmpeg -i IN -c:a pcm_u8 OUT"
+op         = "Transform"
+from       = "audio/wav"
+to         = "audio/wav"
+from_kind  = "AudioPCM"
+to_kind    = "AudioPCM"
+
+[edge.loss]
+bit_depth       = { value = "degraded", from = 16, to = 8, policy = "truncate" }
+signal_fidelity = "degraded"
+audio_channels  = "preserved"
+sample_rate     = "preserved"
+time            = "preserved"
+metadata        = "lost"
+generational    = true
+
+[edge.cost]
+time_model   = "linear_duration"
+memory_model = "streaming"
+base_ms      = 18
+
+[edge.constraints]
+max_input_bytes = 2147483648
+requires        = []
+
+[edge.verification]
+status      = "verified"
+specimens   = ["corpus/audio/quiet-mono.wav"]
+verified_at = "2026-08-23"
+verified_by = "capability-cartographer"
+
+[edge.verification.measured]
+tool         = "SNR and output histogram against the 16-bit original"
+engine_build = "ffmpeg 6.1.1"
+snr_db       = 3.8
+dc_offset_counts = -0.4975
+note = """
+TRUNCATES where SoX rounds, introducing exactly half an LSB of DC offset — mean
+output 127.5025 where offset-binary u8 centres on 128 (docs/RESEARCH.md §14.6).
+
+On this specimen the signal peaks at 1.28 counts, so half a count is 39% of peak
+and dominates the 3.8 dB SNR. On loud content the same offset is inaudible and
+the two engines would look identical. The divergence is real and its visibility
+is entirely a property of the specimen.
+
+The `policy = "truncate"` qualifier here is the whole reason ADR-0012 exists:
+this edge and the SoX one both report bit_depth = degraded, both correctly, and
+one of them shifts your audio by half a count.
+"""

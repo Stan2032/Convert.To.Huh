@@ -557,6 +557,28 @@
       "generational": false
     },
     {
+      "from": "audio/wav",
+      "to": "audio/wav",
+      "from_kind": "AudioPCM",
+      "to_kind": "AudioPCM",
+      "engine": "ffmpeg",
+      "invocation": "ffmpeg -i IN -c:a pcm_u8 OUT",
+      "operation": "Transform",
+      "loss": {
+        "audio_channels": "preserved",
+        "bit_depth": "degraded",
+        "metadata": "lost",
+        "sample_rate": "preserved",
+        "signal_fidelity": "degraded",
+        "time": "preserved"
+      },
+      "loss_policy": {
+        "bit_depth": "truncate"
+      },
+      "verification": "verified",
+      "generational": true
+    },
+    {
       "from": "image/png",
       "to": "image/jpeg",
       "from_kind": "Raster",
@@ -865,6 +887,9 @@
         "signal_fidelity": "degraded",
         "time": "preserved"
       },
+      "loss_policy": {
+        "bit_depth": "round"
+      },
       "verification": "verified",
       "generational": true
     },
@@ -890,8 +915,8 @@
   "counts": {
     "formats": 14,
     "engines": 8,
-    "edges_total": 21,
-    "edges_verified": 20,
+    "edges_total": 22,
+    "edges_verified": 21,
     "edges_claimed": 1
   }
 }

@@ -248,6 +248,7 @@ silently becomes a new category.
 |---|---|
 | `alpha` | `composite_black`, `composite_white`, `discard_channel`, `premultiplied` |
 | `audio_channels` | `downmix_average`, `take_first`, `downmix_weighted` |
+| `bit_depth` | `round`, `truncate` |
 
 Extending a list is a documentation change plus a validator change, in the same
 commit. Adding a policy to a property that has no vocabulary yet is an error —
@@ -256,6 +257,13 @@ first.
 
 A policy is a **claim about engine behaviour** and carries the same verification
 burden as the edge: only record one you have measured.
+
+`bit_depth` is the cautionary example. When ffmpeg and SoX were first measured
+7.3 dB apart, `dither` looked like the obvious policy name. It was wrong: the
+cause turned out to be **rounding** (ffmpeg truncates, introducing half an LSB of
+DC offset; SoX rounds to nearest), and dither is a separate axis already captured
+by the invocation. Writing the vocabulary while the mechanism was still unknown
+would have encoded the wrong distinction permanently. See `RESEARCH.md §14.6`.
 
 
 ## Versioning

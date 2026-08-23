@@ -279,6 +279,10 @@ def loss_value_of(entry) -> str | None:
 LOSS_POLICIES = {
     "alpha": {"composite_black", "composite_white", "discard_channel", "premultiplied"},
     "audio_channels": {"downmix_average", "take_first", "downmix_weighted"},
+    # Rounding only. Dither is a SEPARATE axis and is captured by the
+    # invocation (`sox` vs `sox -D`) under ADR-0013 — see RESEARCH.md §14.6,
+    # where `dither` was very nearly written here and would have been wrong.
+    "bit_depth": {"round", "truncate"},
 }
 
 
