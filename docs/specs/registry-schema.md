@@ -204,6 +204,60 @@ When several formats' signatures match, PRONOM-style priority resolves it
 `priority_over = ["application/zip"]` and wins. Priority must form a DAG — CI
 rejects cycles.
 
+## Edge fields added after the seed schema
+
+Two fields were added by measurement rather than by design, and both exist
+because an edge without them turned out to be under-specified.
+
+### `invocation` — how the engine was called (ADR-0013)
+
+```toml
+[[edge]]
+engine     = "libvips"
+invocation = "vips webpsave IN OUT"
+```
+
+Loss is a property of `(engine, version, invocation, from, to)`, not just the
+engine. `vips webpsave` is **lossy** (SSIM 0.8362 on a photo) and
+`vips webpsave --lossless` is not. Both are "libvips, PNG to WebP".
+
+- **Different flags are different edges**, not variants of one.
+- Defaults are worth recording precisely because they are what most callers get.
+- An in-process library with fixed parameters may omit this; anything invoked as
+  a subprocess should not (**rule 8**, a warning rather than an error, because
+  the validator cannot reliably tell the two apart).
+
+### `policy` — what replaced a lost property (ADR-0012)
+
+```toml
+[edge.loss]
+alpha = { value = "lost", policy = "composite_black" }
+```
+
+`lost` says a property is gone. It does not say what took its place, and for
+some properties that is the entire question a user has. libvips composites
+transparency onto **black**; image-rs and ImageMagick keep whatever colour was
+underneath. All three correctly report `alpha = lost`, and a logo comes out
+looking completely different.
+
+The vocabulary is **closed per property** (**rule 7**), for the same reason the
+property list is closed: an open set makes two entries incomparable, and a typo
+silently becomes a new category.
+
+| Property | Allowed policies |
+|---|---|
+| `alpha` | `composite_black`, `composite_white`, `discard_channel`, `premultiplied` |
+| `audio_channels` | `downmix_average`, `take_first`, `downmix_weighted` |
+
+Extending a list is a documentation change plus a validator change, in the same
+commit. Adding a policy to a property that has no vocabulary yet is an error —
+define the vocabulary first, so the second person to need it agrees with the
+first.
+
+A policy is a **claim about engine behaviour** and carries the same verification
+burden as the edge: only record one you have measured.
+
+
 ## Versioning
 
 The registry is versioned as a whole (`registry/VERSION`). Receipts pin the

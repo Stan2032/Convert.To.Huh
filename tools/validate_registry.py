@@ -273,6 +273,15 @@ def loss_value_of(entry) -> str | None:
     return None
 
 
+# Rule 7. What may replace a lost property (ADR-0012). Closed per property for
+# the same reason the property list itself is closed: an open set makes two
+# entries incomparable, and a typo becomes a silent new category.
+LOSS_POLICIES = {
+    "alpha": {"composite_black", "composite_white", "discard_channel", "premultiplied"},
+    "audio_channels": {"downmix_average", "take_first", "downmix_weighted"},
+}
+
+
 def check_edges(edge_files: dict[str, dict], formats: dict[str, dict],
                 engines: dict[str, dict], f: Findings) -> int:
     count = 0
@@ -361,6 +370,32 @@ def check_edges(edge_files: dict[str, dict], formats: dict[str, dict],
                     f.error(where, "status `verified` requires at least one specimen — registry-schema.md rule 5")
                 if not ver.get("measured"):
                     f.error(where, "status `verified` requires a `measured` block — registry-schema.md rule 5")
+
+            # Rule 7: policy qualifiers must be from the documented set.
+            for prop, val in (edge.get("loss") or {}).items():
+                if not isinstance(val, dict):
+                    continue
+                pol = val.get("policy")
+                if pol is None:
+                    continue
+                allowed = LOSS_POLICIES.get(prop)
+                if allowed is None:
+                    f.error(where, f"`{prop}` has a `policy` but no policy vocabulary is "
+                                   f"defined for it — registry-schema.md rule 7")
+                elif pol not in allowed:
+                    f.error(where, f"unknown policy `{pol}` for `{prop}`; expected one of "
+                                   f"{sorted(allowed)} — registry-schema.md rule 7")
+
+            # Rule 8: a verified edge for an engine that is invoked as a
+            # subprocess must record HOW (ADR-0013). Warning rather than error:
+            # an in-process library with fixed parameters legitimately has no
+            # invocation, and the validator cannot tell the two apart.
+            eng = engines.get(engine) or {}
+            if (edge.get("verification") or {}).get("status") == "verified" \
+                    and not edge.get("invocation") \
+                    and (eng.get("security") or {}).get("isolation") not in (None, "wasm"):
+                f.warn(where, "verified edge has no `invocation`; loss depends on how the "
+                              "engine was called — registry-schema.md rule 8")
             if status == "claimed":
                 f.warn(where, "unverified: the planner will ignore this edge")
     return count
@@ -390,6 +425,46 @@ SELF_TESTS: list[tuple[str, str, str]] = [
         status="claimed"
         """,
         "requires a `confidence` field",
+    ),
+    (
+        "policy from outside the documented vocabulary",
+        """
+        [[edge]]
+        engine="e"
+        op="Transcode"
+        from="a"
+        to="b"
+        from_kind="Raster"
+        to_kind="Raster"
+        [edge.loss]
+        alpha={ value="lost", policy="composite_puce" }
+        [edge.cost]
+        time_model="constant"
+        memory_model="streaming"
+        [edge.verification]
+        status="claimed"
+        """,
+        "unknown policy",
+    ),
+    (
+        "policy on a property with no policy vocabulary",
+        """
+        [[edge]]
+        engine="e"
+        op="Transcode"
+        from="a"
+        to="b"
+        from_kind="Raster"
+        to_kind="Raster"
+        [edge.loss]
+        geometry={ value="lost", policy="crop" }
+        [edge.cost]
+        time_model="constant"
+        memory_model="streaming"
+        [edge.verification]
+        status="claimed"
+        """,
+        "no policy vocabulary is defined",
     ),
     (
         "transcode changing kind",
