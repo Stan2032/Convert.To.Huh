@@ -1541,6 +1541,62 @@ explanation before it is named. The pattern says where to look. It does not say
 what you will find.
 
 
+## 16. PRONOM splits WebP the same way the invocation does
+
+**Source:** PRONOM XML API, `fmt/566`, `fmt/567`, `fmt/568`, retrieved
+2026-08-23. Measurement: libvips 8.15.1 against `corpus/raster/`.
+
+`image-webp.toml` had carried no PUID since 2026-08-20, with a note saying
+PRONOM's search returned nothing and predicting one existed "under a name the
+search did not surface." Retried on the API directly, and the prediction held —
+but the answer is not one identifier:
+
+| PUID | Name | Version |
+|---|---|---|
+| `fmt/566` | WebP | Lossy |
+| `fmt/567` | WebP | Lossless |
+| `fmt/568` | WebP | Extended |
+
+**PRONOM treats lossy and lossless WebP as different formats.** That is the
+same line ADR-0013 draws between `vips webpsave` and `vips webpsave --lossless`
+— arrived at independently and from the opposite direction. This project split
+them because they *lose different things*; PRONOM split them because the files
+*are different things*. Two disciplines, one boundary.
+
+The first plausible guess at the identifier, `fmt/1508`, turned out to be
+Microsoft Visio Drawing 2. Checking cost one API call; guessing would have put a
+wrong PUID in the published dataset, which is exactly what §2.2's audit exists
+to prevent. **The habit is the finding here, not the number.**
+
+### 16.1 …and then the encoder ignores the split
+
+Measured immediately after, because the neat correspondence above invites an
+inference that turns out to be wrong. The first RIFF chunk after `WEBP` names
+the variant — `VP8 ` lossy, `VP8L` lossless, `VP8X` extended:
+
+| Input | Invocation | Chunk | Variant |
+|---|---|---|---|
+| opaque | `vips webpsave` | `VP8X` | Extended |
+| opaque | `vips webpsave --lossless` | `VP8X` | Extended |
+| alpha | `vips webpsave` | `VP8X` | Extended |
+| alpha | `vips webpsave --lossless` | `VP8X` | Extended |
+
+libvips 8.15.1 writes the extended container **every time**, whatever the flag
+and whatever the content. So every libvips WebP edge in this registry emits
+`fmt/568`, including the one whose entire purpose is being lossless.
+
+**Design implication.** Format identity is not derivable from the edge, even
+when a format registry and a conversion registry agree on where the boundary
+lies. A consumer mapping our edges onto PRONOM identifiers must read the
+produced bytes; inferring the PUID from `invocation` would be wrong for every
+libvips edge here. This is ADR-0013's lesson one layer down: the invocation
+determines what is *lost*, and the encoder determines what is *written*, and
+those are not the same question.
+
+image-rs is unmeasured and must not be assumed to match — assuming one encoder
+resembles another is what §13.4 caught in the alpha work.
+
+
 ## Sources
 
 - [Convert To It](https://converttoit.com/) · [Grokipedia: Convert to it](https://grokipedia.com/page/Convert_to_it) · [Convert To It API](https://converttoit.com/api)
