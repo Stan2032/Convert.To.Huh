@@ -1,0 +1,472 @@
+# Capabilities of image-rs. Owner: capability-cartographer.
+# The project's first VERIFIED edges — measured, not claimed.
+
+[[edge]]
+engine    = "image-rs"
+op        = "Transcode"
+from      = "image/png"
+to        = "image/jpeg"
+from_kind = "Raster"
+to_kind   = "Raster"
+
+[edge.loss]
+alpha           = { value = "lost", policy = "discard_channel" }
+signal_fidelity = "degraded"
+color_depth     = { value = "degraded", from = 16, to = 8 }
+geometry      = "preserved"
+color_profile = "preserved"
+metadata      = "lost"
+generational  = true
+
+[edge.cost]
+time_model   = "linear_pixels"
+memory_model = "whole-file"
+base_ms      = 12
+
+[edge.constraints]
+max_input_bytes = 536870912
+requires        = []
+
+[edge.verification]
+status      = "verified"
+specimens   = [
+  "corpus/raster/rgba-gradient.png",
+  "corpus/raster/rgb-photo.png",
+  "corpus/raster/gray16.png",
+  "corpus/raster/rgba-opaque.png",
+]
+verified_at = "2026-08-20"
+verified_by = "capability-cartographer"
+
+[edge.verification.measured]
+tool          = "tools/verify_edges.sh 85"
+specimens     = 4
+ssim_mean     = 0.9966
+ssim_min      = 0.9950
+alpha         = "lost on rgba-gradient; not exercised by the other three"
+color_depth   = "degraded 16->8 on gray16; not exercised by the 8-bit specimens"
+geometry      = "preserved on all four"
+note = """
+Every measurement agrees with the declared vector, which is what earns the
+`verified` status — CI rule 5 refuses it without this block.
+
+Two results worth keeping. `rgba-opaque` is the control: it HAS an alpha channel
+but every pixel is opaque, so dropping alpha is not an observable loss and the
+harness reports `not-present-in-input` rather than `lost`. Distinguishing "the
+format supports it" from "this file uses it" is what stops the harness
+manufacturing agreement.
+
+And gray16.jpg came out at 197.9% of its PNG input — the JPEG is LARGER. A
+16-bit greyscale gradient is close to the best case for PNG's filters and close
+to the worst case for JPEG's DCT. "Convert to JPEG to save space" is not a law
+of nature, and the planner has no cost term that knows this yet."""
+
+
+[[edge]]
+engine    = "image-rs"
+op        = "Transcode"
+from      = "image/jpeg"
+to        = "image/png"
+from_kind = "Raster"
+to_kind   = "Raster"
+
+[edge.loss]
+geometry      = "preserved"
+color_depth   = "preserved"
+color_profile = "preserved"
+metadata      = "lost"
+generational  = false
+
+[edge.cost]
+time_model   = "linear_pixels"
+memory_model = "whole-file"
+base_ms      = 14
+
+[edge.constraints]
+max_input_bytes = 536870912
+requires        = []
+
+[edge.verification]
+status      = "verified"
+specimens   = ["corpus/raster/rgb-photo.png"]
+verified_at = "2026-08-20"
+verified_by = "capability-cartographer"
+
+[edge.verification.measured]
+tool      = "round-trip via tools/verify_edges.sh"
+specimens = 1
+ssim_mean = 1.0
+note = """
+Lossless in the only sense that applies: PNG re-encodes the already-decoded
+JPEG pixels exactly, so SSIM against the JPEG it decoded is 1.0. It does NOT
+recover what the original JPEG encode destroyed.
+
+That distinction is exactly what the composition rules protect. On a
+PNG -> JPEG -> PNG round trip the total still reports alpha as `lost`, because
+`lost` is absorbing: arriving back at a format that supports transparency does
+not bring the transparency back."""
+
+
+# ---------------------------------------------------------------------------
+# Raster targets beyond JPEG. All measured with `cargo run --example probe_edges`
+# across the four corpus specimens; the numbers below are that output, not
+# estimates. PNG acts as the raster pivot (docs/RESEARCH.md §1.5), so pairs like
+# GIF -> JPEG route through it rather than needing their own edge.
+# ---------------------------------------------------------------------------
+
+[[edge]]
+engine    = "image-rs"
+op        = "Transcode"
+from      = "image/png"
+to        = "image/tiff"
+from_kind = "Raster"
+to_kind   = "Raster"
+
+[edge.loss]
+geometry      = "preserved"
+color_depth   = "preserved"
+color_profile = "preserved"
+alpha         = "preserved"
+metadata      = "lost"
+generational  = false
+
+[edge.cost]
+time_model   = "linear_pixels"
+memory_model = "whole-file"
+base_ms      = 18
+
+[edge.constraints]
+max_input_bytes = 536870912
+requires        = []
+
+[edge.verification]
+status      = "verified"
+specimens   = ["corpus/raster/gray16.png", "corpus/raster/rgba-gradient.png", "corpus/raster/rgb-photo.png", "corpus/raster/rgba-opaque.png"]
+verified_at = "2026-08-20"
+verified_by = "capability-cartographer"
+
+[edge.verification.measured]
+tool      = "cargo run --example probe_edges"
+specimens = 4
+ssim_mean = 1.0
+ssim_min  = 1.0
+note = """
+THE ARCHIVAL TARGET, and the only one that earns that description on evidence.
+Across the four specimens TIFF is the ONLY target that preserved 16-bit depth:
+gray16 came through with depth=preserved, while JPEG, GIF, BMP and WebP all
+degraded it to 8-bit. Combined with SSIM 1.0 and intact alpha, this is the route
+to pick when fidelity is the whole point.
+
+The cost is size: 110,802 bytes for the specimen WebP stores in 218, also
+losslessly. That is a genuine user-facing trade-off — archival fidelity versus
+file size — and it is the first one in this registry backed by measurement
+rather than intuition."""
+
+
+[[edge]]
+engine    = "image-rs"
+op        = "Transcode"
+from      = "image/png"
+to        = "image/webp"
+from_kind = "Raster"
+to_kind   = "Raster"
+
+[edge.loss]
+geometry      = "preserved"
+color_depth   = { value = "degraded", from = 16, to = 8 }
+color_profile = "preserved"
+alpha         = "preserved"
+metadata      = "lost"
+generational  = false
+
+[edge.cost]
+time_model   = "linear_pixels"
+memory_model = "whole-file"
+base_ms      = 20
+
+[edge.constraints]
+max_input_bytes = 536870912
+requires        = []
+
+[edge.verification]
+status      = "verified"
+specimens   = ["corpus/raster/gray16.png", "corpus/raster/rgba-gradient.png", "corpus/raster/rgb-photo.png", "corpus/raster/rgba-opaque.png"]
+verified_at = "2026-08-20"
+verified_by = "capability-cartographer"
+
+[edge.verification.measured]
+tool      = "cargo run --example probe_edges"
+specimens = 4
+ssim_mean = 1.0
+ssim_min  = 1.0
+note = """
+The most surprising measured result in the registry. image-rs writes LOSSLESS
+WebP: SSIM 1.0000 on every specimen with alpha intact, at 218 bytes for the
+image PNG needs 993 for and BMP needs 65,658 for. Roughly 4.5x smaller than PNG
+and 300x smaller than BMP, with no measured loss.
+
+`color_depth` is `degraded` rather than `preserved` because gray16 came back at
+8-bit. So WebP is lossless in the SSIM sense while still narrowing depth — which
+is precisely why loss is a vector and not a scalar (ADR-0004). A single quality
+number would have to call this either "lossless" or "lossy" and both would
+mislead.
+
+Caveat kept deliberately: four synthetic specimens is not a finding. Widen the
+corpus before treating WebP as the default lossless target."""
+
+
+[[edge]]
+engine    = "image-rs"
+op        = "Transcode"
+from      = "image/png"
+to        = "image/gif"
+from_kind = "Raster"
+to_kind   = "Raster"
+
+[edge.loss]
+geometry        = "preserved"
+color_depth     = { value = "lost", policy = "palette_nearest" }
+signal_fidelity = "degraded"
+alpha           = { value = "degraded", note = "1-bit only: fully transparent or fully opaque" }
+metadata        = "lost"
+generational    = false
+
+[edge.cost]
+time_model   = "linear_pixels"
+memory_model = "whole-file"
+base_ms      = 22
+
+[edge.constraints]
+max_input_bytes = 536870912
+requires        = []
+
+[edge.verification]
+status      = "verified"
+specimens   = ["corpus/raster/rgba-gradient.png", "corpus/raster/rgb-photo.png", "corpus/raster/rgba-opaque.png", "corpus/raster/gray16.png"]
+verified_at = "2026-08-20"
+verified_by = "capability-cartographer"
+
+[edge.verification.measured]
+tool             = "cargo run --example probe_edges; core/examples/gif_dither.rs"
+specimens        = 4
+ssim_mean        = 0.8800
+ssim_min         = 0.7992
+texture_retained = 0.17
+note = """
+The counterpart to JPEG, and the reason this registry can offer a real choice:
+GIF and JPEG lose OPPOSITE things. JPEG keeps colour and discards transparency;
+GIF keeps transparency and destroys colour.
+
+`color_depth = "lost"` is forced by rule 4 — image/gif does not list
+`color_depth` in `preserves`, because a 256-entry palette cannot carry source
+colour depth at all. The measurement backs that up harshly: SSIM 0.7992 on
+rgba-opaque and 0.8105 on the gradient, versus JPEG's 0.9950 on the same
+specimens. This is the worst-scoring verified edge in the registry by a wide
+margin, and it is CORRECT that it scores badly.
+
+gray16 scores 1.0000 only because a 64x64 greyscale ramp has few enough distinct
+values to survive palettisation — a reminder that a mean over four specimens
+hides more than it shows."""
+
+
+[[edge]]
+engine    = "image-rs"
+op        = "Transcode"
+from      = "image/png"
+to        = "image/bmp"
+from_kind = "Raster"
+to_kind   = "Raster"
+
+[edge.loss]
+geometry      = "preserved"
+color_depth   = { value = "degraded", from = 16, to = 8 }
+color_profile = "preserved"
+alpha         = "preserved"
+metadata      = "lost"
+generational  = false
+
+[edge.cost]
+time_model   = "linear_pixels"
+memory_model = "whole-file"
+base_ms      = 10
+
+[edge.constraints]
+max_input_bytes = 536870912
+requires        = []
+
+[edge.verification]
+status      = "verified"
+specimens   = ["corpus/raster/rgba-gradient.png", "corpus/raster/rgb-photo.png", "corpus/raster/rgba-opaque.png", "corpus/raster/gray16.png"]
+verified_at = "2026-08-20"
+verified_by = "capability-cartographer"
+
+[edge.verification.measured]
+tool      = "cargo run --example probe_edges"
+specimens = 4
+ssim_mean = 1.0
+ssim_min  = 1.0
+note = """
+Lossless and uncompressed. Loss-equivalent to WebP on every tracked property,
+which makes it the test case for alternative DEDUPLICATION: two routes offering
+the same trade-off are one choice, and the planner should not present both.
+
+What distinguishes them is size, which the loss vector does not model:
+65,658 bytes versus WebP's 218 for the same image. A planner that ranked on
+fidelity alone would treat these as interchangeable. They are not. Recorded as
+a known gap rather than quietly fixed with a fudge factor."""
+
+
+[[edge]]
+engine    = "image-rs"
+op        = "Transcode"
+from      = "image/gif"
+to        = "image/png"
+from_kind = "Raster"
+to_kind   = "Raster"
+
+[edge.loss]
+geometry      = "preserved"
+color_depth   = "preserved"
+alpha         = "preserved"
+metadata      = "lost"
+generational  = false
+
+[edge.cost]
+time_model   = "linear_pixels"
+memory_model = "whole-file"
+base_ms      = 12
+
+[edge.constraints]
+max_input_bytes = 536870912
+requires        = []
+
+[edge.verification]
+status      = "verified"
+specimens   = ["corpus/raster/rgba-gradient.png"]
+verified_at = "2026-08-20"
+verified_by = "capability-cartographer"
+
+[edge.verification.measured]
+tool      = "cargo run --example probe_edges (reverse direction)"
+specimens = 1
+ssim_mean = 1.0
+note = """
+Return leg into the PNG pivot, so GIF can reach every other raster target
+without its own edge to each. Lossless with respect to the GIF it decodes; it
+does not recover the colours palettisation destroyed. Composition keeps that
+visible: a PNG -> GIF -> PNG round trip still reports color_depth as lost,
+because `lost` is absorbing."""
+
+
+[[edge]]
+engine    = "image-rs"
+op        = "Transcode"
+from      = "image/tiff"
+to        = "image/png"
+from_kind = "Raster"
+to_kind   = "Raster"
+
+[edge.loss]
+geometry      = "preserved"
+color_depth   = "preserved"
+color_profile = "preserved"
+alpha         = "preserved"
+metadata      = "lost"
+generational  = false
+
+[edge.cost]
+time_model   = "linear_pixels"
+memory_model = "whole-file"
+base_ms      = 16
+
+[edge.constraints]
+max_input_bytes = 536870912
+requires        = []
+
+[edge.verification]
+status      = "verified"
+specimens   = ["corpus/raster/gray16.png"]
+verified_at = "2026-08-20"
+verified_by = "capability-cartographer"
+
+[edge.verification.measured]
+tool      = "cargo run --example probe_edges (reverse direction)"
+specimens = 1
+ssim_mean = 1.0
+note = "Return leg into the PNG pivot. Preserves depth, so TIFF -> PNG -> TIFF is genuinely round-trippable at 16-bit."
+
+
+[[edge]]
+engine    = "image-rs"
+op        = "Transcode"
+from      = "image/webp"
+to        = "image/png"
+from_kind = "Raster"
+to_kind   = "Raster"
+
+[edge.loss]
+geometry      = "preserved"
+color_depth   = "preserved"
+color_profile = "preserved"
+alpha         = "preserved"
+metadata      = "lost"
+generational  = false
+
+[edge.cost]
+time_model   = "linear_pixels"
+memory_model = "whole-file"
+base_ms      = 18
+
+[edge.constraints]
+max_input_bytes = 536870912
+requires        = []
+
+[edge.verification]
+status      = "verified"
+specimens   = ["corpus/raster/rgba-gradient.png"]
+verified_at = "2026-08-20"
+verified_by = "capability-cartographer"
+
+[edge.verification.measured]
+tool      = "cargo run --example probe_edges (reverse direction)"
+specimens = 1
+ssim_mean = 1.0
+note = "Return leg into the PNG pivot."
+
+
+[[edge]]
+engine    = "image-rs"
+op        = "Transcode"
+from      = "image/bmp"
+to        = "image/png"
+from_kind = "Raster"
+to_kind   = "Raster"
+
+[edge.loss]
+geometry      = "preserved"
+color_depth   = "preserved"
+color_profile = "preserved"
+alpha         = "preserved"
+metadata      = "lost"
+generational  = false
+
+[edge.cost]
+time_model   = "linear_pixels"
+memory_model = "whole-file"
+base_ms      = 8
+
+[edge.constraints]
+max_input_bytes = 536870912
+requires        = []
+
+[edge.verification]
+status      = "verified"
+specimens   = ["corpus/raster/rgba-gradient.png"]
+verified_at = "2026-08-20"
+verified_by = "capability-cartographer"
+
+[edge.verification.measured]
+tool      = "cargo run --example probe_edges (reverse direction)"
+specimens = 1
+ssim_mean = 1.0
+note = "Return leg into the PNG pivot."

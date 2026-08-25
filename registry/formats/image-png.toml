@@ -1,0 +1,36 @@
+id         = "image/png"
+name       = "Portable Network Graphics"
+kinds      = ["Raster"]
+extensions = ["png"]
+mime_types = ["image/png"]
+puid       = "fmt/13"
+puid_verified = true
+puid_name  = "Portable Network Graphics 1.2"
+spec_url   = "https://www.w3.org/TR/png-3/"
+
+preserves = ["signal_fidelity", "geometry", "color_depth", "color_profile", "alpha", "metadata"]
+
+[[signatures]]
+offset = 0
+magic  = "89504E470D0A1A0A"
+weight = "decisive"
+
+[detection]
+priority_over = []
+container_of  = []
+
+[notes]
+text = """
+The 8-byte signature is deliberately designed to survive transfer corruption and
+is decisive. APNG shares this signature and is a separate format carrying the
+`time` property — an APNG detected by signature alone will be misidentified as
+PNG, so APNG must declare priority_over = ["image/png"] and probe for the acTL
+chunk. Not yet entered.
+PRONOM VERIFIED 2026-08-20. Note that fmt/13 is PNG **1.2** specifically —
+PRONOM identifies format *versions*, while this registry identifies *formats*.
+The `puid` field therefore names a representative version, not an exact
+equivalence. PRONOM's own signature is richer than ours: BOF
+`89504E470D0A1A0A0000000D49484452*69545874` plus an EOF anchor on the IEND
+chunk `0000000049454E44AE426082`. Ours is the 8-byte prefix — correct but
+weaker, and it cannot detect truncation the way the EOF anchor can.
+"""

@@ -1,0 +1,117 @@
+# Capabilities of SoX. Owner: capability-cartographer.
+#
+# Added as a second audio engine to test whether the ffmpeg measurements were
+# properties of the format pair or of ffmpeg. One of each, as it turned out.
+
+[[edge]]
+engine     = "sox"
+invocation = "sox IN OUT remix 1,2"
+op         = "Transform"
+from       = "audio/wav"
+to         = "audio/wav"
+from_kind  = "AudioPCM"
+to_kind    = "AudioPCM"
+
+[edge.loss]
+audio_channels  = { value = "lost", policy = "downmix_average" }
+signal_fidelity = "degraded"
+sample_rate     = "preserved"
+bit_depth       = "preserved"
+time            = "preserved"
+metadata        = "lost"
+generational    = false
+
+[edge.cost]
+time_model   = "linear_duration"
+memory_model = "streaming"
+base_ms      = 18
+
+[edge.constraints]
+max_input_bytes = 2147483648
+requires        = []
+
+[edge.verification]
+status      = "verified"
+specimens   = ["corpus/audio/stereo-distinct.wav"]
+verified_at = "2026-08-23"
+verified_by = "capability-cartographer"
+
+[edge.verification.measured]
+tool                = "cross-engine comparison against ffmpeg 6.1.1"
+engine_build        = "SoX v14.4.2"
+channels            = "2 -> 1"
+rms_diff_vs_ffmpeg  = 0.0
+note = """
+AGREES WITH FFMPEG EXACTLY. The two engines' mono output differs by 0.0% of
+signal RMS on a specimen carrying different tones per channel — so both average
+the channels, and `downmix_average` is a real convention rather than one
+engine's habit.
+
+Worth recording precisely because the alpha case went the other way (ADR-0012).
+Cross-engine agreement is as much a finding as divergence, and is the easier one
+to forget to write down.
+"""
+
+
+[[edge]]
+engine     = "sox"
+invocation = "sox IN -b 8 -e unsigned-integer OUT"
+op         = "Transform"
+from       = "audio/wav"
+to         = "audio/wav"
+from_kind  = "AudioPCM"
+to_kind    = "AudioPCM"
+
+[edge.loss]
+bit_depth       = { value = "degraded", from = 16, to = 8, policy = "round" }
+signal_fidelity = "degraded"
+audio_channels  = "preserved"
+sample_rate     = "preserved"
+time            = "preserved"
+metadata        = "lost"
+generational    = true
+
+[edge.cost]
+time_model   = "linear_duration"
+memory_model = "streaming"
+base_ms      = 15
+
+[edge.constraints]
+max_input_bytes = 2147483648
+requires        = []
+
+[edge.verification]
+status      = "verified"
+specimens   = ["corpus/audio/quiet-mono.wav"]
+verified_at = "2026-08-23"
+verified_by = "capability-cartographer"
+
+[edge.verification.measured]
+tool          = "SNR against the 16-bit original"
+engine_build  = "SoX v14.4.2"
+snr_db        = 5.2
+snr_db_nodither = 11.1
+note = """
+DISAGREES WITH FFMPEG, and not only because of dither.
+
+  ffmpeg default            3.8 dB
+  ffmpeg -dither_method 0   3.8 dB   (flag had no visible effect)
+  sox default               5.2 dB
+  sox -D (dither disabled) 11.1 dB
+
+Dither explains sox's own 5.9 dB spread — it trades SNR for the removal of
+correlated distortion, which is the intended bargain. It does NOT explain the
+7.3 dB gap between sox -D and ffmpeg. That cause is UNKNOWN and deliberately not
+guessed at; see docs/RESEARCH.md §14.5.
+
+The consequence for the schema is clear even though the cause is not:
+`bit_depth = degraded` is under-specified in exactly the way `alpha = lost` was
+before ADR-0012. It needs a policy vocabulary — `dither`, `truncate`, `round`
+are the obvious candidates — and that vocabulary should not be written until
+someone can explain the remaining gap, or it will encode a guess.
+
+Specimen note: measured on QUIET content, where 8-bit quantisation is
+catastrophic. The same conversion on loud content scores around 50 dB and the
+engines would look identical. A property is only measurable on a specimen that
+exercises it.
+"""

@@ -1,0 +1,65 @@
+id          = "imagemagick"
+name        = "ImageMagick"
+version_pin = ">=6.9,<8"
+homepage    = "https://imagemagick.org"
+
+[license]
+spdx            = "ImageMagick"
+build_profiles  = ["gpl"]
+patent_exposure = "codec-dependent"
+verified        = false
+checked         = "2026-08-23"
+note = """
+ImageMagick's own licence is Apache-2.0-like but DELEGATES pull in others; a
+build-level audit is required before trusting build_profiles.
+
+NARROWED to ["gpl"] on 2026-08-23. This entry claimed `lgpl` while saying in the
+same breath that an audit was needed before its profiles could be trusted — the
+note contradicted the data next to it. Under ADR-0007 `lgpl` means "safe to
+distribute in a proprietary product", and the planner prunes on this field before
+search, so an unaudited `lgpl` admitted ImageMagick into exactly the profile
+where being wrong is unrecoverable.
+
+registry/engines/libreoffice.toml had already reasoned this out for the same
+situation and reached the opposite conclusion: "a wrong `build_profiles` value
+produces routes we must not ship." This entry now follows the precedent it
+should have followed at the time. Raised in review; rule 12 now enforces it.
+"""
+
+[security]
+hostility   = "high"
+isolation   = "microvm"
+network     = false
+delegates   = true
+
+[resources]
+memory_model      = "whole-file"
+concurrency       = "process-per-job"
+crash_expected    = false
+default_timeout_s = 120
+
+[runtimes]
+native = true
+wasm   = false
+
+[notes]
+text = """
+Added 2026-08-21 as a THIRD independent parser family, to test whether the
+alpha-flattening split between libvips and image-rs was real or a coincidence
+of two samples. It was real: ImageMagick discards the alpha channel, siding
+with image-rs and leaving libvips the outlier (docs/RESEARCH.md §13, ADR-0012).
+
+FLATTENING POLICY, measured on two specimens: `discard_channel`. A fully
+transparent (220,40,40) pixel converts to (220,40,41) — the stored colour
+survives, only the channel is dropped.
+
+SECURITY: `delegates = true` is the important field. ImageMagick hands work to
+external programs by policy, Ghostscript among them, which is how several of
+its worst CVEs were reached — an EPS disguised as a JPEG reaching Ghostscript
+through a delegate. sandbox-warden must sever delegation before this engine is
+used on untrusted input, and `isolation = microvm` reflects that until it is.
+
+Licence is UNVERIFIED and marked so. ImageMagick's own terms are permissive but
+its delegate set is not uniformly so, and build_profiles here is a placeholder
+until license-compliance-officer audits an actual build.
+"""

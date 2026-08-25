@@ -1,0 +1,57 @@
+id          = "libvips"
+name        = "libvips"
+version_pin = ">=8.15,<9"
+homepage    = "https://www.libvips.org/"
+
+[license]
+spdx            = "LGPL-2.1-or-later"
+build_profiles  = ["lgpl", "gpl"]
+patent_exposure = "none"
+verified        = true
+checked         = "2026-08-20"
+source          = "https://raw.githubusercontent.com/libvips/libvips/master/LICENSE"
+
+[security]
+hostility   = "moderate"
+isolation   = "gvisor"
+network     = false
+delegates   = false
+
+[resources]
+memory_model      = "streaming"
+concurrency       = "thread-safe"
+crash_expected    = false
+default_timeout_s = 120
+
+[runtimes]
+native = true
+wasm   = true
+
+[notes]
+text = """
+FLATTENING POLICY, measured 2026-08-21 (docs/RESEARCH.md §13). Converting RGBA
+to a format without alpha, libvips COMPOSITES ONTO BLACK — it scales RGB by
+alpha, so a fully transparent pixel becomes (0,0,0). image-rs instead DISCARDS
+the alpha channel and leaves RGB untouched. Both record `alpha = lost`, and both
+are correct by that vocabulary, yet a logo on a transparent background comes out
+of libvips as a black box and out of image-rs showing whatever colour sat under
+the transparency.
+
+This is the clearest evidence so far that loss belongs per-engine rather than
+per-format-pair, and that `lost` needs a qualifier saying what replaced the
+property. Do not "fix" either engine to match the other; record what each does.
+
+LICENSE VERIFIED 2026-08-20: LICENSE is LGPL 2.1 and contains the "any later
+version" clause, so `-or-later` is correct.
+
+Default raster engine: ~4x faster single-threaded and ~8x multi-threaded on
+JPEG, and roughly 200 MB vs 3 GB peak memory against ImageMagick on the same
+workload (docs/RESEARCH.md §3.1). Its demand-driven streaming model is why
+memory_model is `streaming` and why it can be trusted with large inputs.
+
+Counter-evidence on record: at least one report of libvips being slower and
+heavier than ImageMagick on small images. Engine selection is therefore a
+planner decision informed by measured input size, not a global constant.
+`hostility: moderate` rather than `trusted` — it is still a C library parsing
+hostile input.
+"""

@@ -1,0 +1,14 @@
+CC0 1.0 Universal — Public Domain Dedication
+
+The dataset in `dataset/` and the registry data in `registry/` are dedicated to
+the public domain under CC0 1.0 Universal.
+
+To the extent possible under law, the authors have waived all copyright and
+related or neighbouring rights to this data. You may copy, modify, distribute
+and use it, including for commercial purposes, without asking permission and
+without attribution.
+
+Rationale: these are measurements of how software behaves. Facts about the world
+should not carry conditions. Attribution is appreciated and never required.
+
+Full text: https://creativecommons.org/publicdomain/zero/1.0/legalcode

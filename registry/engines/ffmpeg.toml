@@ -1,0 +1,80 @@
+id          = "ffmpeg"
+name        = "FFmpeg"
+version_pin = ">=6.1,<10"
+homepage    = "https://ffmpeg.org/"
+
+[license]
+spdx            = "LGPL-2.1-or-later"
+build_profiles  = ["lgpl"]
+patent_exposure = "h264-h265-mpegla"
+verified        = true
+checked         = "2026-08-20"
+source          = "https://www.ffmpeg.org/legal.html"
+
+[security]
+hostility   = "high"
+isolation   = "gvisor"
+network     = false
+delegates   = false
+
+[resources]
+memory_model      = "streaming"
+concurrency       = "process-per-job"
+crash_expected    = false
+default_timeout_s = 900
+
+[runtimes]
+native = true
+wasm   = true
+
+[notes]
+text = """
+MEASURED BUILD 2026-08-22: ffmpeg 6.1.1 (Ubuntu 7:6.1.1-3ubuntu5). The audio
+edges in registry/edges/ffmpeg.toml were verified against this build.
+
+PIN WIDENED 2026-08-23 to include it, from ">=8.0,<10". The old pin excluded the
+only build anyone here has ever measured, so all four verified ffmpeg edges rested
+on evidence from outside their own engine's declared range — a consumer resolving
+by version_pin and then trusting `status = "verified"` got a guarantee nothing
+supported. Raised in review; the reasoning below had already written its own
+refutation: "a pin nobody has built against is a guess with a version number on
+it". That is what ">=8.0" was.
+
+The earlier note argued the pin is a licensing statement as much as a
+compatibility one, because GPL dependency sets change between majors. That still
+holds and is why the upper bound stays at <10, but it is an argument for
+verifying a range, not for claiming one. 6.1.1 as shipped by Ubuntu is the LGPL
+build this manifest describes.
+
+Rule 11 now rejects any edge whose engine_build falls outside its engine's pin,
+so the two cannot drift apart again.
+
+
+VERSION PIN CORRECTED 2026-08-20. This manifest originally pinned ">=7.1,<8",
+which excluded every currently shipping release — ffmpeg.org lists 9.0.1, 8.1.2
+and 8.0.3. Exactly the class of plausible-but-wrong data the PUID audit turned
+up on the format side. Re-validate this pin against what we actually build and
+test; a pin nobody has built against is a guess with a version number on it.
+
+LICENSE VERIFIED 2026-08-20 against ffmpeg.org/legal.html, quoting: "FFmpeg is
+licensed under the GNU Lesser General Public License (LGPL) version 2.1 or
+later. However, FFmpeg incorporates several optional parts and optimizations
+that are covered by the GNU General Public License."
+
+LICENSE: this manifest describes the LGPL build. `--enable-gpl` pulls in libx264
+and propagates GPL obligations to anything we distribute, so a GPL build is a
+SEPARATE engine entry with build_profiles = ["gpl"], not a flag on this one
+(ADR-0007). patent_exposure is recorded independently because H.264/H.265
+obligations apply regardless of which license path we take — the two are
+routinely conflated and the conflation is expensive.
+
+SECURITY: `hostility: high`. FFmpeg's protocol handlers (HLS and friends) have a
+history of SSRF and local-file disclosure. The no-network invariant removes the
+precondition entirely (docs/RESEARCH.md §4.5); protocol allowlisting is defence
+in depth on top, never the boundary.
+
+WASM: the multithreaded core is ~32 MB and needs cross-origin isolation, is
+flagged unstable upstream, and iOS Safari lacks SharedArrayBuffer in workers.
+Assume the single-threaded ceiling in browser planning, and prefer WebCodecs
+where the codec is supported — 3-10x faster on H.264 (§6.1, §6.2).
+"""

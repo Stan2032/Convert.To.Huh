@@ -1,0 +1,55 @@
+# Capabilities of whisper.cpp. Owner: capability-cartographer.
+# The project's first Synthesize edge — read ADR-0009 before touching it.
+
+[[edge]]
+engine     = "whisper.cpp"
+op         = "Synthesize"
+from       = "audio/wav"
+to         = "text/plain"
+from_kind  = "AudioPCM"
+to_kind    = "Text"
+confidence = 0.82
+
+[edge.loss]
+text_as_text   = "synthesized"
+time           = "lost"
+audio_channels = "lost"
+sample_rate    = "lost"
+bit_depth      = "lost"
+metadata       = "lost"
+generational   = false
+
+[edge.cost]
+time_model   = "linear_duration"
+memory_model = "whole-file"
+base_ms      = 2000
+
+[edge.constraints]
+max_input_bytes = 4294967296
+requires        = ["wav_16khz_mono"]
+
+[edge.verification]
+status = "claimed"
+note   = """
+`text_as_text = "synthesized"` is the load-bearing declaration in this file. It
+is NOT "degraded" — the text was never in the input. That value contaminates
+through composition (loss-vector.md §4), so any plan containing this hop is
+automatically flagged contains_synthesis and inherits every marking obligation
+in ADR-0009 without anyone having to remember.
+
+`requires = ["wav_16khz_mono"]` is what forces the planner to schedule FFmpeg's
+normalization hop first.
+
+`time = "lost"` was originally written as `degraded`, on the reasoning that
+whisper emits segment timestamps. The validator rejected it under rule 4:
+text/plain cannot carry `time` at all, so there is nowhere for those timestamps
+to go and they are genuinely lost. Keeping them requires a DIFFERENT TARGET —
+WebVTT or SRT, which do carry `time` — which is a separate edge nobody has
+written yet. The schema turned a hand-wave into a missing-capability finding.
+
+confidence = 0.82 is a PLACEHOLDER and is currently the least defensible number
+in the registry. Real confidence varies enormously with audio quality, accent,
+domain vocabulary and model size, and a single scalar for the edge is probably
+the wrong model — it likely belongs per-invocation, derived from the decoder's
+own token probabilities. fidelity-analyst owns resolving this.
+"""

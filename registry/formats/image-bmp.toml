@@ -1,0 +1,34 @@
+id         = "image/bmp"
+name       = "Windows Bitmap"
+kinds      = ["Raster"]
+extensions = ["bmp", "dib"]
+mime_types = ["image/bmp", "image/x-ms-bmp"]
+puid       = "fmt/116"
+puid_verified = true
+puid_name  = "Windows Bitmap 3.0"
+spec_url   = "https://learn.microsoft.com/en-us/windows/win32/gdi/bitmap-storage"
+
+preserves = ["signal_fidelity", "geometry", "color_depth", "color_profile", "alpha", "metadata"]
+
+[[signatures]]
+offset = 0
+magic  = "424D"          # "BM"
+weight = "weak"
+
+[detection]
+priority_over = []
+container_of  = []
+
+[notes]
+text = """
+Two bytes of magic is close to nothing — "BM" appears at offset 0 in plenty of
+unrelated files — hence `weight = "weak"`. This is the entry that most needs the
+structural-inspection tier the detector does not have yet: a real check would
+validate the DIB header size and that the declared file size matches.
+
+Lossless and uncompressed, which makes it useful as a route WAYPOINT rather than
+a destination: measured at 65,658 bytes for the same 128x128 image that PNG
+stores in 993 and WebP in 218. A planner that only minimised loss would happily
+route through BMP; one that also weighs size should not. No cost term knows
+this yet.
+"""

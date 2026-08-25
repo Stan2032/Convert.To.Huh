@@ -1,0 +1,40 @@
+id         = "video/x-msvideo"
+name       = "Audio Video Interleave"
+kinds      = ["VideoStream", "AudioPCM"]
+extensions = ["avi"]
+mime_types = ["video/x-msvideo", "video/avi"]
+puid       = "fmt/5"
+puid_verified = true
+puid_name  = "Audio/Video Interleaved Format"
+spec_url   = "https://learn.microsoft.com/en-us/windows/win32/directshow/avi-riff-file-reference"
+
+preserves = ["geometry", "time", "audio_channels", "sample_rate", "bit_depth", "metadata"]
+
+[[signatures]]
+offset = 0
+magic  = "52494646"
+weight = "weak"
+
+[[signatures]]
+offset = 8
+magic  = "41564920"
+weight = "decisive"
+
+[detection]
+priority_over = []
+container_of  = []
+
+[notes]
+text = """
+RIFF at offset 0 is shared with WAV and others; the discriminator is the form
+type at offset 8. Two signatures, one weak and one decisive — the multi-signature
+case the schema has to support, and a reminder that "read the first 4 bytes" is
+not detection.
+
+This is the source format in the worked AVI → PDF example (content-model.md §4),
+the project's founding use case.
+PRONOM VERIFIED 2026-08-20. PRONOM expresses this as a single signature with a
+wildcard for the RIFF size field — `52494646{4}41564920` — where we use two
+signatures at offsets 0 and 8. Equivalent in effect, and confirmation that the
+form type at offset 8 is the real discriminator.
+"""

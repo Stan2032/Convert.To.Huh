@@ -1,0 +1,38 @@
+# Rust — unanchored so it matches core/target/ too, not just a root-level target/
+target/
+**/*.rs.bk
+# Cargo.lock is committed: this ships a binary, so builds must be reproducible
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Node
+node_modules/
+dist/
+.vite/
+
+# WASM build output
+*.wasm
+pkg/
+
+# Corpus: large specimens live out of band, referenced by digest.
+# Small committed specimens are whitelisted explicitly below.
+corpus/large/
+corpus/**/*.mp4
+corpus/**/*.mkv
+corpus/**/*.avi
+!corpus/**/*.min.*
+
+# Conversion scratch
+/scratch/
+/out/
+*.tmp
+
+# Editors / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp

@@ -1,0 +1,120 @@
+# PNG -> GIF through three engines. Owner: capability-cartographer.
+#
+# Kept in one file rather than split per engine, because the point of these
+# entries is the COMPARISON: same conversion, same specimen, three different
+# answers to "what replaces the colours you cannot keep" (docs/RESEARCH.md §15).
+#
+# NOTE on `color_depth = "lost"` rather than `degraded`: GIF's format entry
+# omits color_depth from `preserves` entirely, because a 256-entry palette
+# cannot carry a colour depth in any meaningful sense. Rule 4 rejected
+# `degraded` here and was right to — the first draft of these edges said
+# `degraded` and the validator caught it. `lost` with a policy is the same shape
+# as `alpha = lost, policy = composite_black` in ADR-0012: the property is gone,
+# and the policy says what stands in for it.
+
+# image-rs is NOT repeated here. Its png -> gif edge already lived in
+# registry/edges/image-rs.toml from the earlier raster work, with four specimens
+# and richer notes; the palettisation policy measured in §15 was merged into it
+# rather than duplicated. A consumer reading two entries for the same
+# (engine, from, to, invocation) has no way to know which one to believe.
+#
+# The duplicate existed briefly and was caught by reading the published dataset
+# as an outsider would, not by the validator — which had no rule against it.
+# Rule 9 now does.
+
+[[edge]]
+engine     = "libvips"
+invocation = "vips gifsave IN OUT"
+op         = "Transcode"
+from       = "image/png"
+to         = "image/gif"
+from_kind  = "Raster"
+to_kind    = "Raster"
+
+[edge.loss]
+color_depth     = { value = "lost", policy = "dither_diffuse" }
+signal_fidelity = "degraded"
+alpha           = "degraded"
+geometry        = "preserved"
+color_profile   = "lost"
+metadata        = "lost"
+generational    = true
+
+[edge.cost]
+time_model   = "linear_pixels"
+memory_model = "streaming"
+base_ms      = 30
+
+[edge.constraints]
+max_input_bytes = 536870912
+requires        = []
+
+[edge.verification]
+status      = "verified"
+specimens   = ["corpus/raster/rgb-photo.png"]
+verified_at = "2026-08-23"
+verified_by = "capability-cartographer"
+
+[edge.verification.measured]
+tool             = "core/examples/gif_dither.rs"
+engine_build     = "vips-8.15.1"
+bytes            = 22882
+ssim             = 0.9065
+texture_retained = 0.58
+note = """
+ERROR DIFFUSION, and the outlier again — three times the retained texture of the
+other two engines and 67% more bytes. libvips was also the odd one out on alpha
+flattening (ADR-0012), which is worth noting and not yet worth generalising from.
+
+The SSIM here (0.9065) is LOWER than image-rs (0.9105) despite dithering being
+generally preferred by human viewers. Fidelity scores cannot detect dithering —
+all three engines land within 0.03 — so the policy is the only field that
+distinguishes them. See §15.3.
+"""
+
+
+[[edge]]
+engine     = "imagemagick"
+invocation = "convert IN OUT.gif"
+op         = "Transcode"
+from       = "image/png"
+to         = "image/gif"
+from_kind  = "Raster"
+to_kind    = "Raster"
+
+[edge.loss]
+color_depth     = { value = "lost", policy = "palette_nearest" }
+signal_fidelity = "degraded"
+alpha           = "degraded"
+geometry        = "preserved"
+color_profile   = "lost"
+metadata        = "lost"
+generational    = true
+
+[edge.cost]
+time_model   = "linear_pixels"
+memory_model = "whole-file"
+base_ms      = 40
+
+[edge.constraints]
+max_input_bytes = 536870912
+requires        = []
+
+[edge.verification]
+status      = "verified"
+specimens   = ["corpus/raster/rgb-photo.png"]
+verified_at = "2026-08-23"
+verified_by = "capability-cartographer"
+
+[edge.verification.measured]
+tool             = "core/examples/gif_dither.rs"
+engine_build     = "ImageMagick 6.9.12"
+bytes            = 14774
+ssim             = 0.8799
+texture_retained = 0.20
+palette_size     = 252
+note = """
+Nearest-palette, siding with image-rs against libvips two-to-one — the same
+split as alpha flattening. Uses 252 colours where the others use 255; the
+three-colour difference is unexplained and not worth chasing until it matters.
+"""

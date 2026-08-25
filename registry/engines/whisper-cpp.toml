@@ -1,0 +1,54 @@
+id          = "whisper.cpp"
+name        = "whisper.cpp"
+version_pin = ">=1.7,<2"
+homepage    = "https://github.com/ggml-org/whisper.cpp"
+
+[license]
+spdx            = "MIT"
+build_profiles  = ["lgpl", "gpl"]
+patent_exposure = "none"
+verified        = true
+checked         = "2026-08-20"
+source          = "https://raw.githubusercontent.com/ggml-org/whisper.cpp/master/LICENSE"
+
+[security]
+hostility   = "moderate"
+isolation   = "gvisor"
+network     = false
+delegates   = false
+
+[resources]
+memory_model      = "whole-file"
+concurrency       = "process-per-job"
+crash_expected    = false
+default_timeout_s = 1800
+
+[runtimes]
+native = true
+wasm   = true
+
+[notes]
+text = """
+LICENSE VERIFIED 2026-08-20: MIT, "Copyright (c) 2023-2026 The ggml authors".
+
+MODEL WEIGHTS ARE LICENSED SEPARATELY from the code and are NOT covered by this
+MIT grant. Whoever ships this must check the weights' terms independently —
+license-compliance-officer owns that, and it is unresolved here.
+
+The archetypal Synthesize engine, and the hop that makes AVI -> PDF produce
+something a human actually wants (content-model.md §4).
+
+INPUT CONSTRAINT: consumes standard WAV only. Every route through it carries a
+preceding normalization hop to 16 kHz mono WAV, expressed as edge `requires` so
+the planner inserts it rather than the adapter assuming it
+(docs/RESEARCH.md §3.6).
+
+Its output is an ESTIMATE about the input, not a re-expression of it. Every edge
+from this engine sets `synthesized` on the properties it invents, which
+contaminates through composition and drives the marking obligations of ADR-0009
+automatically. Model weights are part of the version pin: base.en and large-v3
+produce materially different text, and the receipt must say which one ran.
+
+No network at inference time, and no telemetry. Model files are baked into the
+image, never fetched.
+"""

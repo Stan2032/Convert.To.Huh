@@ -1,0 +1,45 @@
+id         = "image/jpeg"
+name       = "JPEG (JFIF)"
+kinds      = ["Raster"]
+extensions = ["jpg", "jpeg", "jpe", "jfif"]
+mime_types = ["image/jpeg"]
+puid       = "fmt/43"
+puid_verified = true
+puid_name  = "JPEG File Interchange Format 1.01"
+spec_url   = "https://www.w3.org/Graphics/JPEG/itu-t81.pdf"
+
+preserves = ["signal_fidelity", "geometry", "color_depth", "color_profile", "metadata"]
+
+[[signatures]]
+offset = 0
+magic  = "FFD8FF"
+weight = "strong"
+
+[detection]
+priority_over = []
+container_of  = []
+
+[notes]
+text = """
+`preserves` deliberately excludes `alpha` — JPEG has none. Any edge claiming to
+preserve alpha into JPEG fails CI rule 4, which is the schema catching a whole
+class of optimistic capability claims automatically.
+
+`color_depth` IS present, and the distinction matters: `preserves` means "can
+carry this property at all", while capacity limits are expressed as `degraded`
+magnitudes on the edge. Baseline JPEG carries colour depth at 8 bits, so a
+16-bit source is `degraded {from = 16, to = 8}` — not `lost`. Alpha is `lost`,
+because there is nowhere to put it. This entry originally omitted color_depth
+and the validator rejected the libvips PNG->JPEG edge; the format was wrong,
+not the edge.
+
+Three bytes is short enough to collide, so the weight is `strong`, not
+`decisive`. CVE-2024-29510 was exploited in the wild using EPS files carrying a
+.jpg extension (docs/RESEARCH.md §4.2) — this entry is the concrete reason
+ADR-0005 exists.
+PRONOM VERIFIED 2026-08-20. fmt/43 is JFIF 1.01, whose PRONOM signature is
+`FFD8FFE0{2}4A464946000101(00|01|02)` — it requires an APP0 segment containing
+"JFIF". Our `FFD8FF` is deliberately BROADER: it also matches Exif JPEG, which
+PRONOM assigns a different PUID. That breadth is right for a converter (we care
+that it is a JPEG) and means our PUID is indicative rather than exact.
+"""

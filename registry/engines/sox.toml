@@ -1,0 +1,46 @@
+id          = "sox"
+name        = "SoX — Sound eXchange"
+version_pin = ">=14.4,<15"
+homepage    = "https://sourceforge.net/projects/sox/"
+
+[license]
+spdx            = "GPL-2.0-or-later"
+build_profiles  = ["gpl"]
+patent_exposure = "codec-dependent"
+verified        = false
+checked         = "2026-08-23"
+note = "SoX core is GPL-2.0-or-later (libSoX is LGPL); the split needs a component-level audit before build_profiles can be trusted. Conservatively gpl-only until then."
+
+[security]
+hostility   = "high"
+isolation   = "microvm"
+network     = false
+delegates   = false
+
+[resources]
+memory_model      = "streaming"
+concurrency       = "process-per-job"
+crash_expected    = false
+default_timeout_s = 120
+
+[runtimes]
+native = true
+wasm   = false
+
+[notes]
+text = """
+Added 2026-08-23 as a SECOND independent audio engine, because every audio
+measurement until now came from ffmpeg alone and the alpha finding only became
+trustworthy at three engines (docs/RESEARCH.md §13, §14.5).
+
+It earned its place immediately by disagreeing. On 16-bit to 8-bit reduction sox
+and ffmpeg differ by 1.4 dB SNR at their defaults, and sox with dither disabled
+differs from ffmpeg by 7.3 dB. `bit_depth = degraded` is as under-specified as
+`alpha = lost` was before ADR-0012.
+
+It also AGREED where that matters: stereo-to-mono downmix is bit-identical
+between the two engines (RMS difference 0.0% of signal), which is evidence
+`downmix_average` is a genuine convention rather than one engine's choice. A
+disagreement is a finding; an agreement across independent implementations is
+also a finding, and the second is easy to forget to record.
+"""

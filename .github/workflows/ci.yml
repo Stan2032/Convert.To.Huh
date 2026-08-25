@@ -1,0 +1,102 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+# These jobs only read the repository. Default token scope is wider than that,
+# and a workflow that never needs write access should not be handed it.
+permissions:
+  contents: read
+
+jobs:
+  registry:
+    name: Validate registry, agents and docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Keep the token out of .git/config, where any later step could read it.
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"   # tomllib is stdlib from 3.11
+
+      # Check the checker before trusting what it says about the registry.
+      - name: Validator self-test
+        run: python3 tools/validate_registry.py --self-test
+
+      - name: Validate registry
+        run: python3 tools/validate_registry.py
+
+      - name: Validate agent definitions
+        run: python3 tools/validate_agents.py
+
+      # ADRs are binding and specs cite the dossier by section, so a dangling
+      # reference turns a binding rule into a rumour.
+      - name: Check documentation cross-references
+        run: python3 tools/check_links.py
+
+  core:
+    name: Build and test huh-core
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Keep the token out of .git/config, where any later step could read it.
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: core
+
+      # Execution dispatches to the engine the plan selected and REFUSES to
+      # substitute a different one, so the engines the registry names have to be
+      # here. Without them the raster tests fail (correctly) and the PDF
+      # cleaning tests skip themselves, which is how CI ended up never
+      # exercising the render-and-rebuild path at all.
+      - name: Install the engines the registry measures
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libvips-tools poppler-utils
+          vips --version
+          pdftoppm -v
+
+      - name: Regenerate the corpus
+        # Specimens are generated, not committed, so this also proves the
+        # generator still produces what the tests expect.
+        run: python3 corpus/generate.py
+
+      - name: Clippy
+        run: cargo clippy --manifest-path core/Cargo.toml --all-targets -- -D warnings
+
+      - name: Test
+        run: cargo test --manifest-path core/Cargo.toml --release
+
+      - name: Verify capability edges against the corpus
+        # The measurement that earns an edge `status = "verified"`. Exits 4 if a
+        # measurement contradicts the registry.
+        run: |
+          cargo build --manifest-path core/Cargo.toml --release
+          ./tools/verify_edges.sh 85
+
+  wasm:
+    name: Core compiles to wasm32 (ADR-0002)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Keep the token out of .git/config, where any later step could read it.
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: core
+      # One planner, two runtimes. If this breaks, browser and server can drift.
+      - name: Build for wasm32
+        run: cargo build --manifest-path core/Cargo.toml --lib --target wasm32-unknown-unknown --release

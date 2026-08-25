@@ -1,0 +1,71 @@
+id         = "image/webp"
+name       = "WebP"
+kinds      = ["Raster"]
+extensions = ["webp"]
+mime_types = ["image/webp"]
+spec_url   = "https://developers.google.com/speed/webp/docs/riff_container"
+
+preserves = ["signal_fidelity", "geometry", "color_depth", "color_profile", "alpha", "time", "metadata"]
+
+[[signatures]]
+offset = 0
+magic  = "52494646"      # "RIFF"
+weight = "weak"
+
+[[signatures]]
+offset = 8
+magic  = "57454250"      # "WEBP" — the form type is the discriminator
+weight = "decisive"
+
+[detection]
+priority_over = []
+container_of  = []
+
+[notes]
+text = """
+NO PUID RECORDED, and the reason changed on 2026-08-23. The earlier note said
+PRONOM's search returned nothing and predicted "a PUID very likely exists under
+a name the search did not surface." That prediction was right, and the answer is
+more interesting than a missing identifier.
+
+**PRONOM has THREE WebP entries, not one.** Verified against the live XML API:
+
+  fmt/566  WebP  Lossy
+  fmt/567  WebP  Lossless
+  fmt/568  WebP  Extended   (alpha, animation, alternative colour profiles)
+
+So a single `puid` field cannot describe this format entry, and picking one
+would be the plausible-looking wrong identifier the audit exists to catch. The
+field stays empty until the schema can carry a set.
+
+**This independently corroborates ADR-0013.** PRONOM splits WebP along exactly
+the line the invocation does: `vips webpsave` and `vips webpsave --lossless` are
+different edges here because they lose different things, and PRONOM calls their
+outputs different formats. Two projects reached the same distinction from
+opposite directions — ours from measuring loss, theirs from identifying files.
+
+MEASURED 2026-08-23, and not what the split above suggests. Which variant you
+actually get is a property of the ENCODER, not of the flag or the content.
+libvips 8.15.1 writes the extended container every time — the first RIFF chunk
+after `WEBP` is `VP8X` in all four combinations:
+
+  opaque  + default      VP8X -> fmt/568
+  opaque  + --lossless   VP8X -> fmt/568
+  alpha   + default      VP8X -> fmt/568
+  alpha   + --lossless   VP8X -> fmt/568
+
+So every libvips WebP edge in this registry produces fmt/568, including the one
+whose whole point is that it is lossless. Anyone mapping our edges to PRONOM
+identifiers must read the output's chunk type rather than infer it from the
+invocation. image-rs is UNMEASURED here and should not be assumed to match.
+
+RIFF-based like AVI and WAV, so it needs the same two-signature AND treatment:
+`RIFF` at 0 is shared with those formats, and the form type at offset 8 is what
+actually discriminates.
+
+Measured and genuinely surprising: the image-rs WebP encoder produced a LOSSLESS
+result (SSIM 1.0000, alpha intact) at 218 bytes for the specimen PNG stores in
+993 — roughly 4.5x smaller with no measured loss at all. If that holds across
+more specimens, WebP is the better lossless target and the registry should say
+so. One specimen is not a finding; capability-cartographer should widen it.
+"""

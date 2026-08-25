@@ -1,0 +1,292 @@
+# Capabilities of libvips. Owner: capability-cartographer.
+#
+# Every edge records the INVOCATION it was measured with (ADR-0013). libvips
+# defaults are not neutral: `vips webpsave` is lossy and `vips jpegsave`
+# composites transparency onto black. Both are flags, both are the default, and
+# both surprise people.
+
+[[edge]]
+engine     = "libvips"
+invocation = "vips jpegsave IN OUT"
+op         = "Transcode"
+from       = "image/png"
+to         = "image/jpeg"
+from_kind  = "Raster"
+to_kind    = "Raster"
+
+[edge.loss]
+alpha           = { value = "lost", policy = "composite_black" }
+signal_fidelity = "degraded"
+color_depth     = { value = "degraded", from = 16, to = 8 }
+geometry      = "preserved"
+color_profile = "preserved"
+metadata      = "lost"
+generational  = true
+
+[edge.cost]
+time_model   = "linear_pixels"
+memory_model = "streaming"
+base_ms      = 8
+
+[edge.constraints]
+max_input_bytes = 536870912
+requires        = []
+
+[edge.verification]
+status      = "verified"
+specimens   = [
+  "corpus/raster/rgb-photo.png",
+  "corpus/raster/rgba-gradient.png",
+  "corpus/raster/rgba-hard-edge.png",
+  "corpus/raster/gray16.png",
+  "corpus/raster/rgba-opaque.png",
+]
+verified_at = "2026-08-21"
+verified_by = "capability-cartographer"
+
+[edge.verification.measured]
+tool                    = "core/examples/cross_engine.rs"
+engine_build            = "vips-8.15.1"
+ssim_opaque             = 0.9933
+ssim_alpha_vs_white     = 0.4010
+ssim_alpha_vs_black     = 0.9933
+comparison_background   = "stated per figure — see note"
+note = """
+CORRECTED 2026-08-21 (docs/RESEARCH.md §13.8, §13.9). An earlier version of this
+block recorded a single `ssim_alpha = 0.4686` from a comparison that read stored
+RGB and ignored alpha. That figure scored the comparison's own baseline, not the
+engine.
+
+For an alpha-LOSING conversion the score depends entirely on which background
+the original is composited onto before comparing, and the ranking against
+image-rs REVERSES between the two: 0.4010 against white, 0.9933 against black.
+Neither is the engine's quality. Both are recorded, with the background named,
+because a score without its background is not reproducible.
+
+The finding that stands independent of any metric is the policy: this
+invocation composites transparency onto BLACK, established by pixel arithmetic
+(ADR-0012). `--background 255` composites onto white and is a separate edge
+below (ADR-0013).
+"""
+
+
+[[edge]]
+engine     = "libvips"
+invocation = "vips webpsave IN OUT"
+op         = "Transcode"
+from       = "image/png"
+to         = "image/webp"
+from_kind  = "Raster"
+to_kind    = "Raster"
+
+[edge.loss]
+alpha           = "preserved"
+signal_fidelity = "degraded"
+color_depth     = { value = "degraded", from = 16, to = 8 }
+geometry        = "preserved"
+color_profile = "preserved"
+metadata      = "lost"
+generational  = true
+
+[edge.cost]
+time_model   = "linear_pixels"
+memory_model = "streaming"
+base_ms      = 10
+
+[edge.constraints]
+max_input_bytes = 536870912
+requires        = []
+
+[edge.verification]
+status      = "verified"
+specimens   = [
+  "corpus/raster/rgb-photo.png",
+  "corpus/raster/rgba-gradient.png",
+  "corpus/raster/gray16.png",
+]
+verified_at = "2026-08-23"
+verified_by = "capability-cartographer"
+
+[edge.verification.measured]
+tool           = "core/examples/libvips_edges.rs; vipsheader for the depth check"
+engine_build   = "vips-8.15.1"
+ssim_photo     = 0.8362
+bytes_photo    = 1942
+depth_observed = "gray16.png is ushort/grey16 in, uchar out"
+note = """
+THE DEFAULT IS LOSSY, and badly so: SSIM 0.8362 on rgb-photo at 1,942 bytes.
+image-rs writes the same pair LOSSLESS at SSIM 1.0 and 37,098 bytes. A consumer
+reading "PNG to WebP" from the image-rs edge and then running libvips in their
+own pipeline would silently get visibly degraded output.
+
+`vips webpsave --lossless` is a separate edge, recorded below: 15,512 bytes at
+SSIM 1.0, one flag apart from this one. See ADR-0013.
+
+`color_depth` and `signal_fidelity` record two different things here, and the
+distinction is the whole point of ADR-0014:
+  - `color_depth = degraded {16 -> 8}` — WebP is 8-bit. Measured directly with
+    vipsheader: gray16.png goes in as `ushort`/`grey16` and comes out `uchar`.
+  - `signal_fidelity = degraded` — the lossy quantisation at SSIM 0.8362, which
+    is not colour-depth loss at all and had nowhere to live before ADR-0014.
+
+CORRECTED 2026-08-23. This edge previously claimed `color_depth = preserved`
+while the `--lossless` edge below claimed `degraded {16 -> 8}` for the same
+engine and the same format pair — WebP does not change bit depth based on a
+compression flag, so both could not be right. The cause was that this edge's
+specimen list omitted gray16.png, so 16-bit input was never exercised, and the
+untested assumption was published as `verified`. gray16.png is now measured
+here. Its note also still described `signal_fidelity` as "proposed and not yet
+adopted" months after ADR-0014 adopted it, and described the `--lossless` edge
+as missing after it had been added. Raised in review.
+"""
+
+
+[[edge]]
+engine     = "libvips"
+invocation = "vips tiffsave IN OUT"
+op         = "Transcode"
+from       = "image/png"
+to         = "image/tiff"
+from_kind  = "Raster"
+to_kind    = "Raster"
+
+[edge.loss]
+alpha         = "preserved"
+color_depth   = "preserved"
+geometry      = "preserved"
+color_profile = "preserved"
+metadata      = "lost"
+generational  = false
+
+[edge.cost]
+time_model   = "linear_pixels"
+memory_model = "streaming"
+base_ms      = 9
+
+[edge.constraints]
+max_input_bytes = 536870912
+requires        = []
+
+[edge.verification]
+status      = "verified"
+specimens   = ["corpus/raster/rgba-gradient.png", "corpus/raster/rgb-photo.png", "corpus/raster/gray16.png"]
+verified_at = "2026-08-21"
+verified_by = "capability-cartographer"
+
+[edge.verification.measured]
+tool         = "core/examples/libvips_edges.rs"
+engine_build = "vips-8.15.1"
+ssim         = 1.0
+note = "Lossless on every specimen, alpha intact. Uncompressed by default and correspondingly large — 110,830 bytes for a 94,487-byte PNG."
+
+
+[[edge]]
+engine     = "libvips"
+invocation = "vips webpsave IN OUT --lossless"
+op         = "Transcode"
+from       = "image/png"
+to         = "image/webp"
+from_kind  = "Raster"
+to_kind    = "Raster"
+
+[edge.loss]
+alpha           = "preserved"
+signal_fidelity = "preserved"
+color_depth     = { value = "degraded", from = 16, to = 8 }
+geometry        = "preserved"
+color_profile = "preserved"
+metadata      = "lost"
+generational  = false
+
+[edge.cost]
+time_model   = "linear_pixels"
+memory_model = "streaming"
+base_ms      = 14
+
+[edge.constraints]
+max_input_bytes = 536870912
+requires        = []
+
+[edge.verification]
+status      = "verified"
+specimens   = [
+  "corpus/raster/rgb-photo.png",
+  "corpus/raster/rgba-gradient.png",
+  "corpus/raster/rgba-hard-edge.png",
+  "corpus/raster/rgba-opaque.png",
+  "corpus/raster/gray16.png",
+]
+verified_at = "2026-08-21"
+verified_by = "capability-cartographer"
+
+[edge.verification.measured]
+tool                  = "core/examples/libvips_flags.rs"
+engine_build          = "vips-8.15.1"
+ssim                  = 1.0
+ssim_16bit_input      = 0.9997
+comparison_background = "white (irrelevant here — alpha is preserved, so the score is 1.0 against any background)"
+note = """
+Genuinely lossless, alpha included: SSIM 1.0000 on every 8-bit specimen. The one
+exception is gray16 at 0.9997, which is not compression loss — WebP is 8-bit, so
+16-bit input is truncated, and `color_depth` records that.
+
+Contrast the DEFAULT invocation above, which is lossy at SSIM 0.8362 on the same
+photo. Same engine, same formats, one flag apart, 15,512 bytes versus 1,942.
+This pair is the clearest argument in the registry for ADR-0013.
+
+This edge is also what exposed the measurement bug in RESEARCH.md §13.8: it
+originally scored 0.4691 on rgba-hard-edge, which is impossible for a lossless
+conversion and turned out to be the harness comparing premultiplied against
+non-premultiplied stored RGB.
+"""
+
+
+[[edge]]
+engine     = "libvips"
+invocation = "vips jpegsave IN OUT --background 255"
+op         = "Transcode"
+from       = "image/png"
+to         = "image/jpeg"
+from_kind  = "Raster"
+to_kind    = "Raster"
+
+[edge.loss]
+alpha           = { value = "lost", policy = "composite_white" }
+signal_fidelity = "degraded"
+color_depth     = { value = "degraded", from = 16, to = 8 }
+geometry      = "preserved"
+color_profile = "preserved"
+metadata      = "lost"
+generational  = true
+
+[edge.cost]
+time_model   = "linear_pixels"
+memory_model = "streaming"
+base_ms      = 8
+
+[edge.constraints]
+max_input_bytes = 536870912
+requires        = []
+
+[edge.verification]
+status      = "verified"
+specimens   = ["corpus/raster/rgba-gradient.png", "corpus/raster/rgba-hard-edge.png", "corpus/raster/rgb-photo.png"]
+verified_at = "2026-08-21"
+verified_by = "capability-cartographer"
+
+[edge.verification.measured]
+tool                  = "core/examples/libvips_flags.rs"
+engine_build          = "vips-8.15.1"
+ssim_alpha            = 0.9855
+ssim_opaque           = 0.9933
+comparison_background = "white"
+note = """
+The same engine and formats as the default jpegsave edge, differing only by
+`--background 255`, which composites transparency onto WHITE instead of black.
+
+Scored against a white-composited original it reaches 0.9855 where the default
+invocation reaches 0.4010. That is not evidence this invocation is better — it
+is evidence that the comparison background and the flattening policy have to
+agree, which is exactly why RESEARCH.md §13.9 says report the policy and never a
+winner. Against a BLACK-composited original the ordering would reverse.
+"""
