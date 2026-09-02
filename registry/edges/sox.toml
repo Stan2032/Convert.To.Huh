@@ -37,7 +37,7 @@ verified_at = "2026-08-23"
 verified_by = "capability-cartographer"
 
 [edge.verification.measured]
-tool                = "cross-engine comparison against ffmpeg 6.1.1"
+tool                = "tools/measure_audio.py"
 engine_build        = "SoX v14.4.2"
 channels            = "2 -> 1"
 rms_diff_vs_ffmpeg  = 0.0
@@ -87,10 +87,10 @@ verified_at = "2026-08-23"
 verified_by = "capability-cartographer"
 
 [edge.verification.measured]
-tool          = "SNR against the 16-bit original"
+tool          = "tools/measure_audio.py --snr"
 engine_build  = "SoX v14.4.2"
-snr_db        = 5.2
-snr_db_nodither = 11.1
+snr_db        = 5.09
+snr_db_nodither = 11.11
 note = """
 DISAGREES WITH FFMPEG, and not only because of dither.
 

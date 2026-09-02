@@ -34,20 +34,27 @@ requires        = []
 
 [edge.verification]
 status      = "verified"
-specimens   = ["corpus/audio/highfreq-mono.wav", "corpus/audio/stereo-distinct.wav"]
-verified_at = "2026-08-22"
+specimens   = [
+  "corpus/audio/highfreq-mono.wav",
+  "corpus/audio/stereo-distinct.wav",
+  "corpus/audio/broadband-mono.wav",
+  "corpus/audio/transient-mono.wav",
+]
+verified_at = "2026-08-25"
 verified_by = "capability-cartographer"
 
 [edge.verification.measured]
-tool                = "corpus/generate_audio.py + ffprobe band-energy analysis"
-engine_build        = "ffmpeg 6.1.1"
-metric              = "band energy retained vs the WAV original"
-band_1khz_retained  = 0.903
-band_15khz_retained = 0.902
+tool                     = "tools/measure_audio.py"
+engine_build             = "ffmpeg 6.1.1"
+metric                   = "band energy retained vs the WAV original, per octave band"
+band_1khz_retained       = 0.9027
+band_15khz_retained      = 0.9026
+top_octave_broadband     = 0.0564
+top_octave_transient     = 0.0003
 note = """
 THE EDGE THAT FORCED ADR-0014. Every property the vocabulary tracked came back
 clean — channels 1 to 1, sample rate 44100 to 44100, duration unchanged — while
-~10% of the signal energy was gone from both measured bands.
+~10% of the signal energy was gone from the measured bands.
 
 `bit_depth` could not express it, because MP3 has no fixed sample width and the
 property does not apply at all; ffprobe reports bits_per_sample = 0. So the loss
@@ -59,6 +66,42 @@ The FLAC edge below is the control: 100.0% retention on the same specimen
 through the same harness. Without it, 90.3% could have been the measuring
 instrument rather than the codec — a mistake this project has already made once
 (§13.8).
+
+REPRODUCIBLE SINCE 2026-08-25. This block previously cited "corpus/
+generate_audio.py + ffprobe band-energy analysis". The generator is committed;
+the analysis never was. The numbers were therefore unfalsifiable — and
+CONTRIBUTING.md calls contradicting an entry with a measurement the most
+valuable contribution anyone can make, which nobody could do here. The harness
+now exists as tools/measure_audio.py, and re-running it reproduces the original
+figures to four places: 0.9027 and 0.9026 against the recorded 0.903 and 0.902.
+The old numbers were honest. They just could not be checked.
+
+AND THEY WERE NOT REPRESENTATIVE. Both original specimens are pure sine tones,
+the easiest case for a perceptual codec. Measuring across octave bands on
+broadband and transient content shows the thing MP3 at 64k most conspicuously
+does, which two tones could not reveal:
+
+  band            highfreq        broadband   transient
+  500-2000 Hz     0.9027          0.9054      0.9221
+  8-16 kHz        0.9026          0.9869      0.9046
+  16-22 kHz       n/a (absent)    0.0564      0.0003
+
+**The top octave is deleted.** highfreq reads `n/a` there because a 1 kHz plus
+15 kHz two-tone has no energy above 16 kHz at all — its 15 kHz component sits
+inside the 8-16 kHz band. The specimen could not see the lowpass, so the
+registry did not record it.
+
+So `band_1khz_retained = 0.903` is true and remains true, and a consumer reading
+it alone would conclude "MP3 at 64k costs about 10%". The honest summary is
+"about 10% in the midrange, and everything above 16 kHz". Recorded here rather
+than replaced, because the midrange figure is still the right answer to the
+question it was asked.
+
+The transient specimen also shows retention ABOVE 1.0 in the lowest bands (1.42
+at 62-125 Hz): the codec ADDS energy where the original had little. That is
+pre-echo, the classic MP3 artefact, and it is a reminder that a lossy codec is
+not only subtractive. `signal_fidelity = degraded` covers it, but the direction
+is worth knowing.
 """
 
 
@@ -91,16 +134,37 @@ requires        = []
 
 [edge.verification]
 status      = "verified"
-specimens   = ["corpus/audio/highfreq-mono.wav"]
-verified_at = "2026-08-22"
+specimens   = [
+  "corpus/audio/highfreq-mono.wav",
+  "corpus/audio/broadband-mono.wav",
+  "corpus/audio/transient-mono.wav",
+]
+verified_at = "2026-08-25"
 verified_by = "capability-cartographer"
 
 [edge.verification.measured]
-tool                = "ffprobe band-energy analysis"
+tool                = "tools/measure_audio.py"
 engine_build        = "ffmpeg 6.1.1"
-metric              = "band energy retained vs the WAV original"
+metric              = "band energy retained vs the WAV original, plus SNR"
 band_15khz_retained = 1.0
-note = "Lossless, and serving as the control that makes the MP3 measurement above credible."
+all_octaves_retained = 1.0
+snr_db              = "infinite (bit-identical)"
+note = """
+Lossless, and serving as the control that makes the MP3 measurement above
+credible.
+
+STRENGTHENED 2026-08-25. This control previously rested on one number — 1.0
+retention in the 15 kHz band of a two-tone specimen. It now runs on the
+broadband and transient specimens as well, the same content that exposes MP3's
+lowpass, and comes back **bit-identical**: 1.0000 in every octave band and an
+infinite SNR.
+
+That matters for what it rules out. The MP3 edge above reports 0.0564 retention
+in the top octave, and the obvious suspicion about any such number is that the
+harness invented it. If tools/measure_audio.py were fabricating loss on
+hard content it would fabricate it here too, on the same specimens through the
+same code path. It does not. The loss is the codec.
+"""
 
 
 [[edge]]
@@ -137,9 +201,10 @@ verified_at = "2026-08-22"
 verified_by = "capability-cartographer"
 
 [edge.verification.measured]
-tool         = "ffprobe channel count"
-engine_build = "ffmpeg 6.1.1"
-channels     = "2 -> 1"
+tool             = "tools/measure_audio.py"
+engine_build     = "ffmpeg 6.1.1"
+channels         = "2 -> 1"
+left_440hz_retained = 0.25
 note = """
 The specimen carries DIFFERENT tones in left and right (A4 and E5), because
 downmixing identical channels is not observably lossy — the audio equivalent of
@@ -147,8 +212,22 @@ testing alpha with a fully opaque image (corpus/generate_audio.py).
 
 `audio_channels` carries a `policy` of `downmix_average`, the audio analogue of
 alpha's `composite_black` (ADR-0012): saying the channels are gone does not say
-what replaced them, and averaging is one choice among several. Whether other
-engines pick differently is UNMEASURED — do not assume this generalises.
+what replaced them, and averaging is one choice among several.
+
+POLICY NOW MEASURED, 2026-08-25, where it was previously asserted. The left
+channel's 440 Hz component comes back at **0.2500** of its original power —
+half amplitude, exactly what averaging two channels predicts. The number
+discriminates between the candidate policies rather than merely being
+consistent with one: `take_first` would return 1.0, since the left channel
+would pass through untouched.
+
+`sox IN OUT remix 1,2` returns the same 0.2500 (registry/edges/sox.toml), so
+both engines average and this edge's policy agrees with its neighbour's. The
+earlier note said "whether other engines pick differently is UNMEASURED"; for
+these two it now is measured, and they agree. That is a weaker claim than the
+three-engine alpha result (§13.4) and should not be read as a general law —
+two engines agreeing is how the alpha investigation started, before ImageMagick
+turned out to differ.
 
 `signal_fidelity = degraded` because a listener no longer hears what was in the
 original stereo field, even though each sample is still full precision.
@@ -189,9 +268,9 @@ verified_at = "2026-08-23"
 verified_by = "capability-cartographer"
 
 [edge.verification.measured]
-tool         = "SNR and output histogram against the 16-bit original"
+tool         = "tools/measure_audio.py --snr"
 engine_build = "ffmpeg 6.1.1"
-snr_db       = 3.8
+snr_db       = 3.76
 dc_offset_counts = -0.4975
 note = """
 TRUNCATES where SoX rounds, introducing exactly half an LSB of DC offset — mean

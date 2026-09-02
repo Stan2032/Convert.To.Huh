@@ -1597,6 +1597,133 @@ image-rs is unmeasured and must not be assumed to match — assuming one encoder
 resembles another is what §13.4 caught in the alpha work.
 
 
+## 17. The audio numbers were unfalsifiable, then unrepresentative
+
+**Source:** `tools/measure_audio.py` (added by this section's work), ffmpeg
+6.1.1, `corpus/audio/`. Measured 2026-08-25.
+
+### 17.1 A verified claim nobody could check
+
+Every audio edge carried `status = "verified"` and cited a tool that did not
+exist. `registry/edges/ffmpeg.toml` named
+
+    tool = "corpus/generate_audio.py + ffprobe band-energy analysis"
+
+The generator is committed. The analysis was done once, in a session, and only
+its outputs were written down. Every *raster* edge cites a committed harness —
+`core/examples/libvips_edges.rs`, `gif_dither.rs`, `probe_edges.rs` — so the gap
+was specific to audio and invisible unless you went looking for the file.
+
+This is worse than an ordinary documentation gap, because of what this project
+claims to be. `CONTRIBUTING.md` says contradicting an existing entry with a
+measurement is the single most valuable contribution anyone can make. **You
+cannot contradict a measurement you cannot reproduce.** An unfalsifiable number
+in a dataset whose entire pitch is falsifiability is a contradiction at the
+centre of the thing.
+
+The harness now exists, and the first job was to check whether the old numbers
+survived it. **Every audio claim in the registry reproduced:**
+
+| Claim | Recorded | Re-measured |
+|---|---|---|
+| MP3 64k, 1 kHz band | 0.903 | 0.9027 |
+| MP3 64k, 15 kHz band | 0.902 | 0.9026 |
+| FLAC control | 1.0 | 1.0000, bit-identical |
+| ffmpeg `pcm_u8` SNR | 3.8 dB | 3.76 dB |
+| SoX `-b 8` SNR | 5.2 dB | 5.09 dB |
+| SoX `-b 8 -D` SNR | 11.1 dB | 11.11 dB |
+
+Including the cross-engine gap §14.6 rests on: 11.11 − 3.76 = **7.35 dB**
+against the recorded 7.3. The original measurements were honest. They were
+simply unverifiable, and those are different faults with the same remedy.
+
+**Design implication, implemented as rule 13.** `verification.measured.tool`
+should name something runnable in this repository, and CI now warns when a
+citation resolves to no such artifact. It is a warning rather than an error on
+rule 8's precedent — some measurements genuinely are one-liners, and the
+validator cannot tell those from a procedure that should have been committed.
+
+**The rule would not have caught the bug that prompted it**, which is worth
+stating plainly rather than quietly enjoying the new check. The audio citation
+named `corpus/generate_audio.py` — a real file — *plus* a procedure that was
+never committed, so an artifact resolved and it passed. Rule 13 catches the
+blunter form: a citation naming nothing runnable at all, which is what four
+other audio edges did. All six now cite `tools/measure_audio.py`.
+
+### 17.2 The specimens were the easy case
+
+All the original audio specimens are pure sine tones — stationary, narrowband,
+and the simplest possible input for a perceptual codec. Two new specimens make
+the hard cases available: `broadband-mono.wav` (deterministic PRNG, energy
+everywhere, no tonal structure to model) and `transient-mono.wav` (clicks
+against silence, which is what provokes pre-echo).
+
+Measured across octave bands, MP3 at 64 kbit/s through ffmpeg 6.1.1:
+
+| Band | highfreq (original specimen) | broadband | transient |
+|---|---|---|---|
+| 500–2000 Hz | 0.9027 | 0.9054 | 0.9221 |
+| 8–16 kHz | 0.9026 | 0.9869 | 0.9046 |
+| **16–22 kHz** | **n/a — absent** | **0.0564** | **0.0003** |
+
+**MP3 at 64k deletes the top octave, and the original specimen could not see
+it.** `highfreq-mono.wav` is a 1 kHz plus 15 kHz two-tone, so it has no energy
+above 16 kHz at all — its high component sits *inside* the 8–16 kHz band. The
+lowpass is the most conspicuous thing this codec does to real audio, and the
+registry did not record it because nothing in the corpus reached up there.
+
+FLAC on the same two specimens returns **bit-identical** output: 1.0000 in every
+band, infinite SNR. That rules out the harness as the source of the 0.0564 —
+if it fabricated loss on hard content, it would fabricate it here too.
+
+**Design implication, and it generalises past audio.** `band_1khz_retained =
+0.903` is true, reproducible, and misleading on its own: a reader concludes "MP3
+costs about 10%", when the honest summary is "about 10% in the midrange, and
+everything above 16 kHz". A single measurement is not a summary of an edge. It
+is a summary of *what that specimen exercised*, which is why `specimens` is
+published alongside `measured` and why both belong in the dataset (§16 makes the
+same point about encoders and format identity).
+
+The old number is kept rather than replaced. It remains the right answer to the
+question it was asked.
+
+### 17.3 Lossy codecs also ADD
+
+The transient specimen returns retention **above 1.0** in the lowest bands —
+1.4161 at 62–125 Hz, 1.1256 at 125–250 Hz. The codec put energy where the
+original had almost none. That is pre-echo: quantisation noise spread backwards
+in time across the encoding window, so noise arrives before the click that
+caused it, and stationary tones cannot exhibit it at all.
+
+**Design implication.** The vocabulary's four values describe what happened to a
+property, and `signal_fidelity = degraded` is correct here — but "degraded"
+reads as subtractive, and this is additive. No change is proposed: inventing a
+fifth value on one measurement is exactly the haste ADR-0014 was careful to
+avoid, and §14.6 records what it costs to name a mechanism before understanding
+it. Noted so the next person measuring a lossy codec is not surprised, and so a
+second independent instance has somewhere to land.
+
+### 17.4 An instrument bug, caught by an implausible number
+
+The first broadband run reported **345.16** retained in the 250–500 Hz band of
+the two-tone specimen. The specimen has near-silence there, the codec has
+quantisation noise there, and dividing negligible by negligible produces a
+number that means nothing.
+
+The guard was an absolute epsilon (`> 1e-12`), which catches exactly-zero and
+nothing else. It is now a share of the original's total power, and such bands
+report **not applicable** instead of a ratio — the audio form of a distinction
+the raster side already draws in
+`opaque_alpha_is_reported_as_unexercised_not_lost`. A property the specimen did
+not exercise has no measurement, and inventing one is worse than admitting the
+gap. Locked in by a self-test case reproducing the 345× number.
+
+Third time an instrument in this repository has been wrong in a way that
+produced plausible output (§13.8, §15.3, here). The pattern each time: a number
+that could not be right, noticed because someone looked at it rather than
+because a test failed.
+
+
 ## Sources
 
 - [Convert To It](https://converttoit.com/) · [Grokipedia: Convert to it](https://grokipedia.com/page/Convert_to_it) · [Convert To It API](https://converttoit.com/api)

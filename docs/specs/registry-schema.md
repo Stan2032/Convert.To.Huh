@@ -324,6 +324,34 @@ ship". `imagemagick.toml` then claimed `lgpl` while stating in the same block
 that an audit was required before its profiles could be trusted. Rule 12 is that
 precedent, enforced.
 
+## A measurement must be re-runnable (rule 13)
+
+`verification.measured.tool` should name something that exists in this
+repository. CI warns when a citation resolves to no runnable artifact
+(**rule 13**). Both of these spellings resolve:
+
+```toml
+tool = "core/examples/libvips_edges.rs; vipsheader for the depth check"
+tool = "cargo run --example probe_edges"   # -> core/examples/probe_edges.rs
+```
+
+A **warning**, not an error, on rule 8's precedent: some measurements genuinely
+are one-liners and the validator cannot reliably tell those from a procedure
+that should have been committed.
+
+The gap it closes: every audio edge carried `status = "verified"` while citing
+`"corpus/generate_audio.py + ffprobe band-energy analysis"`. The generator was
+committed; the analysis never was. Those numbers could not be reproduced — and
+therefore could not be **contradicted**, which `CONTRIBUTING.md` calls the most
+valuable contribution anyone can make. An unfalsifiable number in a dataset that
+sells falsifiability is a contradiction at the centre of the thing.
+
+**This rule would not have caught that bug**, and saying so matters more than
+the rule: the citation named one real file plus prose, so an artifact resolved
+and it passed. What rule 13 catches is the blunter form — a citation naming
+nothing runnable at all, which is what the remaining four audio edges did. See
+`RESEARCH.md §17.1`.
+
 ## Coverage claims are data, not prose (rule 10)
 
 The README states the registry's size in its own words:

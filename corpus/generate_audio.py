@@ -11,6 +11,7 @@ point of a specimen is that you know exactly what is in it.
     python3 corpus/generate_audio.py
 """
 import math
+import random
 import struct
 from pathlib import Path
 
@@ -79,10 +80,49 @@ def gen_quiet_detail():
     write_wav(OUT / "quiet-mono.wav", [tone(440, 1.0, RATE, 0.01, 16)], RATE, 16)
 
 
+def gen_broadband():
+    """Energy at every frequency, with no tonal structure to exploit.
+
+    The three specimens above are all pure sine tones, which is the EASY case
+    for a perceptual codec: stationary, narrowband, trivially modelled. The
+    registry's audio numbers were all measured on them, so they describe how
+    MP3 treats sine waves, and nothing was there to say whether that
+    generalises.
+
+    Deterministic PRNG rather than a captured recording: reproducible, tiny,
+    unambiguously ours, and free of any licensing question about the source
+    material.
+    """
+    rng = random.Random(0x5EED)
+    peak = 2 ** 15 - 1
+    s = [int(0.3 * peak * (rng.random() * 2 - 1)) for _ in range(RATE)]
+    write_wav(OUT / "broadband-mono.wav", [s], RATE, 16)
+
+
+def gen_transient():
+    """Sharp clicks against silence — the case perceptual codecs handle worst.
+
+    A transient forces the encoder to spend bits on a very short event, and the
+    classic MP3 artefact is pre-echo: quantisation noise smeared BACKWARDS in
+    time across the window, so noise appears before the click that caused it.
+    Stationary tones cannot exhibit this at all.
+    """
+    peak = 2 ** 15 - 1
+    s = [0] * RATE
+    for click in range(8):
+        at = int((click + 0.5) * RATE / 8)
+        # A few samples of full-scale alternation: broadband and abrupt.
+        for k in range(16):
+            s[at + k] = int(0.9 * peak * (1 if k % 2 == 0 else -1))
+    write_wav(OUT / "transient-mono.wav", [s], RATE, 16)
+
+
 if __name__ == "__main__":
     OUT.mkdir(parents=True, exist_ok=True)
     print("generating audio specimens:")
     gen_stereo_distinct()
     gen_highfreq()
     gen_quiet_detail()
+    gen_broadband()
+    gen_transient()
     print("done")

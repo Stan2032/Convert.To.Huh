@@ -350,6 +350,38 @@ def build_outside_pin(build: str, pin: str) -> str | None:
     return None
 
 
+TOOL_PATH = re.compile(r"[\w./-]+\.(?:py|rs|sh)")
+TOOL_CARGO = re.compile(r"cargo run\s+--example\s+([\w-]+)")
+
+
+def tool_artifacts(tool: str) -> list[str]:
+    """Files in this repository that a `measured.tool` string actually names.
+
+    Citations are free text and legitimately varied — a bare path, a cargo
+    invocation, a path with a note after it. Both spellings below resolve:
+
+        core/examples/libvips_edges.rs; vipsheader for the depth check
+        cargo run --example probe_edges          -> core/examples/probe_edges.rs
+
+    KNOWN LIMIT, stated because pretending otherwise would be the same class of
+    error this rule exists to catch: it would NOT have caught the bug that
+    prompted it. The audio edges cited "corpus/generate_audio.py + ffprobe
+    band-energy analysis" — a real file plus a procedure that was never
+    committed — so at least one artifact resolved and the citation passed. What
+    this rule does catch is a citation naming nothing runnable at all, which is
+    the more common and more obvious form. See RESEARCH.md §17.1.
+    """
+    found = []
+    for m in TOOL_PATH.finditer(tool):
+        if (REGISTRY.parent / m.group(0)).is_file():
+            found.append(m.group(0))
+    for m in TOOL_CARGO.finditer(tool):
+        cand = f"core/examples/{m.group(1)}.rs"
+        if (REGISTRY.parent / cand).is_file():
+            found.append(cand)
+    return found
+
+
 def check_edges(edge_files: dict[str, dict], formats: dict[str, dict],
                 engines: dict[str, dict], f: Findings) -> int:
     count = 0
@@ -460,6 +492,25 @@ def check_edges(edge_files: dict[str, dict], formats: dict[str, dict],
                     f.error(where, "status `verified` requires at least one specimen — registry-schema.md rule 5")
                 if not ver.get("measured"):
                     f.error(where, "status `verified` requires a `measured` block — registry-schema.md rule 5")
+
+                # Rule 13. `tool` should name something runnable in this repo.
+                #
+                # A warning rather than an error, on rule 8's precedent: some
+                # measurements genuinely are one-liners (`ffprobe channel
+                # count`) and the validator cannot tell those from a procedure
+                # that ought to have been committed.
+                #
+                # The gap this closes: every audio edge cited
+                # "corpus/generate_audio.py + ffprobe band-energy analysis".
+                # The generator existed; the analysis never did, so numbers
+                # published as `verified` could not be reproduced — or
+                # contradicted, which CONTRIBUTING.md calls the most valuable
+                # contribution anyone can make. See RESEARCH.md §17.1.
+                tool = (ver.get("measured") or {}).get("tool")
+                if tool and not tool_artifacts(tool):
+                    f.warn(where, f"[measured] tool `{tool}` names no runnable artifact "
+                                  f"in this repository, so the measurement cannot be "
+                                  f"re-run — registry-schema.md rule 13")
 
             # Rule 7: policy qualifiers must be from the documented set.
             for prop, val in (edge.get("loss") or {}).items():
