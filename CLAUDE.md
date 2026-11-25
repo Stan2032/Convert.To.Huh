@@ -5,34 +5,23 @@ you are about to touch.
 
 ## What this project is
 
-A universal file converter built as a **planner over a typed graph**, not a
-lookup table of format pairs, with two capabilities that follow from the same
-machinery:
-
-1. **Cross-domain conversion** — `AVI → PDF` — treated as an underspecified
-   question with several good answers rather than as an error.
-2. **Sanitization that proves what it removed** (ADR-0010). Lossless conversion
-   is canonicalizing: it rebuilds a file from parsed content and erases
-   everything else, measurably. The loss vector then reports, property by
-   property, what did not survive.
-
-The second was not planned. It came out of testing this repository's original
-premise — deriving an encryption key from the conversion path — which
-measurement refuted: seven different lossless routes produce byte-identical
-output, so the path cannot be key material. The property that killed the cipher
-idea is exactly what a sanitizer needs. See ADR-0010 and `RESEARCH.md §12`.
-
 **The deliverable is `dataset/conversion-loss-registry.json`** (ADR-0011) — a
-CC0 dataset of what each conversion destroys. Nothing publishes this; PRONOM
-says what a file *is*, nothing says what converting it *costs*. The CLI exists
-to produce and validate that data, not the other way round. Success is measured
-in verified edges, not features.
+CC0 dataset of what each file-format conversion destroys, measured against real
+specimens. PRONOM says what a file *is*; nothing says what converting it
+*costs*. Success is measured in verified edges, not features.
+
+The CLI (`huh`) exists to produce and validate that data. It is built as a
+**planner over a typed graph** of formats and conversion edges, and exposes:
+
+- `huh convert` — runs a conversion and states its loss vector.
+- `huh clean` — sanitization by canonicalizing rebuild (ADR-0010): the file is
+  rebuilt from parsed content, and the loss vector reports what did not survive.
+- `huh export` — emits the dataset from `registry/`.
 
 **Prior art matters here.** Dangerzone and mat2 already do sanitization, better
 isolated and across more formats. Do not rebuild them — see `RESEARCH.md §12.3b`.
-Every capability edge in the registry is `claimed`, and the planner ignores
-unverified edges. Edges become real when someone runs them against a specimen
-and records a measurement.
+The planner ignores unverified edges; an edge becomes `verified` when someone
+runs it against a specimen and records a measurement.
 
 ## Ground rules
 

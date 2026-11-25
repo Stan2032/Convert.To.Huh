@@ -1,36 +1,29 @@
 # Convert.To.Huh
 
-**Every file conversion costs you something. Nobody writes down what.**
+An open dataset of what file-format conversions destroy, measured against real
+files.
 
-Convert a PNG to a JPEG and you lose transparency. Convert a PDF to images and
-the text stops being text. Convert a WAV to an MP3 and detail disappears. These
-are well known to the people who hit them and written down nowhere you can
-query.
+[PRONOM](https://www.nationalarchives.gov.uk/PRONOM/) identifies what a file
+*is*. Nothing records what converting it *costs*. Convert a PNG to JPEG and
+transparency is lost; convert a PDF to images and text stops being text;
+convert WAV to MP3 and the top octave disappears. This project records those
+losses, per engine and per invocation, as data.
 
-This project measures those costs and publishes them as data.
+**Dataset:** [`dataset/conversion-loss-registry.json`](dataset/conversion-loss-registry.json) · CC0
 
-📦 **[`dataset/conversion-loss-registry.json`](dataset/conversion-loss-registry.json)** — CC0, free to use, no attribution required.
+**14 formats · 6 engines · 24 conversions (23 verified)**
 
----
+Images, PDF and audio. Coverage grows only by measurement.
 
-## The one-paragraph version
+## The data
 
-[PRONOM](https://www.nationalarchives.gov.uk/PRONOM/) is the standard database
-for *identifying* files — ~2,000 format signatures, used by archives worldwide.
-It tells you **what a file is**. Nothing tells you **what converting it costs**.
-This is an attempt at that missing database, plus the tool that produces it by
-running real conversions against real files and measuring the results.
-
-## Who this is for
-
-**If you build software that converts files** — you can look up what a
-conversion destroys before you ship it, instead of finding out from a bug
-report. Filter on `verification == "verified"` and you get measurements, not
-guesses.
+Each entry is one conversion: source format, target format, engine, the exact
+invocation, and a loss vector recording, property by property, whether it was
+`preserved`, `degraded`, `lost` or `synthesized`.
 
 ```python
 import json
-d = json.load(open("conversion-loss-registry.json"))
+d = json.load(open("dataset/conversion-loss-registry.json"))
 
 for e in d["edges"]:
     if e["from"] == "image/png" and e["to"] == "image/jpeg":
@@ -43,31 +36,37 @@ libvips  | vips jpegsave IN OUT                     | lost -> composite_black
 libvips  | vips jpegsave IN OUT --background 255    | lost -> composite_white
 ```
 
-Three rows for "PNG to JPEG", and the difference is the whole point. All three
-**correctly** report that transparency is lost; they disagree about what
-replaces it, so your logo comes out black, white, or with the channel simply
-dropped. Note the third row: same engine, same formats, one different flag.
-That is why loss is recorded against the *invocation*, not the engine.
+All three lose transparency; they differ in what replaces it. Loss is recorded
+against the invocation, not just the engine, because one flag changes the
+result.
 
-**If you run an archive or library** — the digital preservation field discusses
-conversion loss constantly, in prose. This is the same knowledge in a form you
-can compute with when choosing a preservation format.
+Every entry carries a verification status:
 
-**If you need to clean a file you don't trust** — `huh clean` rebuilds a file
-from its content and tells you what it removed *and what that cost you*. See
-below.
+| Status | Meaning |
+|---|---|
+| `verified` | Run against a committed specimen and measured. |
+| `claimed` | From documentation, not tested. |
+| `refuted` | Tested and found not to hold. |
 
-**If you are just curious what your tools do to your files** — most of the
-findings here surprised the people measuring them.
+Schema and field reference: [`dataset/README.md`](dataset/README.md).
 
-## Two things you can actually run
+## The CLI
 
-### `huh clean` — strip what shouldn't be there
+`huh` produces and checks the dataset. It also exposes two commands that use it
+directly.
 
-A file can be **completely valid** and still carry things you never see: text
-metadata naming you and your machine, private chunks decoders skip, data
-appended after the end-of-image marker, or in a PDF, code set to run when the
-document opens.
+**`huh convert`** — converts a file and states what the conversion lost.
+
+```console
+$ huh convert logo.png logo.jpg
+detected image/png (by signature, confidence 1.00)
+route:   image/png --libvips[Transcode]--> image/jpeg
+effect:  Loses transparency and metadata — transparent areas become black.
+         Reduces colour depth and fine detail. Keeps colour accuracy and resolution.
+```
+
+**`huh clean`** — rebuilds a file from its parsed content, discarding metadata,
+hidden chunks, trailing data and active content, and reports what that cost.
 
 ```console
 $ huh clean report.pdf clean.pdf
@@ -80,114 +79,31 @@ removed:
   - all PDF structure (1 page(s) rebuilt from pixels)
   - document metadata (title, author, producer, creation tool)
   - any /OpenAction, /JavaScript, /EmbeddedFile or annotation
-
 properties destroyed: text_as_text, structure, interactivity, metadata, fonts
 ```
 
-It doesn't scan for threats. It parses the content, throws the container away,
-and builds a new one — so anything that wasn't content doesn't make the trip,
-including attacks nobody has catalogued yet.
+`huh clean` is a reference implementation for generating registry data. For
+untrusted documents in practice, use [Dangerzone](https://dangerzone.rocks/).
 
-**The second half of that output is the part nobody else gives you.** The file
-is now safe *and* you can no longer search it or copy from it. Tools that hide
-that cost are lying by omission.
-
-> ⚠️ For real hostile-document work, use
-> **[Dangerzone](https://dangerzone.rocks/)** — it does this with far better
-> isolation (a gVisor sandbox inside a container). This is a reference
-> implementation for generating registry data, not a replacement.
-
-### `huh convert` — convert, and be told the price
-
-```console
-$ huh convert logo.png logo.jpg
-detected image/png (by signature, confidence 1.00)
-route:   image/png --libvips[Transcode]--> image/jpeg
-effect:  Loses transparency and metadata — transparent areas become black.
-         Reduces colour depth and fine detail. Keeps colour accuracy and resolution.
-```
-
-That "transparent areas become black" is measured, not assumed — and it is
-engine-specific. The same conversion through ImageMagick keeps whatever colour
-was underneath instead. Both are correct; they look completely different.
-
-## What makes this different from just… knowing things
-
-Everything here is **measured against a real file, or marked as unverified.**
-
-Every entry carries a `verification` field:
-
-| Value | Meaning |
-|---|---|
-| `verified` | Run against a real specimen and measured. Trust it. |
-| `claimed` | Copied from documentation, **not tested**. A hint, not a fact. |
-| `refuted` | Tested and found not to work. |
-
-The discipline exists because the data is wrong surprisingly often. In this
-repository the checks have repeatedly rejected hand-written entries — several
-written minutes earlier by the person who had just written the spec they broke.
-The cases are written up in [`registry/README.md`](registry/README.md),
-including one the checks **missed**.
-
-And once, memorably, the *measuring instrument itself* was wrong — a fidelity
-score of 0.9950 that turned out to be scoring an unstated assumption rather than
-the conversion. It reached a pull request description and two decision records
-before a conversion that mathematically could not lose anything scored 0.47 and
-gave it away. Both are written up in full rather than quietly fixed.
-
-## Current scope — small, on purpose
-
-**14 formats · 6 engines · 24 conversions (23 verified)**
-
-Images, PDF and audio. It grows by measurement, not assertion, which is slow
-deliberately. Coverage is not the goal; **trustworthy** coverage is.
-
-(That line is checked against the registry by CI, because it went stale once
-already while nobody noticed.)
-
-## The project's origin, since it explains the shape
-
-This began as a different idea: encrypting files by converting them, with the
-key derived from the *path* of conversions taken. Rather than assume, it was
-tested — and refuted three separate ways:
-
-1. **Seven different lossless routes produce byte-identical output.** The path
-   leaves no trace, so it cannot be a key.
-2. **Restricting to lossless conversions makes it worse, not better** — path
-   independence *is* what "lossless" means.
-3. **Changing medium repeatedly doesn't hide anything.** Three media changes
-   with every trail stripped, and the original comes back byte-identical in one
-   pass. ([Run it yourself](experiments/binary_waterfall.py).)
-
-That refutation is what revealed the useful property: conversion **reliably
-destroys history while preserving content**. Which is what a sanitizer needs,
-and what makes the loss data worth publishing.
-
-The negative results are kept in [`docs/adr/`](docs/adr/), not deleted. They are
-the most useful thing in the repository.
+**`huh export --out <file>`** — regenerates the dataset from `registry/`.
 
 ## Contributing
 
-Measurements are the contribution. **Contradicting an existing entry with a
-measurement is the single most valuable thing you can send** — see
-[CONTRIBUTING.md](CONTRIBUTING.md).
-
-You do not need to know Rust. Adding a specimen and running a conversion is
-enough.
+Measurements are the contribution, and a measurement that contradicts an
+existing entry is the most valuable kind. No Rust required — a specimen and a
+conversion run are enough. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Layout
 
-| Path | What's in it |
+| Path | Contents |
 |---|---|
-| [`dataset/`](dataset/) | **The deliverable.** CC0 data + schema docs. |
+| [`dataset/`](dataset/) | The published dataset and its schema. |
 | [`registry/`](registry/) | Source data: formats, engines, measured conversions. |
-| [`core/`](core/) | Rust: detector, planner, sanitizer, exporter. |
-| [`docs/adr/`](docs/adr/) | 14 binding decisions, each with what would change our mind. |
-| [`docs/RESEARCH.md`](docs/RESEARCH.md) | Evidence base — every finding has a source and an implication. |
-| [`experiments/`](experiments/) | Runnable refutations. |
-| [`corpus/`](corpus/) | Test specimens, committed **and** regenerable — `corpus/generate*.py` reproduces every one, so a measurement can be re-run against exactly the file that produced it. |
+| [`corpus/`](corpus/) | Specimens, committed and reproducible via `corpus/generate*.py`. |
+| [`core/`](core/) | Rust: detection, planning, sanitization, export. |
+| [`tools/`](tools/) | Validators and measurement harnesses, run in CI. |
+| [`docs/`](docs/) | Architecture, decision records, research notes. |
 
 ## Licence
 
-Code **MIT**. Data **CC0** — measurements of how software behaves are facts, and
-facts shouldn't carry conditions.
+Code: MIT. Data: CC0.
