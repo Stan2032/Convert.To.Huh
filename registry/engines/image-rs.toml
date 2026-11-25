@@ -33,10 +33,8 @@ correct by that vocabulary; the visible results are incompatible. See the
 libvips manifest for the other half.
 
 The first engine actually wired up, and chosen for a reason that is not
-"it was easiest": it is pure Rust, links into huh-core directly, and compiles to
-both native and wasm32. That makes it the concrete proof of ADR-0002 — the same
-planner AND the same engine in the browser and on the server, with no
-possibility of drift.
+"it was easiest": it is pure Rust and links into huh-core directly, so it runs
+in-process with no subprocess and no external install.
 
 `hostility: moderate` and `isolation: wasm`. It parses hostile input like any
 decoder, but it is memory-safe and in-process with no subprocess, no delegates

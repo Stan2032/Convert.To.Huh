@@ -41,7 +41,8 @@ validates it**. Specifically:
   does not persist or resume.
 - `[runtimes]` is removed from engine entries, the validator and the schema
   spec. It was never exported, so the published dataset is unchanged.
-- The `--runtime` planner option and the `huh sanitize` command are removed.
+- The `--runtime` planner option, the wasm32 CI build and the `huh sanitize`
+  command are removed.
   `huh clean` covers sanitization, and now carries `sanitize`'s exit code 4 for
   a rebuild that changed the content.
 - Agents for unbuilt subsystems are removed.
