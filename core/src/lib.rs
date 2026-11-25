@@ -1,7 +1,5 @@
-//! Convert.To.Huh core: registry, detector, planner, execution.
-//!
-//! One implementation, compiled to native and `wasm32` (ADR-0002), so the
-//! browser's estimate and the server's cannot drift.
+//! Convert.To.Huh core: registry, detector, planner, execution, sanitization,
+//! and the exporter that publishes the conversion-loss dataset (ADR-0011).
 
 pub mod clean;
 pub mod detect;

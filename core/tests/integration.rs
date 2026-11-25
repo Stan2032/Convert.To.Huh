@@ -46,10 +46,10 @@ fn build_profile_prunes_before_search() {
     // proposed and then failing. LibreOffice is gpl-only, so lgpl sees fewer.
     let r = reg();
     let lgpl = Planner::new(&r, &Policy {
-        build_profile: "lgpl".into(), allow_unverified: true, ..Default::default()
+        build_profile: "lgpl".into(), allow_unverified: true
     });
     let gpl = Planner::new(&r, &Policy {
-        build_profile: "gpl".into(), allow_unverified: true, ..Default::default()
+        build_profile: "gpl".into(), allow_unverified: true
     });
     assert_ne!(lgpl.eligible_count(), gpl.eligible_count(),
         "build profiles must actually change the graph");
@@ -210,7 +210,7 @@ fn refusal_when_no_route_exists() {
 // ---------------------------------------------------------------------------
 
 use huh_core::loss::LossVector;
-use huh_core::registry::{Edge, Engine, Format, License, Resources, Runtimes, Security};
+use huh_core::registry::{Edge, Engine, Format, License, Resources, Security};
 use std::collections::BTreeMap;
 
 fn fmt(id: &str, preserves: &[&str]) -> Format {
@@ -242,7 +242,6 @@ fn engine(id: &str) -> Engine {
         },
         security: Security { hostility: "moderate".into(), isolation: "wasm".into() },
         resources: Resources { memory_model: "streaming".into(), default_timeout_s: 30 },
-        runtimes: Runtimes { native: true, wasm: true },
     }
 }
 

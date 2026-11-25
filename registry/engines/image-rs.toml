@@ -23,10 +23,6 @@ concurrency       = "thread-safe"
 crash_expected    = false
 default_timeout_s = 60
 
-[runtimes]
-native = true
-wasm   = true
-
 [notes]
 text = """
 FLATTENING POLICY, measured 2026-08-21 (docs/RESEARCH.md §13). Converting RGBA

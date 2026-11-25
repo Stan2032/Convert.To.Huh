@@ -265,9 +265,6 @@ def check_engines(engines: dict[str, dict], f: Findings) -> dict[str, dict]:
         if not isinstance(res.get("default_timeout_s"), int):
             f.error(fname, "[resources] default_timeout_s must be an integer")
 
-        if "runtimes" not in doc:
-            f.error(fname, "missing [runtimes] — the planner needs to know browser vs server availability")
-
         if not lic.get("build_profiles"):
             f.warn(fname, "no build profiles: the planner will prune this engine entirely")
     return by_id
@@ -765,8 +762,6 @@ ENGINE_SELF_TESTS: list[tuple[str, str, str]] = [
         memory_model="streaming"
         concurrency="thread-safe"
         default_timeout_s=60
-        [runtimes]
-        native=true
         """,
         "rule 12",
     ),
@@ -792,8 +787,6 @@ ENGINE_SELF_TESTS: list[tuple[str, str, str]] = [
         memory_model="streaming"
         concurrency="thread-safe"
         default_timeout_s=60
-        [runtimes]
-        native=true
         """,
         "strong copyleft component",
     ),
@@ -816,8 +809,6 @@ ENGINE_SELF_TESTS: list[tuple[str, str, str]] = [
         memory_model="streaming"
         concurrency="thread-safe"
         default_timeout_s=60
-        [runtimes]
-        native=true
         """,
         "must be traceable",
     ),
@@ -842,8 +833,6 @@ ENGINE_SELF_TESTS: list[tuple[str, str, str]] = [
         memory_model="streaming"
         concurrency="thread-safe"
         default_timeout_s=60
-        [runtimes]
-        native=true
         """,
         "requires isolation `microvm`",
     ),
@@ -868,8 +857,6 @@ ENGINE_SELF_TESTS: list[tuple[str, str, str]] = [
         memory_model="streaming"
         concurrency="thread-safe"
         default_timeout_s=60
-        [runtimes]
-        native=true
         """,
         "network must be false",
     ),

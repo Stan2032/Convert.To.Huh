@@ -71,7 +71,7 @@ hidden chunks, trailing data and active content, and reports what that cost.
 ```console
 $ huh clean report.pdf clean.pdf
 detected application/pdf (by signature, confidence 1.00)
-strategy render-and-rebuild (1090 -> 9287 bytes)
+strategy render-and-rebuild (1090 -> 9354 bytes, 82 ms)
   ran: pdftoppm -r 150 -png in.pdf page
   ran: vips jpegsave page-1.png page-1.jpg --Q 90
 

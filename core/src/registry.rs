@@ -81,14 +81,6 @@ pub struct Resources {
     pub default_timeout_s: u64,
 }
 
-#[derive(Debug, Clone, Default, Deserialize)]
-pub struct Runtimes {
-    #[serde(default)]
-    pub native: bool,
-    #[serde(default)]
-    pub wasm: bool,
-}
-
 #[derive(Debug, Clone, Deserialize)]
 pub struct Engine {
     pub id: String,
@@ -97,8 +89,6 @@ pub struct Engine {
     pub license: License,
     pub security: Security,
     pub resources: Resources,
-    #[serde(default)]
-    pub runtimes: Runtimes,
 }
 
 #[derive(Debug, Clone, Default, Deserialize)]

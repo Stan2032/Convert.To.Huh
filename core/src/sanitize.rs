@@ -69,7 +69,7 @@ fn png_passengers(bytes: &[u8]) -> Vec<Passenger> {
         // The declared length is attacker-controlled and is not yet known to be
         // real: this runs BEFORE any decode, so a crafted file reaches it.
         //
-        // On wasm32 (ADR-0002) `usize` is 32 bits, and a declared length of
+        // On any 32-bit target `usize` is 32 bits, and a declared length of
         // 0xFFFFFFF4 makes `12 + len` wrap to exactly 0 — the cursor stops
         // advancing and the loop never ends. In a debug build it panics first.
         // A length merely larger than the file is milder but still wrong: it
@@ -296,7 +296,7 @@ mod tests {
     #[test]
     fn a_lying_chunk_length_neither_hangs_nor_overcounts() {
         // 0xFFFFFFF4 is the value that makes `12 + len` wrap to 0 on a 32-bit
-        // usize, which is what wasm32 gives us (ADR-0002). The scan must stop,
+        // usize, as on any 32-bit target. The scan must stop,
         // not spin, and must not claim more passenger bytes than the file has.
         for declared in [0xFFFF_FFF4u32, 0xFFFF_FFFF, 5_000_000] {
             let mut png = b"\x89PNG\r\n\x1a\n".to_vec();

@@ -22,7 +22,7 @@ SOFTWARE.
 
 ---
 
-NOTE ON SCOPE: this MIT licence covers the CODE (core/, tools/, experiments/).
+NOTE ON SCOPE: this MIT licence covers the CODE (core/, tools/, corpus/*.py).
 The DATA (dataset/, registry/) is CC0-1.0 — see LICENSE-CC0. The split is
 deliberate: code benefits from a licence that keeps attribution, and
 measurements of software behaviour should carry no conditions at all.

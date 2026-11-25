@@ -158,13 +158,11 @@ pub struct Policy {
     /// rule 6). `capability-cartographer` sets it true to probe new edges —
     /// that is how the bootstrap chicken-and-egg is resolved.
     pub allow_unverified: bool,
-    /// `native` | `wasm`
-    pub runtime: String,
 }
 
 impl Default for Policy {
     fn default() -> Self {
-        Policy { build_profile: "lgpl".into(), allow_unverified: false, runtime: "native".into() }
+        Policy { build_profile: "lgpl".into(), allow_unverified: false }
     }
 }
 
@@ -177,11 +175,6 @@ impl<'a> Planner<'a> {
             if !engine.license.build_profiles.contains(&policy.build_profile) {
                 continue;
             }
-            let runtime_ok = match policy.runtime.as_str() {
-                "wasm" => engine.runtimes.wasm,
-                _ => engine.runtimes.native,
-            };
-            if !runtime_ok { continue; }
             if !policy.allow_unverified && e.status != "verified" { continue; }
             if e.status == "refuted" { continue; }
             eligible.push(i);

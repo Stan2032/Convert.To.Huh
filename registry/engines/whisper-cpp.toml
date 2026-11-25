@@ -23,10 +23,6 @@ concurrency       = "process-per-job"
 crash_expected    = false
 default_timeout_s = 1800
 
-[runtimes]
-native = true
-wasm   = true
-
 [notes]
 text = """
 LICENSE VERIFIED 2026-08-20: MIT, "Copyright (c) 2023-2026 The ggml authors".

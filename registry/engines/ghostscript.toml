@@ -24,10 +24,6 @@ concurrency       = "process-per-job"
 crash_expected    = true
 default_timeout_s = 60
 
-[runtimes]
-native = true
-wasm   = false
-
 [notes]
 text = """
 LICENSE VERIFIED 2026-08-20: the LICENSE file confirms "GNU Affero General

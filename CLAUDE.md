@@ -32,10 +32,10 @@ These hold everywhere. Violating one is a bug regardless of what else works.
 3. **Every capability claim is verified against a real specimen** before the
    planner trusts it.
 4. **Synthesized content is always marked** — plan, UI, output metadata, receipt.
-5. **Conversion sandboxes have no network.**
+5. **Conversion sandboxes have no network.** (A deployment requirement; this
+   repository isolates at process level only — see `docs/ARCHITECTURE.md`.)
 6. **Legally unavailable routes do not exist**, rather than failing at runtime.
-7. **The planner is one implementation**, compiled to native and WASM.
-8. **Every plan is explainable in plain language**, generated from its loss vector.
+7. **Every plan is explainable in plain language**, generated from its loss vector.
 
 ## Where things live
 

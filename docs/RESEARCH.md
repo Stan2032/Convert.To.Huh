@@ -957,7 +957,7 @@ From vendor and critic sources (OPSWAT, Deep Instinct, Fortinet, Wikipedia):
   the assumption; sanitization makes isolation load-bearing instead of
   precautionary, and moves `sandbox-warden` onto the critical path.
 - (4) and (5) are honest scope limits and should be refused explicitly rather
-  than silently passed through. `huh sanitize` already refuses unidentifiable
+  than silently passed through. `huh clean` already refuses unidentifiable
   input for this reason: passing bytes through unchanged is the one genuinely
   dangerous outcome for a tool whose users believe it cleans files.
 
@@ -972,7 +972,7 @@ containers, and strips all metadata. Its isolation is considerably better than
 anything here: a **gVisor sandbox inside a container**, networking disabled,
 nothing mounted from the host. That is precisely what ADR-0003 demands and what
 this project has *not* built. The PDF flattening measured in
-`experiments/pdf_flatten.py` is a weaker version of what Dangerzone ships to
+`experiments/pdf_flatten.py` (since superseded by `huh clean`) is a weaker version of what Dangerzone ships to
 journalists today.
 
 **mat2** (`jvoisin/mat2`, used by Tails) removes metadata across roughly 25
@@ -1017,7 +1017,7 @@ other tools consume*.
   changes bytes, the output was never canonical, and "sanitized" means nothing.
   Enforced by `sanitize::tests::sanitizing_is_idempotent`.
 - **Content preservation as a hard gate.** Destroying the file removes every
-  passenger and is worthless. `huh sanitize` exits non-zero when SSIM shows the
+  passenger and is worthless. `huh clean` exits non-zero when SSIM shows the
   rebuild was unfaithful, so "safe but ruined" is a failure rather than a pass.
 
 ### 12.5 Open question: what does canonicalization guarantee?

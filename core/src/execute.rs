@@ -1,6 +1,6 @@
 //! Plan execution and the receipt.
 //!
-//! ADR-0008: execution is a state machine over per-hop artifacts. The receipt
+//! Hops run in sequence within one process (ADR-0015). The receipt
 //! is a component rather than a log line for two reasons — users deserve to
 //! know when a model wrote their content, and declared-vs-measured divergence
 //! is how registry bugs get found automatically.

@@ -93,10 +93,6 @@ memory_model    = "streaming"      # streaming | whole-file | unbounded
 concurrency     = "thread-safe"    # thread-safe | process-per-job | singleton
 crash_expected  = false            # true for LibreOffice (R§3.2)
 default_timeout_s = 120
-
-[runtimes]
-native = true
-wasm   = true                      # is there a usable WASM build? (R§6)
 ```
 
 `hostility` drives the isolation tier the executor enforces (R§4.4). Assigning
