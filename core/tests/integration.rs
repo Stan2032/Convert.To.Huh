@@ -747,6 +747,32 @@ fn a_full_256_colour_palette_survives_image_rs_but_not_libvips_gifsave() {
     assert!(n < 256, "libvips gifsave kept all 256 colours ({n}); revise RESEARCH §18.3");
 }
 
+/// The registry declared ImageMagick PNG->GIF `metadata = lost`; real files
+/// contradicted it (RESEARCH §18.5). ImageMagick carries PNG comment text into
+/// the GIF and drops other keys, so the value is `degraded`. Pins both halves
+/// on the committed specimen, including the comment marked "do-not-share".
+#[test]
+fn imagemagick_carries_png_comments_into_gif() {
+    if !engine_present("convert") {
+        eprintln!("skipping: ImageMagick not installed");
+        return;
+    }
+    let dir = std::env::temp_dir().join(format!("huh-meta-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let out = dir.join("out.gif");
+    let st = std::process::Command::new("convert")
+        .arg(root().join("corpus/raster/png-with-passengers.png"))
+        .arg(&out)
+        .status()
+        .unwrap();
+    assert!(st.success());
+    let gif = std::fs::read(&out).unwrap();
+    std::fs::remove_dir_all(&dir).ok();
+    let has = |s: &[u8]| gif.windows(s.len()).any(|w| w == s);
+    assert!(has(b"internal-doc-id-88213-do-not-share"), "comment no longer carried: revise the registry");
+    assert!(!has(b"Alice Example"), "Author now carried too: revise the registry");
+}
+
 fn engine_present(prog: &str) -> bool {
     std::process::Command::new("which")
         .arg(prog)

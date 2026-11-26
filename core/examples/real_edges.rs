@@ -36,6 +36,108 @@ fn colours(img: &image::DynamicImage) -> (usize, bool) {
     (seen.len(), partial)
 }
 
+/// The input's metadata payloads: EXIF/XMP/IPTC blocks and comments in JPEG,
+/// text and EXIF chunks in PNG, comment and XMP extensions in GIF. Payloads
+/// under 8 bytes are skipped, since a byte search for them in the output would
+/// match by chance.
+///
+/// Used to observe `metadata = lost` directly: did any of THIS file's metadata
+/// reach the output, in any wrapper? A byte search finds EXIF carried from a
+/// JPEG APP1 into a PNG eXIf chunk, which a "does the output have metadata"
+/// check would miss, and it ignores metadata an encoder adds of its own.
+fn metadata_payloads(b: &[u8], fmt: &str) -> Vec<Vec<u8>> {
+    let mut out = vec![];
+    match fmt {
+        "image/png" if b.len() > 8 => {
+            let mut i = 8;
+            while i + 12 <= b.len() {
+                let len = u32::from_be_bytes(b[i..i + 4].try_into().unwrap()) as usize;
+                let Some(end) = (i + 8).checked_add(len) else { break };
+                if end + 4 > b.len() { break; }
+                let tag = &b[i + 4..i + 8];
+                let body = &b[i + 8..end];
+                match tag {
+                    // tEXt is keyword\0value: the value is the payload.
+                    b"tEXt" => out.extend(body.iter().position(|&c| c == 0).map(|z| body[z + 1..].to_vec())),
+                    // zTXt is keyword\0method\0zlib(value). Searched for in
+                    // its DECOMPRESSED form: ImageMagick carries a compressed
+                    // PNG comment into a GIF as plain text, which a search for
+                    // the compressed bytes miscounted as lost (189036.png).
+                    b"zTXt" => out.extend(body.iter().position(|&c| c == 0)
+                        .and_then(|z| inflate(body.get(z + 2..)?))),
+                    // iTXt: keyword\0 flag method lang\0 key\0 text, text
+                    // zlib-compressed when flag is 1.
+                    b"iTXt" => out.extend(itxt_text(body)),
+                    b"eXIf" => out.push(body.to_vec()),
+                    _ => {}
+                }
+                i = end + 4;
+            }
+        }
+        "image/jpeg" => {
+            let mut i = 2;
+            while i + 4 <= b.len() && b[i] == 0xFF {
+                let m = b[i + 1];
+                if m == 0xDA || m == 0xD9 { break; } // image data / end
+                let len = u16::from_be_bytes([b[i + 2], b[i + 3]]) as usize;
+                let Some(end) = (i + 2).checked_add(len) else { break };
+                if len < 2 || end > b.len() { break; }
+                let body = &b[i + 4..end];
+                // APP1 (EXIF/XMP), APP13 (IPTC), COM.
+                if m == 0xE1 || m == 0xED || m == 0xFE { out.push(body.to_vec()); }
+                i = end;
+            }
+        }
+        "image/gif" if b.len() > 13 => {
+            // Comment (0xFE) and application (0xFF, e.g. XMP) extensions.
+            let mut i = 13 + if b[10] & 0x80 != 0 { 3usize << ((b[10] & 7) + 1) } else { 0 };
+            while i + 2 < b.len() {
+                match b[i] {
+                    0x21 => {
+                        let kind = b[i + 1];
+                        let mut j = i + 2;
+                        let mut payload = vec![];
+                        while j < b.len() && b[j] != 0 {
+                            let n = b[j] as usize;
+                            payload.extend_from_slice(&b[(j + 1).min(b.len())..(j + 1 + n).min(b.len())]);
+                            j += n + 1;
+                        }
+                        if (kind == 0xFE || kind == 0xFF) && !payload.starts_with(b"NETSCAPE") {
+                            out.push(payload);
+                        }
+                        i = j + 1;
+                    }
+                    _ => break, // image data: metadata extensions precede it
+                }
+            }
+        }
+        _ => {}
+    }
+    out.retain(|p| p.len() >= 8);
+    out
+}
+
+fn inflate(z: &[u8]) -> Option<Vec<u8>> {
+    use std::io::Read;
+    let mut v = vec![];
+    flate2::read::ZlibDecoder::new(z).take(1 << 20).read_to_end(&mut v).ok()?;
+    Some(v)
+}
+
+fn itxt_text(body: &[u8]) -> Option<Vec<u8>> {
+    let k = body.iter().position(|&c| c == 0)?;
+    let (flag, rest) = (*body.get(k + 1)?, body.get(k + 3..)?);
+    let lang = rest.iter().position(|&c| c == 0)?;
+    let rest = rest.get(lang + 1..)?;
+    let key = rest.iter().position(|&c| c == 0)?;
+    let text = rest.get(key + 1..)?;
+    if flag == 1 { inflate(text) } else { Some(text.to_vec()) }
+}
+
+fn contains(hay: &[u8], needle: &[u8]) -> bool {
+    hay.windows(needle.len()).any(|w| w == needle)
+}
+
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
     let (dir, out) = match args.as_slice() {
@@ -77,6 +179,9 @@ fn main() {
         let mut contradictions = Vec::new();
         let mut ssims = Vec::new();
         let (mut palette_reduced, mut partial_alpha_binarised) = (0usize, 0usize);
+        let (mut metadata_present, mut metadata_lost, mut metadata_survived) = (0usize, 0usize, 0usize);
+        let mut metadata_some_missing = 0usize;
+        let mut metadata_survived_in: Vec<String> = vec![];
         for (name, fmt, bytes) in &specimens {
             if fmt != &e.from {
                 continue;
@@ -84,6 +189,17 @@ fn main() {
             match execute::execute(&plan, bytes, 85) {
                 Ok((out, receipt)) => {
                     ran += 1;
+                    let meta = metadata_payloads(bytes, &e.from);
+                    if !meta.is_empty() {
+                        metadata_present += 1;
+                        metadata_some_missing += usize::from(meta.iter().any(|p| !contains(&out, p)));
+                        if meta.iter().any(|p| contains(&out, p)) {
+                            metadata_survived += 1;
+                            metadata_survived_in.push(name.clone());
+                        } else {
+                            metadata_lost += 1;
+                        }
+                    }
                     let b = Budget::default();
                     if let (Ok(a), Ok(z)) = (decode(bytes, &e.from, &b), decode(&out, &e.to, &b)) {
                         let ((ca, pa), (cz, pz)) = (colours(&a), colours(&z));
@@ -125,6 +241,15 @@ fn main() {
         row.insert("observed".into(), json!({
             "palette_reduced": palette_reduced,
             "partial_alpha_binarised": partial_alpha_binarised,
+            // Files whose input carried metadata; of those, none of it in the
+            // output vs at least one payload found in the output.
+            "metadata_present": metadata_present,
+            "metadata_lost": metadata_lost,
+            "metadata_survived": metadata_survived,
+            // At least one of the input's payloads absent from the output: the
+            // observation behind `metadata = degraded` (partly kept).
+            "metadata_some_missing": metadata_some_missing,
+            "metadata_survived_in": metadata_survived_in,
         }));
         if !ssims.is_empty() {
             row.insert("ssim_min".into(), json!((ssims[0].0 * 1e4).round() / 1e4));

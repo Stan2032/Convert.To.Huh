@@ -1,6 +1,6 @@
 {
   "schema_version": "1.1.0",
-  "registry_version": "2026.11.0",
+  "registry_version": "2026.11.1",
   "license": "CC0-1.0",
   "source": "https://github.com/Stan2032/Convert.To.Huh",
   "properties": [
@@ -765,7 +765,8 @@
         "contradicted": 0,
         "affected": {
           "alpha": 1,
-          "color_depth": 15
+          "color_depth": 15,
+          "metadata": 6
         },
         "results": "corpus/govdocs1/edges.json"
       },
@@ -784,7 +785,7 @@
         "color_depth": "lost",
         "color_profile": "lost",
         "geometry": "preserved",
-        "metadata": "lost",
+        "metadata": "degraded",
         "signal_fidelity": "degraded"
       },
       "loss_policy": {
@@ -792,16 +793,17 @@
       },
       "verification": "verified",
       "specimens": [
-        "corpus/raster/rgb-photo.png"
+        "corpus/raster/rgb-photo.png",
+        "corpus/raster/png-with-passengers.png"
       ],
       "measured": {
         "bytes": 14774,
         "engine_build": "ImageMagick 6.9.12",
-        "note": "Nearest-palette, siding with image-rs against libvips two-to-one — the same\nsplit as alpha flattening. Uses 252 colours where the others use 255; the\nthree-colour difference is unexplained and not worth chasing until it matters.\n\nREAL-WORLD DEFECT, found 2026-11-26 on Govdocs1 (docs/RESEARCH.md §18.1). A PNG\ncarrying an `oFFs` page offset comes out as a GIF whose frame sits AT that\noffset while the logical screen stays the image's own size, so the frame lies\noutside the visible area. 2 of 39 real PNGs (303329, 189036); a negative offset\nis clamped to 0 and is harmless. Decoders then disagree about the same file:\n\n  image-rs     117x64, all black\n  libvips      226x183, canvas enlarged to hold the frame\n  ffmpeg       refuses: \"Invalid top position: 119\"\n  ImageMagick  reads it back intact\n\nlibvips `gifsave` and image-rs write the frame at (0, 0). Reproduce with\n`corpus/raster/png-with-offset.png`; the test\n`imagemagick_moves_an_offset_png_outside_the_gif_screen` pins the behaviour.\n\nNo tracked property records this. `geometry` is resolution, which is\nunchanged; the pixels survive; the loss is where they are placed. Noted here\nrather than forced into a property that means something else.\n",
+        "note": "Nearest-palette, siding with image-rs against libvips two-to-one — the same\nsplit as alpha flattening. Uses 252 colours where the others use 255; the\nthree-colour difference is unexplained and not worth chasing until it matters.\n\nMETADATA CORRECTED 2026-11-26, from `lost` to `degraded` (docs/RESEARCH.md\n§18.5). ImageMagick carries a PNG's COMMENT text into the GIF's comment\nextension and drops the rest. On the committed specimen\npng-with-passengers.png, the comment \"internal-doc-id-88213-do-not-share\"\nsurvives while `Author` does not; on 6 real Govdocs1 PNGs with metadata, the\ncomment survived in 4. libvips and image-rs carry neither. For anyone using\nthis conversion to strip a file before sharing it, that is the difference\nthat matters. Pinned by `imagemagick_carries_png_comments_into_gif`.\n\nREAL-WORLD DEFECT, found 2026-11-26 on Govdocs1 (docs/RESEARCH.md §18.1). A PNG\ncarrying an `oFFs` page offset comes out as a GIF whose frame sits AT that\noffset while the logical screen stays the image's own size, so the frame lies\noutside the visible area. 2 of 39 real PNGs (303329, 189036); a negative offset\nis clamped to 0 and is harmless. Decoders then disagree about the same file:\n\n  image-rs     117x64, all black\n  libvips      226x183, canvas enlarged to hold the frame\n  ffmpeg       refuses: \"Invalid top position: 119\"\n  ImageMagick  reads it back intact\n\nlibvips `gifsave` and image-rs write the frame at (0, 0). Reproduce with\n`corpus/raster/png-with-offset.png`; the test\n`imagemagick_moves_an_offset_png_outside_the_gif_screen` pins the behaviour.\n\nNo tracked property records this. `geometry` is resolution, which is\nunchanged; the pixels survive; the loss is where they are placed. Noted here\nrather than forced into a property that means something else.\n",
         "palette_size": 252,
         "ssim": 0.8799,
         "texture_retained": 0.2,
-        "tool": "core/examples/gif_dither.rs"
+        "tool": "core/examples/gif_dither.rs; core/examples/real_edges.rs for metadata"
       },
       "real_world": {
         "corpus": "govdocs1",
@@ -810,7 +812,8 @@
         "contradicted": 0,
         "affected": {
           "alpha": 1,
-          "color_depth": 12
+          "color_depth": 12,
+          "metadata": 3
         },
         "results": "corpus/govdocs1/edges.json"
       },
@@ -987,7 +990,8 @@
         "contradicted": 0,
         "affected": {
           "alpha": 2,
-          "color_depth": 0
+          "color_depth": 0,
+          "metadata": 6
         },
         "results": "corpus/govdocs1/edges.json"
       },
@@ -1021,7 +1025,9 @@
         "files": 40,
         "ran": 40,
         "contradicted": 0,
-        "affected": {},
+        "affected": {
+          "metadata": 20
+        },
         "results": "corpus/govdocs1/edges.json"
       },
       "generational": false
@@ -1059,7 +1065,9 @@
         "files": 39,
         "ran": 39,
         "contradicted": 0,
-        "affected": {},
+        "affected": {
+          "metadata": 6
+        },
         "results": "corpus/govdocs1/edges.json"
       },
       "generational": false
@@ -1098,7 +1106,8 @@
         "ran": 39,
         "contradicted": 0,
         "affected": {
-          "color_depth": 0
+          "color_depth": 0,
+          "metadata": 6
         },
         "results": "corpus/govdocs1/edges.json"
       },
@@ -1143,7 +1152,8 @@
         "contradicted": 0,
         "affected": {
           "alpha": 1,
-          "color_depth": 11
+          "color_depth": 11,
+          "metadata": 6
         },
         "results": "corpus/govdocs1/edges.json"
       },
@@ -1183,7 +1193,8 @@
         "ran": 39,
         "contradicted": 0,
         "affected": {
-          "color_depth": 0
+          "color_depth": 0,
+          "metadata": 6
         },
         "results": "corpus/govdocs1/edges.json"
       },
@@ -1217,7 +1228,9 @@
         "files": 27,
         "ran": 27,
         "contradicted": 0,
-        "affected": {},
+        "affected": {
+          "metadata": 3
+        },
         "results": "corpus/govdocs1/edges.json"
       },
       "generational": false
@@ -1457,7 +1470,8 @@
         "contradicted": 0,
         "affected": {
           "alpha": 2,
-          "color_depth": 0
+          "color_depth": 0,
+          "metadata": 6
         },
         "results": "corpus/govdocs1/edges.json"
       },
@@ -1499,7 +1513,8 @@
         "ran": 39,
         "contradicted": 0,
         "affected": {
-          "color_depth": 0
+          "color_depth": 0,
+          "metadata": 6
         },
         "results": "corpus/govdocs1/edges.json"
       },
@@ -1537,7 +1552,9 @@
         "files": 39,
         "ran": 39,
         "contradicted": 0,
-        "affected": {},
+        "affected": {
+          "metadata": 6
+        },
         "results": "corpus/govdocs1/edges.json"
       },
       "generational": false
@@ -1580,7 +1597,8 @@
         "ran": 39,
         "contradicted": 0,
         "affected": {
-          "color_depth": 0
+          "color_depth": 0,
+          "metadata": 6
         },
         "results": "corpus/govdocs1/edges.json"
       },
@@ -1626,7 +1644,8 @@
         "contradicted": 0,
         "affected": {
           "alpha": 2,
-          "color_depth": 0
+          "color_depth": 0,
+          "metadata": 6
         },
         "results": "corpus/govdocs1/edges.json"
       },

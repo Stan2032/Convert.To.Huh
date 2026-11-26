@@ -15,7 +15,7 @@ the scope line in [README.md](README.md), which CI checks against the registry.
 
 1. **Count more losses on real files.** The dataset now publishes how often
    each loss occurred on real files (`real_world`, schema 1.1.0), but only
-   where an observation can see it. Signal fidelity, metadata and text are
+   where an observation can see it (now including metadata). Signal fidelity and text are
    not yet counted; each needs an observation that detects the declared
    outcome, not a threshold.
 2. **Decide where output size goes.** `huh clean` makes real PDFs a median 23×

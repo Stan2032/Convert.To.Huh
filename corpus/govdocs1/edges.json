@@ -18,6 +18,11 @@
       }
     },
     "observed": {
+      "metadata_lost": 6,
+      "metadata_present": 6,
+      "metadata_some_missing": 6,
+      "metadata_survived": 0,
+      "metadata_survived_in": [],
       "palette_reduced": 15,
       "partial_alpha_binarised": 1
     },
@@ -47,6 +52,16 @@
       }
     },
     "observed": {
+      "metadata_lost": 2,
+      "metadata_present": 6,
+      "metadata_some_missing": 3,
+      "metadata_survived": 4,
+      "metadata_survived_in": [
+        "189036.png",
+        "303329.png",
+        "671351.png",
+        "696048.png"
+      ],
       "palette_reduced": 12,
       "partial_alpha_binarised": 1
     },
@@ -85,6 +100,11 @@
       }
     },
     "observed": {
+      "metadata_lost": 6,
+      "metadata_present": 6,
+      "metadata_some_missing": 6,
+      "metadata_survived": 0,
+      "metadata_survived_in": [],
       "palette_reduced": 3,
       "partial_alpha_binarised": 1
     },
@@ -119,6 +139,11 @@
       }
     },
     "observed": {
+      "metadata_lost": 20,
+      "metadata_present": 20,
+      "metadata_some_missing": 20,
+      "metadata_survived": 0,
+      "metadata_survived_in": [],
       "palette_reduced": 0,
       "partial_alpha_binarised": 0
     },
@@ -148,6 +173,11 @@
       }
     },
     "observed": {
+      "metadata_lost": 6,
+      "metadata_present": 6,
+      "metadata_some_missing": 6,
+      "metadata_survived": 0,
+      "metadata_survived_in": [],
       "palette_reduced": 0,
       "partial_alpha_binarised": 0
     },
@@ -177,6 +207,11 @@
       }
     },
     "observed": {
+      "metadata_lost": 6,
+      "metadata_present": 6,
+      "metadata_some_missing": 6,
+      "metadata_survived": 0,
+      "metadata_survived_in": [],
       "palette_reduced": 0,
       "partial_alpha_binarised": 0
     },
@@ -206,6 +241,11 @@
       }
     },
     "observed": {
+      "metadata_lost": 6,
+      "metadata_present": 6,
+      "metadata_some_missing": 6,
+      "metadata_survived": 0,
+      "metadata_survived_in": [],
       "palette_reduced": 11,
       "partial_alpha_binarised": 1
     },
@@ -235,6 +275,11 @@
       }
     },
     "observed": {
+      "metadata_lost": 6,
+      "metadata_present": 6,
+      "metadata_some_missing": 6,
+      "metadata_survived": 0,
+      "metadata_survived_in": [],
       "palette_reduced": 0,
       "partial_alpha_binarised": 0
     },
@@ -264,6 +309,11 @@
       }
     },
     "observed": {
+      "metadata_lost": 3,
+      "metadata_present": 3,
+      "metadata_some_missing": 3,
+      "metadata_survived": 0,
+      "metadata_survived_in": [],
       "palette_reduced": 0,
       "partial_alpha_binarised": 0
     },
@@ -282,6 +332,11 @@
     "invocation": null,
     "measured": {},
     "observed": {
+      "metadata_lost": 0,
+      "metadata_present": 0,
+      "metadata_some_missing": 0,
+      "metadata_survived": 0,
+      "metadata_survived_in": [],
       "palette_reduced": 0,
       "partial_alpha_binarised": 0
     },
@@ -296,6 +351,11 @@
     "invocation": null,
     "measured": {},
     "observed": {
+      "metadata_lost": 0,
+      "metadata_present": 0,
+      "metadata_some_missing": 0,
+      "metadata_survived": 0,
+      "metadata_survived_in": [],
       "palette_reduced": 0,
       "partial_alpha_binarised": 0
     },
@@ -310,6 +370,11 @@
     "invocation": null,
     "measured": {},
     "observed": {
+      "metadata_lost": 0,
+      "metadata_present": 0,
+      "metadata_some_missing": 0,
+      "metadata_survived": 0,
+      "metadata_survived_in": [],
       "palette_reduced": 0,
       "partial_alpha_binarised": 0
     },
@@ -335,6 +400,11 @@
       }
     },
     "observed": {
+      "metadata_lost": 6,
+      "metadata_present": 6,
+      "metadata_some_missing": 6,
+      "metadata_survived": 0,
+      "metadata_survived_in": [],
       "palette_reduced": 3,
       "partial_alpha_binarised": 1
     },
@@ -373,6 +443,11 @@
       }
     },
     "observed": {
+      "metadata_lost": 6,
+      "metadata_present": 6,
+      "metadata_some_missing": 6,
+      "metadata_survived": 0,
+      "metadata_survived_in": [],
       "palette_reduced": 4,
       "partial_alpha_binarised": 0
     },
@@ -402,6 +477,11 @@
       }
     },
     "observed": {
+      "metadata_lost": 6,
+      "metadata_present": 6,
+      "metadata_some_missing": 6,
+      "metadata_survived": 0,
+      "metadata_survived_in": [],
       "palette_reduced": 0,
       "partial_alpha_binarised": 0
     },
@@ -431,6 +511,11 @@
       }
     },
     "observed": {
+      "metadata_lost": 6,
+      "metadata_present": 6,
+      "metadata_some_missing": 6,
+      "metadata_survived": 0,
+      "metadata_survived_in": [],
       "palette_reduced": 0,
       "partial_alpha_binarised": 0
     },
@@ -460,6 +545,11 @@
       }
     },
     "observed": {
+      "metadata_lost": 6,
+      "metadata_present": 6,
+      "metadata_some_missing": 6,
+      "metadata_survived": 0,
+      "metadata_survived_in": [],
       "palette_reduced": 3,
       "partial_alpha_binarised": 1
     },

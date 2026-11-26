@@ -22,6 +22,8 @@ never happened when the instrument simply cannot see it:
   fonts        degraded                no requested font embedded   (office)
   precision    degraded                a stored number not printed exactly (.xls)
 
+  metadata     lost                     input had metadata; none of it in the output
+  metadata     degraded                 input had metadata; some of it missing
   color_depth  lost (to GIF)            output has fewer distinct colours than input
   alpha        degraded (to GIF)        partial transparency came out on/off only
 
@@ -65,19 +67,28 @@ def raster_blocks() -> dict[tuple, dict]:
         if not row["ran"] and not row["failed"]:
             continue  # no real file of this source format
         key = (row["engine"], row["invocation"], row["from"], row["to"])
-        contradicted = len({c["specimen"] for c in row["contradictions"]})
+        contradicted = {c["specimen"] for c in row["contradictions"]}
         affected = {}
         for prop, outcomes in row["measured"].items():
             if prop in RASTER_OCCURRED:
                 affected[prop] = (RASTER_OCCURRED[prop], outcomes)
+        obs = row.get("observed", {})
+        if "metadata_present" in obs:
+            affected["metadata"] = (({"lost"}, "occurred"), {"occurred": obs["metadata_lost"]})
+            affected["metadata_degraded"] = (({"degraded"}, "occurred"),
+                                             {"occurred": obs["metadata_some_missing"]})
         if row["to"] == "image/gif":
             obs = row.get("observed", {})
             affected["color_depth"] = (({"lost"}, "occurred"),
                                        {"occurred": obs.get("palette_reduced", 0)})
             affected["alpha"] = (({"degraded"}, "occurred"),
                                  {"occurred": obs.get("partial_alpha_binarised", 0)})
+        # Files whose metadata reached the output contradict `metadata = lost`;
+        # resolved per edge in rewrite(), where the declared value is known.
+        survived = set(row.get("observed", {}).get("metadata_survived_in", []))
         out[key] = {"corpus": "govdocs1", "files": row["ran"] + sum(row["failed"].values()),
                     "ran": row["ran"], "contradicted": contradicted,
+                    "metadata_survived_in": survived,
                     "affected": affected, "results": RASTER}
     return out
 
@@ -137,11 +148,18 @@ def rewrite(path: Path, raster: dict) -> tuple[str, int]:
         for p, v in rw["affected"].items():
             if isinstance(v, tuple):  # raster: ((detectable declared values, occurred), outcomes)
                 (detectable, occurred), outcomes = v
-                if declared(loss, p) in detectable:
-                    counted[p] = outcomes.get(occurred, 0)
+                prop = p.removesuffix("_degraded")
+                if declared(loss, prop) in detectable:
+                    counted[prop] = outcomes.get(occurred, 0)
             elif declared(loss, p) not in (None, "preserved"):
                 counted[p] = v
         rw = rw | {"affected": counted}
+        if isinstance(rw.get("contradicted"), set):
+            files = set(rw["contradicted"])
+            if declared(loss, "metadata") == "lost":
+                files |= rw.get("metadata_survived_in", set())
+            rw["contradicted"] = len(files)
+        rw.pop("metadata_survived_in", None)
         body = BLOCK_RE.sub("\n", part).rstrip("\n")
         new = body + "\n\n" + render(rw) + ("\n\n" if i < len(parts) - 1 else "")
         if new != part:

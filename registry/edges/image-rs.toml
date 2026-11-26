@@ -66,7 +66,7 @@ corpus       = "govdocs1"
 files        = 39
 ran          = 39
 contradicted = 0
-affected     = { alpha = 2, color_depth = 0 }
+affected     = { alpha = 2, color_depth = 0, metadata = 6 }
 results      = "corpus/govdocs1/edges.json"
 
 
@@ -127,7 +127,7 @@ corpus       = "govdocs1"
 files        = 40
 ran          = 40
 contradicted = 0
-affected     = {  }
+affected     = { metadata = 20 }
 results      = "corpus/govdocs1/edges.json"
 
 
@@ -184,7 +184,7 @@ corpus       = "govdocs1"
 files        = 39
 ran          = 39
 contradicted = 0
-affected     = {  }
+affected     = { metadata = 6 }
 results      = "corpus/govdocs1/edges.json"
 
 
@@ -244,7 +244,7 @@ corpus       = "govdocs1"
 files        = 39
 ran          = 39
 contradicted = 0
-affected     = { color_depth = 0 }
+affected     = { color_depth = 0, metadata = 6 }
 results      = "corpus/govdocs1/edges.json"
 
 
@@ -306,7 +306,7 @@ corpus       = "govdocs1"
 files        = 39
 ran          = 39
 contradicted = 0
-affected     = { alpha = 1, color_depth = 11 }
+affected     = { alpha = 1, color_depth = 11, metadata = 6 }
 results      = "corpus/govdocs1/edges.json"
 
 
@@ -361,7 +361,7 @@ corpus       = "govdocs1"
 files        = 39
 ran          = 39
 contradicted = 0
-affected     = { color_depth = 0 }
+affected     = { color_depth = 0, metadata = 6 }
 results      = "corpus/govdocs1/edges.json"
 
 
@@ -411,7 +411,7 @@ corpus       = "govdocs1"
 files        = 27
 ran          = 27
 contradicted = 0
-affected     = {  }
+affected     = { metadata = 3 }
 results      = "corpus/govdocs1/edges.json"
 
 

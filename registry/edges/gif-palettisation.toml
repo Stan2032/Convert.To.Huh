@@ -87,7 +87,7 @@ corpus       = "govdocs1"
 files        = 39
 ran          = 39
 contradicted = 0
-affected     = { alpha = 1, color_depth = 15 }
+affected     = { alpha = 1, color_depth = 15, metadata = 6 }
 results      = "corpus/govdocs1/edges.json"
 
 
@@ -106,7 +106,7 @@ signal_fidelity = "degraded"
 alpha           = "degraded"
 geometry        = "preserved"
 color_profile   = "lost"
-metadata        = "lost"
+metadata        = "degraded"
 generational    = true
 
 [edge.cost]
@@ -120,12 +120,12 @@ requires        = []
 
 [edge.verification]
 status      = "verified"
-specimens   = ["corpus/raster/rgb-photo.png"]
+specimens   = ["corpus/raster/rgb-photo.png", "corpus/raster/png-with-passengers.png"]
 verified_at = "2026-08-23"
 verified_by = "capability-cartographer"
 
 [edge.verification.measured]
-tool             = "core/examples/gif_dither.rs"
+tool             = "core/examples/gif_dither.rs; core/examples/real_edges.rs for metadata"
 engine_build     = "ImageMagick 6.9.12"
 bytes            = 14774
 ssim             = 0.8799
@@ -135,6 +135,15 @@ note = """
 Nearest-palette, siding with image-rs against libvips two-to-one — the same
 split as alpha flattening. Uses 252 colours where the others use 255; the
 three-colour difference is unexplained and not worth chasing until it matters.
+
+METADATA CORRECTED 2026-11-26, from `lost` to `degraded` (docs/RESEARCH.md
+§18.5). ImageMagick carries a PNG's COMMENT text into the GIF's comment
+extension and drops the rest. On the committed specimen
+png-with-passengers.png, the comment "internal-doc-id-88213-do-not-share"
+survives while `Author` does not; on 6 real Govdocs1 PNGs with metadata, the
+comment survived in 4. libvips and image-rs carry neither. For anyone using
+this conversion to strip a file before sharing it, that is the difference
+that matters. Pinned by `imagemagick_carries_png_comments_into_gif`.
 
 REAL-WORLD DEFECT, found 2026-11-26 on Govdocs1 (docs/RESEARCH.md §18.1). A PNG
 carrying an `oFFs` page offset comes out as a GIF whose frame sits AT that
@@ -161,5 +170,5 @@ corpus       = "govdocs1"
 files        = 39
 ran          = 39
 contradicted = 0
-affected     = { alpha = 1, color_depth = 12 }
+affected     = { alpha = 1, color_depth = 12, metadata = 3 }
 results      = "corpus/govdocs1/edges.json"

@@ -2105,6 +2105,38 @@ why it is reported apart from the rebuild.
 half has no single value. A `signal_fidelity` figure for such an edge should
 say which it measured (ADR-0014 already requires naming the metric).
 
+### 18.5 Counting metadata loss, and a value the counting corrected
+
+Every image conversion declared `metadata = lost`, and nothing counted how
+often there was metadata to lose. `core/examples/real_edges.rs` now extracts
+the input's metadata payloads (JPEG APP1/APP13/COM, PNG text and eXIf chunks,
+GIF comment and XMP extensions) and searches the output's bytes for each. A
+byte search finds metadata carried in a different wrapper, such as JPEG EXIF
+moved into a PNG eXIf chunk, and ignores metadata an encoder adds of its own.
+
+Real files with metadata: 20 of 40 JPEGs, 6 of 39 PNGs, 3 of 27 GIFs. Every
+conversion removed all of it, on every one of those files, **except
+ImageMagick PNG to GIF**, where the comment survived in 4 of 6.
+
+**The instrument was wrong once first.** A compressed PNG comment (zTXt) was
+searched for in compressed form, but ImageMagick writes it into the GIF as
+plain text, so a survival counted as a loss (189036.png). Compressed text is
+now decompressed before searching; the count went from 3 to 4.
+
+**The correction.** ImageMagick carries a PNG's comment into the GIF's
+comment extension and drops other keys (`Software`, `Author`). On the
+committed specimen `png-with-passengers.png`, "internal-doc-id-88213-do-not-share"
+survives and `Author` does not. That is partial survival, so the edge now
+declares `metadata = degraded` (registry 2026.11.1), and a characterisation
+test pins it. Under the old value, `real_world.contradicted` would have
+counted the 4 files against it, which is how it surfaced.
+
+**Design implication.** `metadata` is the property a user stripping a file
+before sharing it cares about most, and the registry had it wrong for one
+engine because nobody had looked at real metadata. Counting a declared loss
+on real files is how a declared value gets falsified; it is not only
+prevalence.
+
 ## Sources
 
 - [Convert To It](https://converttoit.com/) · [Grokipedia: Convert to it](https://grokipedia.com/page/Convert_to_it) · [Convert To It API](https://converttoit.com/api)

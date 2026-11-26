@@ -7,6 +7,19 @@ Two version numbers, deliberately separate:
 - **`registry_version`** (calendar, `YYYY.MM.N`) changes when the *data*
   changes: an edge added, a loss value corrected, a count updated.
 
+## registry 2026.11.1 · schema 1.1.0
+
+**Correction.** ImageMagick PNG to GIF (`convert IN OUT.gif`) declared
+`metadata: lost`; it is `degraded`. ImageMagick carries a PNG's comment text
+into the GIF and drops the rest. Found by counting metadata survival on real
+files (4 of 6 real PNGs with metadata kept their comment) and reproduced on
+the committed specimen, where a comment reading
+"internal-doc-id-88213-do-not-share" survives.
+
+**Data.** Every image conversion now carries a real-file `metadata` count:
+how many real files had metadata that the conversion actually removed (for
+example, all 20 real JPEGs with metadata lost it through image-rs to PNG).
+
 ## registry 2026.11.0 · schema 1.1.0
 
 **Schema 1.1.0 (additive).** Edges may carry `real_world`: how the conversion
