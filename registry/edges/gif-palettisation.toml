@@ -72,6 +72,14 @@ all three engines land within 0.03 — so the policy is the only field that
 distinguishes them. See §15.3.
 """
 
+[edge.verification.real_world]
+corpus       = "govdocs1"
+files        = 39
+ran          = 39
+contradicted = 0
+affected     = {  }
+results      = "corpus/govdocs1/edges.json"
+
 
 [[edge]]
 engine     = "imagemagick"
@@ -137,3 +145,11 @@ No tracked property records this. `geometry` is resolution, which is
 unchanged; the pixels survive; the loss is where they are placed. Noted here
 rather than forced into a property that means something else.
 """
+
+[edge.verification.real_world]
+corpus       = "govdocs1"
+files        = 39
+ran          = 39
+contradicted = 0
+affected     = {  }
+results      = "corpus/govdocs1/edges.json"

@@ -355,6 +355,41 @@ and it passed. What rule 13 catches is the blunter form — a citation naming
 nothing runnable at all, which is what the remaining four audio edges did. See
 `RESEARCH.md §17.1`.
 
+## Behaviour on real files (rule 14)
+
+A verified edge may carry the counts from running it over real files, beside
+the measurement on its specimens:
+
+```toml
+[edge.verification.real_world]
+corpus       = "govdocs1"       # which real-file corpus
+files        = 39               # real files of the source format it was run on
+ran          = 39               # converted without error
+contradicted = 0                # files where a measurement contradicted the loss vector
+affected     = { alpha = 2 }    # per declared loss: files on which it actually occurred
+results      = "corpus/govdocs1/edges.json"   # per-file results, committed
+```
+
+Synthetic specimens show a loss exists; these say how often it happens. "Loses
+transparency" means something different when 2 of 39 real PNGs had any.
+
+CI rejects (**rule 14**): the block on an edge that is not `verified`;
+`ran > files`; `contradicted > ran`; an `affected` count above `ran`; an
+`affected` key the edge does not declare, or declares `preserved`; and a
+`results` path that is not in the repository.
+
+Two rules the validator cannot check, so they live in the generator
+(`tools/real_world_blocks.py`), which writes these blocks from the results
+files rather than by hand:
+
+- **`contradicted` is optional.** Absent means no automated declared-vs-measured
+  check ran on these files, which is a different claim from zero.
+- **A property is counted only where the observation can see the declared
+  outcome.** PNG to GIF declares `alpha = degraded` (one-bit transparency); the
+  raster harness observes transparency only as present or absent, so it cannot
+  see that loss and the edge carries no `alpha` count. Writing zero there
+  would say the loss never happened. That nearly shipped.
+
 ## Coverage claims are data, not prose (rule 10)
 
 The README states the registry's size in its own words:

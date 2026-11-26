@@ -14,7 +14,7 @@ use crate::registry::Registry;
 use serde::Serialize;
 
 /// Bump on any breaking change to the emitted shape. Consumers pin this.
-pub const SCHEMA_VERSION: &str = "1.0.0";
+pub const SCHEMA_VERSION: &str = "1.1.0";
 
 #[derive(Debug, Serialize)]
 pub struct PropertyDoc {
@@ -97,6 +97,11 @@ pub struct EdgeOut {
     /// trust — which is the one thing this dataset exists not to do.
     #[serde(skip_serializing_if = "std::collections::BTreeMap::is_empty")]
     pub measured: std::collections::BTreeMap<String, serde_json::Value>,
+    /// How the edge behaved on real files: how many it ran on, how often each
+    /// declared loss actually occurred, and whether anything contradicted it.
+    /// Added in schema 1.1.0; absent where no real-file run exists.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub real_world: Option<crate::registry::RealWorld>,
     /// True when repeated lossy application compounds (re-encoding generations).
     pub generational: bool,
 }
@@ -279,6 +284,7 @@ pub fn build(reg: &Registry) -> Dataset {
                     serde_json::to_value(v).ok().map(|j| (k.clone(), j))
                 })
                 .collect(),
+            real_world: e.real_world.clone(),
             generational: e.generational,
         })
         .collect();
@@ -364,6 +370,28 @@ mod tests {
                 "unknown verification status `{}` would confuse consumers",
                 e.verification
             );
+        }
+    }
+
+    #[test]
+    fn real_world_counts_are_published_and_only_count_declared_losses() {
+        let d = build(&registry());
+        let with: Vec<_> = d.edges.iter().filter(|e| e.real_world.is_some()).collect();
+        assert!(!with.is_empty(), "real-world counts exist in the registry but were not exported");
+        for e in with {
+            let rw = e.real_world.as_ref().unwrap();
+            let id = format!("{} {} -> {}", e.engine, e.from, e.to);
+            assert_eq!(e.verification, "verified", "{id}");
+            assert!(rw.ran <= rw.files, "{id}");
+            if let Some(c) = rw.contradicted {
+                assert!(c <= rw.ran, "{id}");
+            }
+            for (prop, n) in &rw.affected {
+                let declared = e.loss.get(prop).map(String::as_str);
+                assert!(matches!(declared, Some(v) if v != "preserved"),
+                        "{id}: affected `{prop}` but the edge declares {declared:?}");
+                assert!(*n <= rw.ran, "{id}: affected {prop} {n} > ran {}", rw.ran);
+            }
         }
     }
 

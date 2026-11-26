@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.0.0",
+  "schema_version": "1.1.0",
   "registry_version": "2026.08.0-alpha",
   "license": "CC0-1.0",
   "source": "https://github.com/Stan2032/Convert.To.Huh",
@@ -758,6 +758,14 @@
         "texture_retained": 0.58,
         "tool": "core/examples/gif_dither.rs"
       },
+      "real_world": {
+        "corpus": "govdocs1",
+        "files": 39,
+        "ran": 39,
+        "contradicted": 0,
+        "affected": {},
+        "results": "corpus/govdocs1/edges.json"
+      },
       "generational": true
     },
     {
@@ -791,6 +799,14 @@
         "ssim": 0.8799,
         "texture_retained": 0.2,
         "tool": "core/examples/gif_dither.rs"
+      },
+      "real_world": {
+        "corpus": "govdocs1",
+        "files": 39,
+        "ran": 39,
+        "contradicted": 0,
+        "affected": {},
+        "results": "corpus/govdocs1/edges.json"
       },
       "generational": true
     },
@@ -958,6 +974,17 @@
         "ssim_min": 0.995,
         "tool": "tools/verify_edges.sh 85"
       },
+      "real_world": {
+        "corpus": "govdocs1",
+        "files": 39,
+        "ran": 39,
+        "contradicted": 0,
+        "affected": {
+          "alpha": 2,
+          "color_depth": 0
+        },
+        "results": "corpus/govdocs1/edges.json"
+      },
       "generational": true
     },
     {
@@ -982,6 +1009,14 @@
         "specimens": 1,
         "ssim_mean": 1.0,
         "tool": "round-trip via tools/verify_edges.sh"
+      },
+      "real_world": {
+        "corpus": "govdocs1",
+        "files": 40,
+        "ran": 40,
+        "contradicted": 0,
+        "affected": {},
+        "results": "corpus/govdocs1/edges.json"
       },
       "generational": false
     },
@@ -1013,6 +1048,14 @@
         "ssim_min": 1.0,
         "tool": "cargo run --example probe_edges"
       },
+      "real_world": {
+        "corpus": "govdocs1",
+        "files": 39,
+        "ran": 39,
+        "contradicted": 0,
+        "affected": {},
+        "results": "corpus/govdocs1/edges.json"
+      },
       "generational": false
     },
     {
@@ -1042,6 +1085,16 @@
         "ssim_mean": 1.0,
         "ssim_min": 1.0,
         "tool": "cargo run --example probe_edges"
+      },
+      "real_world": {
+        "corpus": "govdocs1",
+        "files": 39,
+        "ran": 39,
+        "contradicted": 0,
+        "affected": {
+          "color_depth": 0
+        },
+        "results": "corpus/govdocs1/edges.json"
       },
       "generational": false
     },
@@ -1077,6 +1130,14 @@
         "texture_retained": 0.17,
         "tool": "cargo run --example probe_edges; core/examples/gif_dither.rs"
       },
+      "real_world": {
+        "corpus": "govdocs1",
+        "files": 39,
+        "ran": 39,
+        "contradicted": 0,
+        "affected": {},
+        "results": "corpus/govdocs1/edges.json"
+      },
       "generational": false
     },
     {
@@ -1107,6 +1168,16 @@
         "ssim_min": 1.0,
         "tool": "cargo run --example probe_edges"
       },
+      "real_world": {
+        "corpus": "govdocs1",
+        "files": 39,
+        "ran": 39,
+        "contradicted": 0,
+        "affected": {
+          "color_depth": 0
+        },
+        "results": "corpus/govdocs1/edges.json"
+      },
       "generational": false
     },
     {
@@ -1131,6 +1202,14 @@
         "specimens": 1,
         "ssim_mean": 1.0,
         "tool": "cargo run --example probe_edges (reverse direction)"
+      },
+      "real_world": {
+        "corpus": "govdocs1",
+        "files": 27,
+        "ran": 27,
+        "contradicted": 0,
+        "affected": {},
+        "results": "corpus/govdocs1/edges.json"
       },
       "generational": false
     },
@@ -1238,6 +1317,15 @@
         "tool": "tools/measure_office.py",
         "word_recall": 1.0
       },
+      "real_world": {
+        "corpus": "govdocs1",
+        "files": 20,
+        "ran": 20,
+        "affected": {
+          "fonts": 20
+        },
+        "results": "corpus/govdocs1/office.json"
+      },
       "generational": false
     },
     {
@@ -1269,6 +1357,16 @@
         "tool": "tools/measure_office.py",
         "word_recall": 0.6744
       },
+      "real_world": {
+        "corpus": "govdocs1",
+        "files": 20,
+        "ran": 20,
+        "affected": {
+          "fonts": 20,
+          "precision": 11
+        },
+        "results": "corpus/govdocs1/office.json"
+      },
       "generational": false
     },
     {
@@ -1295,6 +1393,15 @@
         "real_word_recall_min": 0.7677,
         "tool": "tools/measure_office.py",
         "word_recall": 1.0
+      },
+      "real_world": {
+        "corpus": "govdocs1",
+        "files": 20,
+        "ran": 20,
+        "affected": {
+          "fonts": 20
+        },
+        "results": "corpus/govdocs1/office.json"
       },
       "generational": false
     },
@@ -1334,6 +1441,17 @@
         "ssim_opaque": 0.9933,
         "tool": "core/examples/cross_engine.rs"
       },
+      "real_world": {
+        "corpus": "govdocs1",
+        "files": 39,
+        "ran": 39,
+        "contradicted": 0,
+        "affected": {
+          "alpha": 2,
+          "color_depth": 0
+        },
+        "results": "corpus/govdocs1/edges.json"
+      },
       "generational": true
     },
     {
@@ -1366,6 +1484,16 @@
         "ssim_photo": 0.8362,
         "tool": "core/examples/libvips_edges.rs; vipsheader for the depth check"
       },
+      "real_world": {
+        "corpus": "govdocs1",
+        "files": 39,
+        "ran": 39,
+        "contradicted": 0,
+        "affected": {
+          "color_depth": 0
+        },
+        "results": "corpus/govdocs1/edges.json"
+      },
       "generational": true
     },
     {
@@ -1394,6 +1522,14 @@
         "note": "Lossless on every specimen, alpha intact. Uncompressed by default and correspondingly large — 110,830 bytes for a 94,487-byte PNG.",
         "ssim": 1.0,
         "tool": "core/examples/libvips_edges.rs"
+      },
+      "real_world": {
+        "corpus": "govdocs1",
+        "files": 39,
+        "ran": 39,
+        "contradicted": 0,
+        "affected": {},
+        "results": "corpus/govdocs1/edges.json"
       },
       "generational": false
     },
@@ -1429,6 +1565,16 @@
         "ssim_16bit_input": 0.9997,
         "tool": "core/examples/libvips_flags.rs"
       },
+      "real_world": {
+        "corpus": "govdocs1",
+        "files": 39,
+        "ran": 39,
+        "contradicted": 0,
+        "affected": {
+          "color_depth": 0
+        },
+        "results": "corpus/govdocs1/edges.json"
+      },
       "generational": false
     },
     {
@@ -1463,6 +1609,17 @@
         "ssim_alpha": 0.9855,
         "ssim_opaque": 0.9933,
         "tool": "core/examples/libvips_flags.rs"
+      },
+      "real_world": {
+        "corpus": "govdocs1",
+        "files": 39,
+        "ran": 39,
+        "contradicted": 0,
+        "affected": {
+          "alpha": 2,
+          "color_depth": 0
+        },
+        "results": "corpus/govdocs1/edges.json"
       },
       "generational": true
     },

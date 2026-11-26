@@ -268,6 +268,7 @@ fn edge(from: &str, to: &str, loss: &[(&str, LossValue)], ms: u64) -> Edge {
         confidence: None,
         specimens: vec![],
         measured: Default::default(),
+        real_world: None,
     }
 }
 

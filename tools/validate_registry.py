@@ -299,6 +299,45 @@ def loss_value_of(entry) -> str | None:
     return None
 
 
+def real_world_problems(rw: dict, loss: dict, status: str | None) -> list[str]:
+    """Rule 14. The comparison behind it, split out so the self-test reaches it."""
+    out = []
+    if status != "verified":
+        out.append("only a verified edge can report real-world behaviour")
+    for key in ("corpus", "results"):
+        if not isinstance(rw.get(key), str) or not rw.get(key):
+            out.append(f"`{key}` must be a non-empty string")
+    nums = {}
+    # `contradicted` is optional: absent means no automated declared-vs-
+    # measured check ran on these files, which is different from zero.
+    for key in ("files", "ran", "contradicted"):
+        v = rw.get(key)
+        if key == "contradicted" and v is None:
+            continue
+        if not isinstance(v, int) or isinstance(v, bool) or v < 0:
+            out.append(f"`{key}` must be a non-negative integer")
+        else:
+            nums[key] = v
+    if {"files", "ran"} <= nums.keys() and nums["ran"] > nums["files"]:
+        out.append("`ran` exceeds `files`")
+    if {"ran", "contradicted"} <= nums.keys() and nums["contradicted"] > nums["ran"]:
+        out.append("`contradicted` exceeds `ran`")
+    for prop, n in (rw.get("affected") or {}).items():
+        declared = loss_value_of(loss.get(prop))
+        if declared is None:
+            out.append(f"`affected.{prop}`: the edge declares no `{prop}` loss")
+        elif declared == "preserved":
+            out.append(f"`affected.{prop}`: `{prop}` is declared preserved, so nothing can be affected")
+        if not isinstance(n, int) or isinstance(n, bool) or n < 0:
+            out.append(f"`affected.{prop}` must be a non-negative integer")
+        elif "ran" in nums and n > nums["ran"]:
+            out.append(f"`affected.{prop}` exceeds `ran`")
+    results = rw.get("results")
+    if isinstance(results, str) and results and not (REGISTRY.parent / results).is_file():
+        out.append(f"`results` names `{results}`, which is not in the repository")
+    return out
+
+
 # Rule 7. What may replace a lost property (ADR-0012). Closed per property for
 # the same reason the property list itself is closed: an open set makes two
 # entries incomparable, and a typo becomes a silent new category.
@@ -540,6 +579,14 @@ def check_edges(edge_files: dict[str, dict], formats: dict[str, dict],
                 elif pol not in allowed:
                     f.error(where, f"unknown policy `{pol}` for `{prop}`; expected one of "
                                    f"{sorted(allowed)} — registry-schema.md rule 7")
+
+            # Rule 14: real-world counts must be internally consistent and only
+            # count losses the edge actually declares.
+            rw = (edge.get("verification") or {}).get("real_world")
+            if rw is not None:
+                problems = real_world_problems(rw, edge.get("loss") or {}, status)
+                for p in problems:
+                    f.error(where, f"[real_world] {p} — registry-schema.md rule 14")
 
             # Rule 8: a verified edge for an engine that is invoked as a
             # subprocess must record HOW (ADR-0013). Warning rather than error:
@@ -980,7 +1027,31 @@ def self_test() -> int:
             failures += 1
             print(f"         expected {expect!r}, got: {got!r}")
 
-    total = len(SELF_TESTS) + len(ENGINE_SELF_TESTS) + 1 + 3 + 7
+    # Rule 14: real-world counts.
+    loss = {"alpha": "lost", "geometry": "preserved"}
+    good = {"corpus": "govdocs1", "files": 39, "ran": 39, "contradicted": 0,
+            "affected": {"alpha": 2}, "results": "corpus/govdocs1/edges.json"}
+    rw_cases = [
+        ("real-world block that is consistent", good, "verified", None),
+        ("real-world on an unverified edge", good, "claimed", "only a verified edge"),
+        ("affected count on a preserved property", good | {"affected": {"geometry": 3}},
+         "verified", "declared preserved"),
+        ("affected count on an undeclared property", good | {"affected": {"fonts": 1}},
+         "verified", "declares no `fonts` loss"),
+        ("more contradictions than runs", good | {"contradicted": 40}, "verified",
+         "`contradicted` exceeds `ran`"),
+        ("results file that does not exist", good | {"results": "corpus/nope.json"},
+         "verified", "not in the repository"),
+    ]
+    for name, rw, status, expect in rw_cases:
+        got = real_world_problems(rw, loss, status)
+        ok = (not got) if expect is None else any(expect in g for g in got)
+        print(f"  [{'PASS' if ok else 'FAIL'}] {name}")
+        if not ok:
+            failures += 1
+            print(f"         expected {expect!r}, got: {got!r}")
+
+    total = len(SELF_TESTS) + len(ENGINE_SELF_TESTS) + 1 + 3 + 7 + len(rw_cases)
     print(f"\nself-test: {total - failures}/{total} passed")
     return 1 if failures else 0
 

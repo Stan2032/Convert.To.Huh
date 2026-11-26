@@ -73,6 +73,35 @@ So `signal_fidelity: "degraded"` is a starting point, not the answer. Whether a
 10% band-energy loss matters is your decision, and you can only make it with the
 number in front of you.
 
+### How often it actually happens
+
+Since schema **1.1.0**, an edge may carry `real_world`: what happened when it was
+run over real files rather than test specimens.
+
+```json
+"real_world": {
+  "corpus": "govdocs1",
+  "files": 39,
+  "ran": 39,
+  "contradicted": 0,
+  "affected": { "alpha": 2, "color_depth": 0 },
+  "results": "corpus/govdocs1/edges.json"
+}
+```
+
+Read it as: on 39 real PNGs from Govdocs1, all converted, none contradicted
+the declared loss vector, and the declared transparency loss actually occurred
+on 2 (the only 2 that had transparency). `color_depth: 0` means no real file had
+more than 8 bits per channel to lose.
+
+- A property **absent from `affected`** was not observable on those files. That
+  is not the same as zero.
+- `contradicted` absent means no automated check ran, also not zero.
+- `results` points at the per-file data in the repository.
+
+The files are real US-government documents from Govdocs1. They are not
+redistributed here; their SHA-256 digests are, in `corpus/govdocs1/MANIFEST.tsv`.
+
 ## Structure
 
 | Key | Contents |

@@ -17,9 +17,11 @@ the scope line in [README.md](README.md), which CI checks against the registry.
    ranked equally, though one turns transparency black and one does not.
 2. **A document fidelity metric.** PDF cleaning is verified by the absence of
    payloads, not by how faithful the rebuild is.
-3. **Publish real-world prevalence.** The Govdocs1 tier (R§18) shows how often
-   a loss is exercised on real files. That belongs beside each loss in the
-   dataset, and the tier should grow beyond four formats.
+3. **Count more losses on real files.** The dataset now publishes how often
+   each loss occurred on real files (`real_world`, schema 1.1.0), but only
+   where an observation can see it. PNG to GIF palette and transparency loss,
+   signal fidelity and text are not yet counted; each needs an observation
+   that detects the declared outcome, not a threshold.
 4. **Decide where output size goes.** `huh clean` makes real PDFs a median 23×
    larger (R§18). No tracked property can say so.
 5. **Video.** `signal_fidelity` will likely need its metric recorded alongside

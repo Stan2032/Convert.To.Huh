@@ -19,6 +19,7 @@ python3 tools/fetch_govdocs.py    # ~40 MB via HTTP range requests, verified by 
 cargo build --release --manifest-path core/Cargo.toml
 python3 tools/run_govdocs.py      # ~6 minutes; rewrites results.json
 python3 tools/measure_office.py   # ~2 minutes; needs LibreOffice and catdoc
+python3 tools/real_world_blocks.py --write   # results -> registry real_world counts
 cargo run --release --manifest-path core/Cargo.toml --example real_edges -- \
     corpus/govdocs1/files corpus/govdocs1/edges.json   # ~1 minute
 ```

@@ -1997,6 +1997,28 @@ crash instead of a missing-file error. LibreOffice is GPL-only in the registry
 implying none does.
 
 
+### 18.2 Publishing how often a loss happens
+
+The dataset (schema 1.1.0) now carries a `real_world` block per edge: how many
+real files it ran on, how many converted, how many contradicted the declared
+loss vector, and, per declared loss, on how many files it actually occurred.
+17 edges have one. The blocks are generated from the committed results by
+`tools/real_world_blocks.py`, not written by hand, and validator rule 14 checks
+their arithmetic and that they count only declared losses.
+
+**The first version would have published false zeros.** It counted
+`alpha = 0` and `color_depth = 0` for every PNG to GIF edge. Those edges
+declare `alpha = degraded` (one-bit transparency) and `color_depth = lost`
+(palette reduction), and the raster harness observes transparency only as
+present or absent and depth only as bits per channel. It cannot see either
+loss, so its zero meant "not observable", which a consumer would read as
+"never happened". A count is now written only when the observation detects
+exactly the declared outcome; otherwise the property is left out.
+
+**Design implication.** "Not observed" and "observed not to happen" must stay
+distinguishable everywhere the dataset reports a count, as `claimed` and
+`verified` already are. Absent is the honest encoding of the first.
+
 ## Sources
 
 - [Convert To It](https://converttoit.com/) · [Grokipedia: Convert to it](https://grokipedia.com/page/Convert_to_it) · [Convert To It API](https://converttoit.com/api)

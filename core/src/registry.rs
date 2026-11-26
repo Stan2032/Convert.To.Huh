@@ -125,6 +125,32 @@ pub struct EdgeVerification {
     /// is the one thing this dataset exists not to do.
     #[serde(default)]
     pub measured: BTreeMap<String, toml::Value>,
+    #[serde(default)]
+    pub real_world: Option<RealWorld>,
+}
+
+/// How an edge behaved on real files, not just on the specimens that verified
+/// it (docs/specs/registry-schema.md, `real_world`). Synthetic specimens show
+/// a loss exists; this says how often it actually happens.
+#[derive(Debug, Clone, Deserialize, serde::Serialize, PartialEq)]
+pub struct RealWorld {
+    /// Which real-file corpus, e.g. `govdocs1`.
+    pub corpus: String,
+    /// Real files of the edge's source format it was run on.
+    pub files: u32,
+    /// How many converted without error.
+    pub ran: u32,
+    /// Files where a measurement contradicted the declared loss vector.
+    /// Absent when no automated declared-vs-measured check ran on these files,
+    /// which is not the same claim as zero.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub contradicted: Option<u32>,
+    /// Per declared (non-preserved) property: files on which that loss
+    /// actually occurred. Only properties with a yes/no observation appear.
+    #[serde(default)]
+    pub affected: BTreeMap<String, u32>,
+    /// Where the per-file results live, so a count can be checked.
+    pub results: String,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -181,6 +207,8 @@ pub struct Edge {
     pub specimens: Vec<String>,
     /// The measurement behind `status`, kept verbatim. See `EdgeVerification`.
     pub measured: BTreeMap<String, toml::Value>,
+    /// Behaviour on real files, where measured. See `RealWorld`.
+    pub real_world: Option<RealWorld>,
 }
 
 #[derive(Debug, Default, Deserialize)]
@@ -329,6 +357,7 @@ impl Registry {
                     confidence: r.confidence,
                     specimens: r.verification.specimens,
                     measured: r.verification.measured,
+                    real_world: r.verification.real_world,
                 });
             }
         }
