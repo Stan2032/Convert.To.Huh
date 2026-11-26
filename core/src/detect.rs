@@ -82,7 +82,7 @@ pub fn ole2_names(b: &[u8]) -> Vec<String> {
     }
     let fat: Vec<u32> = fat_sectors.iter()
         .filter_map(|&n| sector(n))
-        .flat_map(|sec| sec.chunks_exact(4).map(|c| u32::from_le_bytes(c.try_into().unwrap())))
+        .flat_map(|sec| sec.as_chunks::<4>().0.iter().map(|c| u32::from_le_bytes(*c)))
         .collect();
 
     // Collect the directory: 128-byte entries along the directory chain.
@@ -91,7 +91,7 @@ pub fn ole2_names(b: &[u8]) -> Vec<String> {
     let mut steps = 0;
     while next < END && steps < max_sectors {
         let Some(sec) = sector(next) else { break };
-        entries.extend(sec.chunks_exact(128));
+        entries.extend(sec.as_chunks::<128>().0.iter().map(|e| e.as_slice()));
         next = *fat.get(next as usize).unwrap_or(&END);
         steps += 1;
     }
@@ -101,8 +101,8 @@ pub fn ole2_names(b: &[u8]) -> Vec<String> {
         if !(2..=64).contains(&len) || e[66] == 0 {
             return None;
         }
-        let units: Vec<u16> = e[..len - 2].chunks_exact(2)
-            .map(|c| u16::from_le_bytes([c[0], c[1]])).collect();
+        let units: Vec<u16> = e[..len - 2].as_chunks::<2>().0.iter()
+            .map(|c| u16::from_le_bytes(*c)).collect();
         Some(String::from_utf16_lossy(&units))
     };
 
