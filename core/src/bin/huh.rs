@@ -160,11 +160,27 @@ fn main() -> ExitCode {
             let pol = policy_from(&args);
             let pl = planner::Planner::new(&reg, &pol);
             let Some(plan) = pl.plan(&d.format, &target) else {
-                eprintln!(
-                    "refused: no route from {} to {target}. Try --allow-unverified \
-                     if you are probing a new edge.",
-                    d.format
-                );
+                // Say WHY when the route exists but is legally out of reach
+                // under this profile (ADR-0007), rather than implying none does.
+                let other = ["lgpl", "gpl"].into_iter()
+                    .filter(|p| *p != pol.build_profile)
+                    .find(|p| {
+                        let alt = planner::Policy { build_profile: (*p).into(), ..policy_from(&args) };
+                        planner::Planner::new(&reg, &alt).plan(&d.format, &target).is_some()
+                    });
+                match other {
+                    Some(p) => eprintln!(
+                        "refused: no route from {} to {target} under the `{}` build profile. \
+                         One exists under `{p}` (--profile {p}); it uses an engine that \
+                         profile allows and this one does not (ADR-0007).",
+                        d.format, pol.build_profile
+                    ),
+                    None => eprintln!(
+                        "refused: no route from {} to {target}. Try --allow-unverified \
+                         if you are probing a new edge.",
+                        d.format
+                    ),
+                }
                 return ExitCode::from(3);
             };
 

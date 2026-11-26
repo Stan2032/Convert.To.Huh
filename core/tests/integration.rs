@@ -612,6 +612,59 @@ fn imagemagick_moves_an_offset_png_outside_the_gif_screen() {
     assert!(left >= screen.0 || top >= screen.1, "frame lies wholly outside the screen");
 }
 
+/// `.doc`, `.xls` and `.ppt` share the OLE2 signature. Detection must tell
+/// them apart by content, from the compound file's directory, and must not
+/// need the extension to do it.
+#[test]
+fn binary_office_formats_are_told_apart_by_content() {
+    let r = reg();
+    for (file, want) in [
+        ("report.doc", "application/msword"),
+        ("figures.xls", "application/vnd.ms-excel"),
+        ("slides.ppt", "application/vnd.ms-powerpoint"),
+    ] {
+        let bytes = std::fs::read(root().join("corpus/office").join(file)).expect("specimen");
+        let named = detect::detect(&r, &bytes, Some(file));
+        assert_eq!(named.format, want, "{file}");
+        assert_eq!(named.detected_by, "signature", "{file} must be identified by content");
+        // Misnamed: content still wins, and the mismatch is reported.
+        let wrong = detect::detect(&r, &bytes, Some("renamed.txt"));
+        assert_eq!(wrong.format, want, "{file} renamed");
+        assert!(wrong.extension_mismatch, "{file}: a misleading extension must be flagged");
+    }
+}
+
+/// The LibreOffice edge runs through the executor (the `OUTDIR` placeholder)
+/// and keeps the specimen's text, which is what its loss vector declares.
+#[test]
+fn word_to_pdf_runs_through_libreoffice_and_keeps_the_text() {
+    if !engine_present("soffice") {
+        eprintln!("skipping: LibreOffice not installed");
+        return;
+    }
+    let r = reg();
+    let pol = Policy { build_profile: "gpl".into(), ..Default::default() };
+    let plan = Planner::new(&r, &pol).plan("application/msword", "application/pdf")
+        .expect("route under gpl");
+    assert_eq!(plan.hops[0].engine, "libreoffice");
+    let doc = std::fs::read(root().join("corpus/office/report.doc")).unwrap();
+    let (pdf, receipt) = execute::execute(&plan, &doc, 85).expect("conversion runs");
+    assert_eq!(&pdf[..5], b"%PDF-");
+    assert!(receipt.unmeasured.is_some());
+
+    // The text layer must carry the specimen's words (pdftotext, if present).
+    if engine_present("pdftotext") {
+        let dir = std::env::temp_dir().join(format!("huh-doc-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let p = dir.join("out.pdf");
+        std::fs::write(&p, &pdf).unwrap();
+        let out = std::process::Command::new("pdftotext").arg(&p).arg("-").output().unwrap();
+        std::fs::remove_dir_all(&dir).ok();
+        let text = String::from_utf8_lossy(&out.stdout);
+        assert!(text.contains("Turbidity exceeded the advisory threshold"), "{text}");
+    }
+}
+
 fn engine_present(prog: &str) -> bool {
     std::process::Command::new("which")
         .arg(prog)

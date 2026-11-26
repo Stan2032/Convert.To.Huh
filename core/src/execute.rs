@@ -113,6 +113,7 @@ fn programs_for(engine: &str) -> Option<&'static [&'static str]> {
         "sox" => &["sox"],
         "gstreamer" => &["gst-launch-1.0"],
         "imagemagick" => &["convert", "magick"],
+        "libreoffice" => &["soffice"],
         _ => return None,
     })
 }
@@ -121,9 +122,11 @@ fn programs_for(engine: &str) -> Option<&'static [&'static str]> {
 ///
 /// The edge's `invocation` is the recipe, not a description of one: running
 /// anything else would measure a different edge. Placeholders are `IN` and
-/// `OUT` as whole tokens, `key=IN` / `key=OUT` (GStreamer's `location=`), and
-/// `OUT.<ext>` where the extension matches the target. Anything else carrying
-/// a placeholder is refused rather than guessed at.
+/// `OUT` as whole tokens, `key=IN` / `key=OUT` (GStreamer's `location=`),
+/// `OUT.<ext>` where the extension matches the target, and `OUTDIR` for
+/// engines that take an output directory rather than a file (`soffice
+/// --convert-to`): it must hold exactly one file afterwards, which is the
+/// output. Anything else carrying a placeholder is refused rather than guessed.
 fn run_invocation(
     hop: &crate::planner::Hop,
     programs: &[&str],
@@ -156,12 +159,20 @@ fn run_invocation(
     std::fs::write(&in_path, bytes)
         .map_err(|e| ConvertError::Internal(format!("write hop input: {e}")))?;
 
+    let out_dir = scratch.join("outdir");
+    let mut uses_out_dir = false;
     let out_with_ext = format!("OUT.{out_ext}");
     let mut cmd = crate::subprocess::External::new(program);
     for t in tokens {
         cmd = match t {
             "IN" => cmd.path_arg(&in_path),
             "OUT" => cmd.path_arg(&out_path),
+            "OUTDIR" => {
+                std::fs::create_dir_all(&out_dir)
+                    .map_err(|e| ConvertError::Internal(format!("create output dir: {e}")))?;
+                uses_out_dir = true;
+                cmd.path_arg(&out_dir)
+            }
             t if t == out_with_ext => cmd.path_arg(&out_path),
             t if t.ends_with("=IN") => {
                 cmd.arg(format!("{}{}", &t[..t.len() - 2], in_path.display()))
@@ -169,7 +180,7 @@ fn run_invocation(
             t if t.ends_with("=OUT") => {
                 cmd.arg(format!("{}{}", &t[..t.len() - 3], out_path.display()))
             }
-            t if t.split(['=', '.', ',', ':']).any(|p| p == "IN" || p == "OUT") => {
+            t if t.split(['=', '.', ',', ':']).any(|p| p == "IN" || p == "OUT" || p == "OUTDIR") => {
                 return Err(ConvertError::InputUnsupported(format!(
                     "invocation token `{t}` in the {} edge {} -> {} carries a \
                      placeholder this executor does not understand",
@@ -180,6 +191,22 @@ fn run_invocation(
         };
     }
     cmd.run()?;
+
+    if uses_out_dir {
+        let produced: Vec<_> = std::fs::read_dir(&out_dir)
+            .map_err(|e| ConvertError::Internal(format!("read output dir: {e}")))?
+            .filter_map(|e| e.ok().map(|e| e.path()))
+            .collect();
+        return match produced.as_slice() {
+            [one] => std::fs::read(one)
+                .map_err(|e| ConvertError::Internal(format!("read hop output: {e}"))),
+            _ => Err(ConvertError::EngineCrash(format!(
+                "{} wrote {} files to its output directory, expected exactly one \
+                 (soffice writes nothing when another instance holds its profile)",
+                hop.engine, produced.len()
+            ))),
+        };
+    }
 
     std::fs::read(&out_path)
         .map_err(|e| ConvertError::Internal(format!("read hop output: {e}")))
@@ -199,6 +226,9 @@ fn ext_for(format_id: &str) -> &'static str {
         "audio/mpeg" => "mp3",
         "audio/flac" => "flac",
         "application/pdf" => "pdf",
+        "application/msword" => "doc",
+        "application/vnd.ms-excel" => "xls",
+        "application/vnd.ms-powerpoint" => "ppt",
         _ => "bin",
     }
 }
@@ -240,8 +270,9 @@ pub fn execute(plan: &Plan, input: &[u8], quality: u8) -> Result<(Vec<u8>, Recei
             (Vec::new(), None, None)
         } else {
             (Vec::new(), None, Some(format!(
-                "{} -> {} is not measured in-process; audio entries in the dataset \
-                 are measured with tools/measure_audio.py",
+                "{} -> {} is not measured in-process; the dataset measures audio \
+                 with tools/measure_audio.py and office documents with \
+                 tools/measure_office.py",
                 plan.source, current_format
             )))
         };

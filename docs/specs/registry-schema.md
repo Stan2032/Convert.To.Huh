@@ -41,6 +41,9 @@ weight = "decisive"               # decisive | strong | weak
 priority_over = []                # PRONOM-style priority: this beats these ids
                                   # e.g. docx sets priority_over = ["application/zip"]
 container_of  = []                # e.g. docx: ["application/zip"]
+ole2_streams  = []                # OLE2 formats only: stream names in the compound
+                                  # file's directory, any one of which identifies
+                                  # this format, e.g. ["WordDocument"]
 
 [notes]
 text = "Free-form. Gotchas, ambiguities, why a field is what it is."
@@ -49,6 +52,10 @@ text = "Free-form. Gotchas, ambiguities, why a field is what it is."
 Rules:
 
 - `id` is stable forever. Renaming requires an alias entry, never an edit.
+- A format whose signature is the OLE2 header `D0CF11E0A1B11AE1` must declare
+  `ole2_streams`, and only such a format may. `.doc`, `.xls` and `.ppt` share
+  that header; the detector matches one only when its stream is present in the
+  compound file's directory. Enforced by `validate_registry.py`.
 - A format with no signatures and no `container_of` is **undetectable** and must
   say so in `notes` — permitted, but it can only ever be a target, never a
   detected source.

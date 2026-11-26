@@ -8,7 +8,8 @@ the scope line in [README.md](README.md), which CI checks against the registry.
 | Raster (PNG, JPEG, GIF, BMP, TIFF, WebP) | Measured across three engines |
 | PDF | Sanitization measured, including on 40 real PDFs; no document fidelity metric yet |
 | Audio (WAV, MP3, FLAC) | Measured across three engines (ffmpeg, SoX, GStreamer), on tonal, broadband and transient specimens |
-| Video, office documents | Not started |
+| Office (DOC, XLS, PPT) | LibreOffice to PDF measured on synthetic specimens and 60 real documents |
+| Video | Not started |
 
 ## Next, in priority order
 

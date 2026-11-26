@@ -1,0 +1,39 @@
+id         = "application/vnd.ms-excel"
+name       = "Microsoft Excel Binary Workbook"
+kinds      = ["Table", "Text"]
+extensions = ["xls"]
+mime_types = ["application/vnd.ms-excel"]
+puid       = "fmt/61"
+puid_verified = true
+puid_name  = "Microsoft Excel 97-2003 Workbook (xls)"
+spec_url   = "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-xls/"
+
+preserves = ["text_as_text", "precision", "structure", "fonts", "metadata"]
+
+[[signatures]]
+offset = 0
+magic  = "D0CF11E0A1B11AE1"
+weight = "decisive"
+
+[detection]
+priority_over = []
+container_of  = []
+ole2_streams  = ["Workbook", "Book"]
+
+[notes]
+text = """
+Added 2026-11-26 because Govdocs1 is full of these and the detector called
+every one `application/octet-stream` (docs/RESEARCH.md §19).
+
+DETECTION. `.doc`, `.xls` and `.ppt` all begin with the OLE2 compound-file
+header `D0CF11E0A1B11AE1`, so that signature alone says only "OLE2". The
+format is identified by a stream in the compound file's directory
+(`ole2_streams`); without one the format does not match at all. That is why
+the signature can be `decisive`: it never fires on its own.
+
+PRONOM VERIFIED 2026-11-26 with tools/verify_pronom.py: fmt/61 is
+"Microsoft Excel 97-2003 Workbook (xls)". This entry is family-level, so it also covers fmt/59 (Excel 5.0/95; its stream is named Book, not Workbook),
+which shares the container and the stream name. PRONOM's own signature for
+both is the bare compound-document header, which cannot separate the Office
+formats either.
+"""

@@ -1,0 +1,174 @@
+# Capabilities of LibreOffice. Owner: capability-cartographer.
+#
+# The first office-document edges (docs/RESEARCH.md §19). Each is verified on
+# a synthetic specimen with known content (corpus/office/, compared against
+# its .truth.txt) and checked against real Govdocs1 documents
+# (corpus/govdocs1/office.json), with reference text from an independent
+# extractor so the engine does not grade itself.
+#
+# FONTS: every `fonts = degraded` here was measured in an environment WITHOUT
+# Microsoft core fonts (Liberation, DejaVu, Inter installed). Substitution
+# depends on installed fonts as much as on the engine, so the value describes
+# this conversion in that environment. No real document kept a requested font.
+#
+# STRUCTURE is not declared. LibreOffice 24.2 tags its PDFs by default
+# (UseTaggedPDF = true; all 60 real outputs are tagged), but a tag tree being
+# present is not a measurement of how faithful it is.
+
+[[edge]]
+engine     = "libreoffice"
+invocation = "soffice --headless --convert-to pdf --outdir OUTDIR IN"
+op         = "Project"
+from       = "application/msword"
+to         = "application/pdf"
+from_kind  = "DocTree"
+to_kind    = "PageLayout"
+
+[edge.loss]
+text_as_text = "preserved"
+fonts        = "degraded"
+generational = false
+
+[edge.cost]
+time_model   = "linear_bytes"
+memory_model = "whole-file"
+base_ms      = 500
+
+[edge.constraints]
+max_input_bytes = 268435456
+requires        = []
+
+[edge.verification]
+status      = "verified"
+specimens   = ["corpus/office/report.doc"]
+verified_at = "2026-11-26"
+verified_by = "capability-cartographer"
+
+[edge.verification.measured]
+tool                    = "tools/measure_office.py"
+engine_build            = "LibreOffice 24.2.7.2"
+word_recall             = 1.0
+real_files              = 20
+real_word_recall_median = 0.9967
+real_word_recall_min    = 0.9682
+real_requested_font_kept = 0
+note = """
+Text survives: every word of the synthetic specimen, and a median 99.7% of
+distinct words across 20 real Govdocs1 documents (catdoc as reference).
+
+No real document kept a font it asked for: Arial and Times New Roman became
+Liberation Sans and Serif (metric compatible), others DejaVu or Inter. See the
+FONTS note at the top of this file before reading that as an engine property.
+
+catdoc prints hidden table-of-contents bookmark ids (_Toc...), so `.doc`
+number recall is not a precision measurement and is not recorded here.
+"""
+
+
+[[edge]]
+engine     = "libreoffice"
+invocation = "soffice --headless --convert-to pdf --outdir OUTDIR IN"
+op         = "Project"
+from       = "application/vnd.ms-excel"
+to         = "application/pdf"
+from_kind  = "Table"
+to_kind    = "PageLayout"
+
+[edge.loss]
+text_as_text = "degraded"
+precision    = "degraded"
+fonts        = "degraded"
+generational = false
+
+[edge.cost]
+time_model   = "linear_bytes"
+memory_model = "whole-file"
+base_ms      = 400
+
+[edge.constraints]
+max_input_bytes = 268435456
+requires        = []
+
+[edge.verification]
+status      = "verified"
+specimens   = ["corpus/office/figures.xls"]
+verified_at = "2026-11-26"
+verified_by = "capability-cartographer"
+
+[edge.verification.measured]
+tool                      = "tools/measure_office.py"
+engine_build              = "LibreOffice 24.2.7.2"
+word_recall               = 0.6744
+number_recall             = 0.0
+real_files                = 18
+real_word_recall_median   = 0.9834
+real_word_recall_min      = 0.7005
+real_number_recall_median = 0.9758
+real_number_recall_min    = 0.251
+note = """
+A PDF of a spreadsheet keeps what was DISPLAYED, not what was stored.
+
+precision: the specimen stores 25 values to full double precision and displays
+two decimals; none of the stored values survives (0.0). On 16 real
+spreadsheets with enough numbers to measure, a median 97.6% of distinct values
+survive exactly, worst 25%: most real spreadsheets display what they store,
+some do not. Inherent to printing a spreadsheet, not a LibreOffice defect.
+
+text_as_text: a long text cell beside a filled one is CLIPPED at the
+neighbour's edge. The specimen's glossary cell loses every word after
+"Glossary: turb", and those are exactly its missing words (0.67 recall). The
+same happens on real files: the worst, 490684.xls at 0.70, is a glossary cell.
+
+Two real .xls files are Excel 4.0 worksheets (BIFF4, no OLE2 container) and
+xls2csv reads nothing from them, so they are not in the real-file figures.
+"""
+
+
+[[edge]]
+engine     = "libreoffice"
+invocation = "soffice --headless --convert-to pdf --outdir OUTDIR IN"
+op         = "Transcode"
+from       = "application/vnd.ms-powerpoint"
+to         = "application/pdf"
+from_kind  = "PageLayout"
+to_kind    = "PageLayout"
+
+[edge.loss]
+text_as_text = "preserved"
+fonts        = "degraded"
+generational = false
+
+[edge.cost]
+time_model   = "linear_bytes"
+memory_model = "whole-file"
+base_ms      = 600
+
+[edge.constraints]
+max_input_bytes = 268435456
+requires        = []
+
+[edge.verification]
+status      = "verified"
+specimens   = ["corpus/office/slides.ppt"]
+verified_at = "2026-11-26"
+verified_by = "capability-cartographer"
+
+[edge.verification.measured]
+tool                    = "tools/measure_office.py"
+engine_build            = "LibreOffice 24.2.7.2"
+word_recall             = 1.0
+real_files              = 18
+real_word_recall_median = 0.99
+real_word_recall_min    = 0.7677
+note = """
+Slides survive; speaker notes do not, by default (they need the
+ExportNotesPages filter option, which is a different invocation).
+
+The real-file minimum, 300839.ppt at 0.77, is UNRESOLVED: the missing text is
+in the raw file but in neither the slides, the notes, the hidden slides nor
+LibreOffice's own model of the presentation. Possibly PowerPoint fast-save
+residue, which a PDF should drop. Telling the cases apart needs PowerPoint.
+
+catppt repeats slide text, which made the first word-recall figures read as
+low as 0.11 on faithful PDFs; recall is over distinct words (§19).
+"""

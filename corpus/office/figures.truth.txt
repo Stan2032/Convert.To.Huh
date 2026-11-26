@@ -1,0 +1,27 @@
+Ashby weir 1.93747258045114
+Brenton weir 2.37390960636936
+Calder weir 2.742
+Dunmore weir 3.06641312917471
+Elsworth weir 3.35980094761295
+Farrow weir 3.62967929615849
+Galway weir 3.88094516090228
+Harlan weir 4.117
+Ingram weir 4.34032039443068
+Jessop weir 4.5527759627869
+Kendall weir 4.75581921273872
+Lowther weir 4.95060524738567
+Marlow weir 5.1380706198803
+Norbury weir 5.31898718430416
+Oakham weir 5.494
+Pembury weir 5.6636547070962
+Quarley weir 5.82841774135342
+Redmire weir 5.98869155265072
+Stanton weir 6.14482625834942
+Thorley weir 6.2971287020895
+Upwell weir 6.4458695909581
+Varley weir 6.59128918693843
+Wexcombe weir 6.73360189522591
+Yarrow weir 6.873
+Zennor weir 7.00965673362212
+Glossary: turbidity is a measure of water clarity expressed in nephelometric units, and readings above the advisory threshold trigger resampling.
+adjacent

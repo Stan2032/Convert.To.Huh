@@ -1941,6 +1941,62 @@ signature `D0 CF 11 E0`, and (c) a way for a `fonts` value to state the font
 environment it was measured in.
 
 
+### 19.1 Telling .doc, .xls and .ppt apart, and the first office edges
+
+The three binary Office formats are now registry entries (PRONOM fmt/40,
+fmt/61 and fmt/126, verified with `tools/verify_pronom.py`; the 6.0/95
+versions fmt/39, fmt/59 and fmt/125 share their containers and are covered by
+the same family-level entries). All three begin with the OLE2 header
+`D0CF11E0A1B11AE1`, as does PRONOM's own signature for each, so that header
+says only "OLE2". Detection now reads the compound file's directory and
+matches on a stream name (`ole2_streams`: `WordDocument`; `Workbook` or
+`Book`; `PowerPoint Document`). The parser runs on untrusted bytes before
+anything else, so it is bounds-checked and its chain walks are capped; unit
+tests cover a looping directory chain and truncated input.
+
+**Real files caught a bug a synthetic specimen would not have.** The first
+version collected every name in the directory. `098807.doc` is a Word document
+with an Excel chart embedded in its `ObjectPool` storage, so it carried a
+`Workbook` stream too and detected as Excel, flagged as an extension mismatch.
+Only the root storage's direct children identify the file; the parser now
+walks that tree alone. After the fix all 60 real files detect correctly: 20
+Word, 20 PowerPoint, 18 Excel by content, and 2 Excel 4.0 worksheets (BIFF4,
+which predates the OLE2 container) by extension at confidence 0.3, which is
+the honest answer for a format the registry does not describe.
+
+**Three LibreOffice edges**, `soffice --headless --convert-to pdf --outdir
+OUTDIR IN`, each verified on a synthetic specimen with known content
+(`corpus/generate_office.py`, compared against a `.truth.txt` sidecar) and
+checked against the real files:
+
+| Edge | Declared | Synthetic | Real (median, min) |
+|---|---|---|---|
+| `.doc` → PDF | `text_as_text` preserved, `fonts` degraded | words 1.0 | words 0.997, 0.968 |
+| `.xls` → PDF | `text_as_text` degraded, `precision` degraded, `fonts` degraded | words 0.67 (clipped cell), stored values 0.0 | words 0.983, 0.70; values 0.976, 0.25 |
+| `.ppt` → PDF | `text_as_text` preserved, `fonts` degraded | words 1.0 | words 0.99, 0.77 |
+
+Two things the synthetic specimens could not measure, recorded so nobody tries:
+catppt reads no text from a LibreOffice-written `.ppt` (hence the ground-truth
+sidecars), and a LibreOffice-written file names LibreOffice's own fonts, so
+font substitution is measured on real files only.
+
+`structure` is not declared. LibreOffice 24.2 defaults to `UseTaggedPDF =
+true` and all 60 real outputs are tagged, which contradicts the assumption in
+`application-pdf.toml` that PDF output is untagged. A tag tree being present
+is not a measurement of its fidelity, so it is noted rather than claimed;
+tagged PDF probably wants its own format entry, as that entry's notes already
+suggest.
+
+**Executor.** `soffice` takes an output directory, not a file, so the
+executor gained an `OUTDIR` placeholder: an empty directory that must hold
+exactly one file afterwards. `soffice --headless` silently writes nothing
+when another instance holds its profile, and that now surfaces as an engine
+crash instead of a missing-file error. LibreOffice is GPL-only in the registry
+(ADR-0007), so under the default `lgpl` profile these routes are pruned;
+`huh convert` now says a route exists under `--profile gpl` instead of
+implying none does.
+
+
 ## Sources
 
 - [Convert To It](https://converttoit.com/) · [Grokipedia: Convert to it](https://grokipedia.com/page/Convert_to_it) · [Convert To It API](https://converttoit.com/api)

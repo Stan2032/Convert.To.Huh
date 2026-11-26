@@ -34,6 +34,9 @@ KINDS = {
 # docs/specs/content-model.md §3
 OPS = {"Transcode", "Transform", "Project", "Extract", "Assemble", "Synthesize"}
 
+# The OLE2 compound-file header, shared by .doc, .xls, .ppt and others.
+OLE2_MAGIC = "D0CF11E0A1B11AE1"
+
 # Ops that must NOT change content kind.
 SAME_KIND_OPS = {"Transcode", "Transform"}
 
@@ -130,6 +133,20 @@ def check_formats(formats: dict[str, dict], f: Findings) -> dict[str, dict]:
                 f.error(fname, f"signature[{i}] weight must be one of {sorted(SIGNATURE_WEIGHTS)}")
             if not isinstance(sig.get("offset"), int) or sig.get("offset", -1) < 0:
                 f.error(fname, f"signature[{i}] needs a non-negative integer offset")
+
+        # registry-schema.md: OLE2 formats share one signature, so each must name
+        # the directory stream that identifies it, and only OLE2 formats may.
+        ole2 = doc.get("detection", {}).get("ole2_streams", [])
+        has_ole2_magic = any(sig.get("offset") == 0 and sig.get("magic", "").startswith(OLE2_MAGIC)
+                             for sig in sigs)
+        if ole2 and (not isinstance(ole2, list)
+                     or not all(isinstance(x, str) and x for x in ole2)):
+            f.error(fname, "[detection] ole2_streams must be a list of non-empty stream names")
+        if ole2 and not has_ole2_magic:
+            f.error(fname, f"[detection] ole2_streams needs the OLE2 signature {OLE2_MAGIC} at offset 0")
+        if has_ole2_magic and not ole2:
+            f.error(fname, "OLE2 signature without [detection] ole2_streams: every .doc, .xls "
+                           "and .ppt would match it — name the identifying stream")
 
         # registry-schema.md: undetectable formats must say so in notes.
         notes = doc.get("notes", {}).get("text", "")

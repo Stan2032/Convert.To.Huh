@@ -29,6 +29,11 @@ pub struct Detection {
     pub priority_over: Vec<String>,
     #[serde(default)]
     pub container_of: Vec<String>,
+    /// Stream names inside an OLE2 compound file, any one of which identifies
+    /// this format. `.doc`, `.xls` and `.ppt` share the OLE2 signature, so the
+    /// signature alone cannot tell them apart; the directory can.
+    #[serde(default)]
+    pub ole2_streams: Vec<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]

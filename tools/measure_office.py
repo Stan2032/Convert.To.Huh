@@ -3,6 +3,7 @@
 
     python3 tools/fetch_govdocs.py          # once
     python3 tools/measure_office.py         # writes corpus/govdocs1/office.json
+    python3 tools/measure_office.py --dir corpus/office --out -   # synthetic specimens
     python3 tools/measure_office.py --self-test
 
 For each Govdocs1 .doc/.xls/.ppt it runs `soffice --convert-to pdf` and reports:
@@ -10,11 +11,13 @@ For each Govdocs1 .doc/.xls/.ppt it runs `soffice --convert-to pdf` and reports:
   word_recall    share of the source's distinct words found in the PDF text
   number_recall  the same for numbers, after removing digit-grouping commas
   pages          page count of the PDF
+  tagged         whether the PDF carries a structure tree (pdfinfo "Tagged")
   fonts          font families the source requests, the PDF embeds, and
                  whether any requested family survived
 
 REFERENCE TEXT comes from an independent extractor (catdoc, xls2csv, catppt),
-not from LibreOffice, so the engine is not grading its own work.
+not from LibreOffice, so the engine is not grading its own work. A synthetic
+specimen with a <stem>.truth.txt beside it is compared against that instead.
 
 THREE WAYS THIS INSTRUMENT WAS WRONG FIRST (docs/RESEARCH.md §19):
 
@@ -101,13 +104,20 @@ def measure(path: Path, work: Path, profile: str) -> dict:
         row["error"] = r.stderr.decode("utf-8", "replace").strip()[-200:] or f"exit {r.returncode}"
         return row
 
-    src = run(EXTRACT[ext] + [str(path)]).stdout.decode("utf-8", "replace")
+    truth = path.with_suffix(".truth.txt")
+    if truth.is_file():  # synthetic specimen: the content is known exactly
+        src = truth.read_text("utf-8")
+        row["reference"] = "truth"
+    else:
+        src = run(EXTRACT[ext] + [str(path)]).stdout.decode("utf-8", "replace")
+        row["reference"] = EXTRACT[ext][0]
     out = run(["pdftotext", "-q", str(pdf), "-"]).stdout.decode("utf-8", "replace")
     row["source_words"] = len(words(src))
     row["word_recall"] = recall(words(src), words(out))
     row["number_recall"] = recall(numbers(src), numbers(out))
     info = run(["pdfinfo", str(pdf)]).stdout.decode()
     row["pages"] = int(m.group(1)) if (m := re.search(r"Pages:\s+(\d+)", info)) else None
+    row["tagged"] = bool(re.search(r"Tagged:\s+yes", info))
 
     embedded = {family(line.split()[0])
                 for line in run(["pdffonts", str(pdf)]).stdout.decode().splitlines()[2:]
@@ -146,6 +156,7 @@ def summarise(rows: list[dict]) -> dict:
             "no_requested_font_embedded": sum(1 for r in ok if r["fonts_requested"]
                                               and not r["requested_font_survived"]),
             "with_requested_fonts": sum(1 for r in ok if r["fonts_requested"]),
+            "tagged": sum(1 for r in ok if r.get("tagged")),
         }
     return out
 
@@ -180,9 +191,12 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--self-test", action="store_true")
-    if ap.parse_args().self_test:
+    ap.add_argument("--dir", type=Path, default=FILES, help="specimen directory")
+    ap.add_argument("--out", default=str(OUT), help="results file, or - for stdout only")
+    args = ap.parse_args()
+    if args.self_test:
         return self_test()
-    files = sorted(p for p in FILES.iterdir() if p.suffix[1:].lower() in EXTRACT)
+    files = sorted(p for p in args.dir.iterdir() if p.suffix[1:].lower() in EXTRACT)
     if not files:
         sys.exit("no office files: run tools/fetch_govdocs.py")
     build = run(["soffice", "--version"]).stdout.decode().strip()
@@ -192,10 +206,13 @@ def main() -> int:
             row = measure(f, Path(work), profile)
             rows.append(row)
             print(f"  {f.name:<12} words {row.get('word_recall')}  numbers "
-                  f"{row.get('number_recall')}  pages {row.get('pages')}", flush=True)
+                  f"{row.get('number_recall')}  pages {row.get('pages')}", file=sys.stderr, flush=True)
     result = {"engine_build": build, "summary": summarise(rows), "files": rows}
-    OUT.write_text(json.dumps(result, indent=2) + "\n")
-    print(json.dumps(result["summary"], indent=2))
+    if args.out != "-":
+        Path(args.out).write_text(json.dumps(result, indent=2) + "\n")
+        print(json.dumps(result["summary"], indent=2))
+    else:
+        print(json.dumps(result["files"], indent=2))
     return 0
 
 

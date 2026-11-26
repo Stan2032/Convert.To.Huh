@@ -15,7 +15,8 @@
         "min": 0.7013
       },
       "no_requested_font_embedded": 20,
-      "with_requested_fonts": 20
+      "with_requested_fonts": 20,
+      "tagged": 20
     },
     "xls": {
       "files": 20,
@@ -31,7 +32,8 @@
         "min": 0.251
       },
       "no_requested_font_embedded": 20,
-      "with_requested_fonts": 20
+      "with_requested_fonts": 20,
+      "tagged": 20
     },
     "ppt": {
       "files": 20,
@@ -47,17 +49,20 @@
         "min": 1.0
       },
       "no_requested_font_embedded": 20,
-      "with_requested_fonts": 20
+      "with_requested_fonts": 20,
+      "tagged": 20
     }
   },
   "files": [
     {
       "file": "040090.ppt",
       "type": "ppt",
+      "reference": "catppt",
       "source_words": 147,
       "word_recall": 0.966,
       "number_recall": null,
       "pages": 15,
+      "tagged": true,
       "fonts_requested": [
         "arial",
         "bookantiqua",
@@ -73,10 +78,12 @@
     {
       "file": "042295.ppt",
       "type": "ppt",
+      "reference": "catppt",
       "source_words": 2,
       "word_recall": null,
       "number_recall": null,
       "pages": 1,
+      "tagged": true,
       "fonts_requested": [
         "helvetica",
         "tahoma",
@@ -92,10 +99,12 @@
     {
       "file": "049331.doc",
       "type": "doc",
+      "reference": "catdoc",
       "source_words": 994,
       "word_recall": 0.998,
       "number_recall": 1.0,
       "pages": 20,
+      "tagged": true,
       "fonts_requested": [
         "arial",
         "bookantiqua",
@@ -120,10 +129,12 @@
     {
       "file": "049978.doc",
       "type": "doc",
+      "reference": "catdoc",
       "source_words": 1687,
       "word_recall": 0.9852,
       "number_recall": 0.8788,
       "pages": 35,
+      "tagged": true,
       "fonts_requested": [
         "arial",
         "arialblack",
@@ -146,10 +157,12 @@
     {
       "file": "050294.xls",
       "type": "xls",
+      "reference": "xls2csv",
       "source_words": 61,
       "word_recall": 0.9672,
       "number_recall": 0.5833,
       "pages": 1,
+      "tagged": true,
       "fonts_requested": [
         "arial",
         "timesnewroman"
@@ -162,10 +175,12 @@
     {
       "file": "070770.ppt",
       "type": "ppt",
+      "reference": "catppt",
       "source_words": 199,
       "word_recall": 0.9849,
       "number_recall": null,
       "pages": 15,
+      "tagged": true,
       "fonts_requested": [
         "timesnewroman"
       ],
@@ -177,10 +192,12 @@
     {
       "file": "090703.doc",
       "type": "doc",
+      "reference": "catdoc",
       "source_words": 492,
       "word_recall": 0.998,
       "number_recall": null,
       "pages": 5,
+      "tagged": true,
       "fonts_requested": [
         "arial",
         "georgia",
@@ -197,10 +214,12 @@
     {
       "file": "098807.doc",
       "type": "doc",
+      "reference": "catdoc",
       "source_words": 549,
       "word_recall": 0.9982,
       "number_recall": 1.0,
       "pages": 8,
+      "tagged": true,
       "fonts_requested": [
         "arial",
         "tahoma",
@@ -215,10 +234,12 @@
     {
       "file": "103224.ppt",
       "type": "ppt",
+      "reference": "catppt",
       "source_words": 235,
       "word_recall": 0.9915,
       "number_recall": null,
       "pages": 22,
+      "tagged": true,
       "fonts_requested": [
         "arial",
         "arialblack",
@@ -239,10 +260,12 @@
     {
       "file": "117275.doc",
       "type": "doc",
+      "reference": "catdoc",
       "source_words": 589,
       "word_recall": 0.9966,
       "number_recall": 1.0,
       "pages": 28,
+      "tagged": true,
       "fonts_requested": [
         "couriernew",
         "symbol",
@@ -260,10 +283,12 @@
     {
       "file": "120669.ppt",
       "type": "ppt",
+      "reference": "catppt",
       "source_words": 182,
       "word_recall": 0.9396,
       "number_recall": null,
       "pages": 15,
+      "tagged": true,
       "fonts_requested": [
         "symbol",
         "timesnewroman"
@@ -278,10 +303,12 @@
     {
       "file": "124256.xls",
       "type": "xls",
+      "reference": "xls2csv",
       "source_words": 74,
       "word_recall": 1.0,
       "number_recall": null,
       "pages": 1,
+      "tagged": true,
       "fonts_requested": [
         "arial",
         "futuramdbt"
@@ -294,10 +321,12 @@
     {
       "file": "127725.xls",
       "type": "xls",
+      "reference": "xls2csv",
       "source_words": 468,
       "word_recall": 0.9744,
       "number_recall": 0.975,
       "pages": 7,
+      "tagged": true,
       "fonts_requested": [
         "arial",
         "georgia",
@@ -314,10 +343,12 @@
     {
       "file": "140201.xls",
       "type": "xls",
+      "reference": "xls2csv",
       "source_words": 290,
       "word_recall": 0.969,
       "number_recall": 0.9298,
       "pages": 10,
+      "tagged": true,
       "fonts_requested": [
         "arial"
       ],
@@ -329,10 +360,12 @@
     {
       "file": "142669.doc",
       "type": "doc",
+      "reference": "catdoc",
       "source_words": 713,
       "word_recall": 1.0,
       "number_recall": null,
       "pages": 7,
+      "tagged": true,
       "fonts_requested": [
         "couriernew",
         "msmincho",
@@ -347,10 +380,12 @@
     {
       "file": "146109.xls",
       "type": "xls",
+      "reference": "xls2csv",
       "source_words": 88,
       "word_recall": 0.9432,
       "number_recall": 0.9226,
       "pages": 6,
+      "tagged": true,
       "fonts_requested": [
         "arial"
       ],
@@ -362,10 +397,12 @@
     {
       "file": "149115.ppt",
       "type": "ppt",
+      "reference": "catppt",
       "source_words": 447,
       "word_recall": 0.9978,
       "number_recall": 1.0,
       "pages": 14,
+      "tagged": true,
       "fonts_requested": [
         "arial",
         "garamond",
@@ -382,10 +419,12 @@
     {
       "file": "149391.xls",
       "type": "xls",
+      "reference": "xls2csv",
       "source_words": 264,
       "word_recall": 1.0,
       "number_recall": 0.5565,
       "pages": 10,
+      "tagged": true,
       "fonts_requested": [
         "arial",
         "timesnewroman"
@@ -398,10 +437,12 @@
     {
       "file": "153202.xls",
       "type": "xls",
+      "reference": "xls2csv",
       "source_words": 218,
       "word_recall": 1.0,
       "number_recall": 1.0,
       "pages": 66,
+      "tagged": true,
       "fonts_requested": [
         "arial",
         "cambria",
@@ -416,10 +457,12 @@
     {
       "file": "153378.doc",
       "type": "doc",
+      "reference": "catdoc",
       "source_words": 316,
       "word_recall": 0.9905,
       "number_recall": 1.0,
       "pages": 3,
+      "tagged": true,
       "fonts_requested": [
         "arial",
         "cgtimes(w1)",
@@ -439,10 +482,12 @@
     {
       "file": "153670.ppt",
       "type": "ppt",
+      "reference": "catppt",
       "source_words": 795,
       "word_recall": 0.995,
       "number_recall": 1.0,
       "pages": 90,
+      "tagged": true,
       "fonts_requested": [
         "arial",
         "bookman",
@@ -466,10 +511,12 @@
     {
       "file": "157581.doc",
       "type": "doc",
+      "reference": "catdoc",
       "source_words": 1853,
       "word_recall": 0.9968,
       "number_recall": 0.9805,
       "pages": 26,
+      "tagged": true,
       "fonts_requested": [
         "arial",
         "castletult",
@@ -483,10 +530,12 @@
     {
       "file": "164731.ppt",
       "type": "ppt",
+      "reference": "catppt",
       "source_words": 192,
       "word_recall": 0.9896,
       "number_recall": 1.0,
       "pages": 20,
+      "tagged": true,
       "fonts_requested": [
         "arial",
         "arialblack",
@@ -504,10 +553,12 @@
     {
       "file": "167086.doc",
       "type": "doc",
+      "reference": "catdoc",
       "source_words": 5401,
       "word_recall": 0.9993,
       "number_recall": 1.0,
       "pages": 521,
+      "tagged": true,
       "fonts_requested": [
         "timesnewroman"
       ],
@@ -519,10 +570,12 @@
     {
       "file": "177770.ppt",
       "type": "ppt",
+      "reference": "catppt",
       "source_words": 2,
       "word_recall": null,
       "number_recall": null,
       "pages": 24,
+      "tagged": true,
       "fonts_requested": [
         "arial",
         "bookantiqua",
@@ -540,10 +593,12 @@
     {
       "file": "188908.xls",
       "type": "xls",
+      "reference": "xls2csv",
       "source_words": 0,
       "word_recall": null,
       "number_recall": null,
       "pages": 27,
+      "tagged": true,
       "fonts_requested": [
         "arial"
       ],
@@ -555,10 +610,12 @@
     {
       "file": "190298.ppt",
       "type": "ppt",
+      "reference": "catppt",
       "source_words": 397,
       "word_recall": 0.8967,
       "number_recall": 1.0,
       "pages": 21,
+      "tagged": true,
       "fonts_requested": [
         "arial",
         "georgia",
@@ -576,10 +633,12 @@
     {
       "file": "200110.ppt",
       "type": "ppt",
+      "reference": "catppt",
       "source_words": 143,
       "word_recall": 0.993,
       "number_recall": null,
       "pages": 27,
+      "tagged": true,
       "fonts_requested": [
         "arial",
         "arialblack",
@@ -597,10 +656,12 @@
     {
       "file": "206498.doc",
       "type": "doc",
+      "reference": "catdoc",
       "source_words": 118,
       "word_recall": 1.0,
       "number_recall": null,
       "pages": 1,
+      "tagged": true,
       "fonts_requested": [
         "timesnewroman"
       ],
@@ -612,10 +673,12 @@
     {
       "file": "210687.doc",
       "type": "doc",
+      "reference": "catdoc",
       "source_words": 2318,
       "word_recall": 0.9978,
       "number_recall": 1.0,
       "pages": 43,
+      "tagged": true,
       "fonts_requested": [
         "palatino",
         "symbol",
@@ -631,10 +694,12 @@
     {
       "file": "221800.ppt",
       "type": "ppt",
+      "reference": "catppt",
       "source_words": 82,
       "word_recall": 1.0,
       "number_recall": null,
       "pages": 11,
+      "tagged": true,
       "fonts_requested": [
         "arial",
         "timesnewroman",
@@ -650,10 +715,12 @@
     {
       "file": "224168.xls",
       "type": "xls",
+      "reference": "xls2csv",
       "source_words": 233,
       "word_recall": 1.0,
       "number_recall": 1.0,
       "pages": 2,
+      "tagged": true,
       "fonts_requested": [
         "arial"
       ],
@@ -665,10 +732,12 @@
     {
       "file": "236837.xls",
       "type": "xls",
+      "reference": "xls2csv",
       "source_words": 197,
       "word_recall": 0.7005,
       "number_recall": null,
       "pages": 3,
+      "tagged": true,
       "fonts_requested": [
         "arial"
       ],
@@ -680,10 +749,12 @@
     {
       "file": "247546.xls",
       "type": "xls",
+      "reference": "xls2csv",
       "source_words": 0,
       "word_recall": null,
       "number_recall": null,
       "pages": 12,
+      "tagged": true,
       "fonts_requested": [
         "timesnewroman"
       ],
@@ -696,10 +767,12 @@
     {
       "file": "252017.doc",
       "type": "doc",
+      "reference": "catdoc",
       "source_words": 486,
       "word_recall": 0.9959,
       "number_recall": 1.0,
       "pages": 4,
+      "tagged": true,
       "fonts_requested": [
         "arialblack",
         "courier",
@@ -714,10 +787,12 @@
     {
       "file": "252572.doc",
       "type": "doc",
+      "reference": "catdoc",
       "source_words": 2883,
       "word_recall": 0.9712,
       "number_recall": 0.7013,
       "pages": 114,
+      "tagged": true,
       "fonts_requested": [
         "arial",
         "arialunicodems",
@@ -739,10 +814,12 @@
     {
       "file": "275138.doc",
       "type": "doc",
+      "reference": "catdoc",
       "source_words": 1394,
       "word_recall": 0.9785,
       "number_recall": 0.9662,
       "pages": 19,
+      "tagged": true,
       "fonts_requested": [
         "akzidenzgroteskbe",
         "arial",
@@ -763,10 +840,12 @@
     {
       "file": "285215.doc",
       "type": "doc",
+      "reference": "catdoc",
       "source_words": 108,
       "word_recall": 1.0,
       "number_recall": null,
       "pages": 1,
+      "tagged": true,
       "fonts_requested": [
         "couriernew",
         "garamond",
@@ -784,10 +863,12 @@
     {
       "file": "286720.xls",
       "type": "xls",
+      "reference": "xls2csv",
       "source_words": 52,
       "word_recall": 1.0,
       "number_recall": 0.625,
       "pages": 4,
+      "tagged": true,
       "fonts_requested": [
         "arial"
       ],
@@ -799,10 +880,12 @@
     {
       "file": "287004.ppt",
       "type": "ppt",
+      "reference": "catppt",
       "source_words": 185,
       "word_recall": 0.9838,
       "number_recall": null,
       "pages": 36,
+      "tagged": true,
       "fonts_requested": [
         "arial",
         "arialblack",
@@ -820,10 +903,12 @@
     {
       "file": "294354.ppt",
       "type": "ppt",
+      "reference": "catppt",
       "source_words": 200,
       "word_recall": 0.995,
       "number_recall": null,
       "pages": 9,
+      "tagged": true,
       "fonts_requested": [
         "arial",
         "baskervilleoldface",
@@ -842,10 +927,12 @@
     {
       "file": "300839.ppt",
       "type": "ppt",
+      "reference": "catppt",
       "source_words": 198,
       "word_recall": 0.7677,
       "number_recall": null,
       "pages": 20,
+      "tagged": true,
       "fonts_requested": [
         "arial"
       ],
@@ -858,10 +945,12 @@
     {
       "file": "301340.doc",
       "type": "doc",
+      "reference": "catdoc",
       "source_words": 407,
       "word_recall": 1.0,
       "number_recall": null,
       "pages": 4,
+      "tagged": true,
       "fonts_requested": [
         "georgia",
         "simsun",
@@ -875,10 +964,12 @@
     {
       "file": "308180.doc",
       "type": "doc",
+      "reference": "catdoc",
       "source_words": 1519,
       "word_recall": 0.9868,
       "number_recall": 0.9714,
       "pages": 20,
+      "tagged": true,
       "fonts_requested": [
         "arial",
         "couriernew",
@@ -897,10 +988,12 @@
     {
       "file": "320509.doc",
       "type": "doc",
+      "reference": "catdoc",
       "source_words": 285,
       "word_recall": 0.986,
       "number_recall": null,
       "pages": 4,
+      "tagged": true,
       "fonts_requested": [
         "arialblack",
         "couriernew",
@@ -921,10 +1014,12 @@
     {
       "file": "323884.ppt",
       "type": "ppt",
+      "reference": "catppt",
       "source_words": 167,
       "word_recall": 0.988,
       "number_recall": null,
       "pages": 11,
+      "tagged": true,
       "fonts_requested": [
         "timesnewroman"
       ],
@@ -936,10 +1031,12 @@
     {
       "file": "327584.ppt",
       "type": "ppt",
+      "reference": "catppt",
       "source_words": 441,
       "word_recall": 0.9977,
       "number_recall": 1.0,
       "pages": 25,
+      "tagged": true,
       "fonts_requested": [
         "arial",
         "timesnewroman"
@@ -953,10 +1050,12 @@
     {
       "file": "328128.doc",
       "type": "doc",
+      "reference": "catdoc",
       "source_words": 115,
       "word_recall": 0.9913,
       "number_recall": null,
       "pages": 1,
+      "tagged": true,
       "fonts_requested": [
         "timesnewroman"
       ],
@@ -968,10 +1067,12 @@
     {
       "file": "328783.xls",
       "type": "xls",
+      "reference": "xls2csv",
       "source_words": 185,
       "word_recall": 0.9514,
       "number_recall": 0.9973,
       "pages": 44,
+      "tagged": true,
       "fonts_requested": [
         "arial",
         "times",
@@ -988,10 +1089,12 @@
     {
       "file": "332930.doc",
       "type": "doc",
+      "reference": "catdoc",
       "source_words": 1288,
       "word_recall": 0.9682,
       "number_recall": 0.9457,
       "pages": 25,
+      "tagged": true,
       "fonts_requested": [
         "arial",
         "arialunicodems",
@@ -1011,10 +1114,12 @@
     {
       "file": "369699.ppt",
       "type": "ppt",
+      "reference": "catppt",
       "source_words": 199,
       "word_recall": 0.995,
       "number_recall": null,
       "pages": 24,
+      "tagged": true,
       "fonts_requested": [
         "arial",
         "timesnewroman"
@@ -1029,10 +1134,12 @@
     {
       "file": "389011.ppt",
       "type": "ppt",
+      "reference": "catppt",
       "source_words": 32,
       "word_recall": 0.9688,
       "number_recall": null,
       "pages": 27,
+      "tagged": true,
       "fonts_requested": [
         "arial",
         "timesnewroman",
@@ -1048,10 +1155,12 @@
     {
       "file": "411381.ppt",
       "type": "ppt",
+      "reference": "catppt",
       "source_words": 314,
       "word_recall": 0.9904,
       "number_recall": 1.0,
       "pages": 14,
+      "tagged": true,
       "fonts_requested": [
         "arial",
         "timesnewroman"
@@ -1065,10 +1174,12 @@
     {
       "file": "465032.xls",
       "type": "xls",
+      "reference": "xls2csv",
       "source_words": 198,
       "word_recall": 0.9899,
       "number_recall": 1.0,
       "pages": 7,
+      "tagged": true,
       "fonts_requested": [
         "courier",
         "timesnewroman"
@@ -1081,10 +1192,12 @@
     {
       "file": "477301.xls",
       "type": "xls",
+      "reference": "xls2csv",
       "source_words": 89,
       "word_recall": 1.0,
       "number_recall": 0.9921,
       "pages": 8,
+      "tagged": true,
       "fonts_requested": [
         "arial",
         "mssansserif"
@@ -1098,10 +1211,12 @@
     {
       "file": "481128.xls",
       "type": "xls",
+      "reference": "xls2csv",
       "source_words": 127,
       "word_recall": 0.9055,
       "number_recall": 0.251,
       "pages": 2,
+      "tagged": true,
       "fonts_requested": [
         "arial"
       ],
@@ -1113,10 +1228,12 @@
     {
       "file": "490684.xls",
       "type": "xls",
+      "reference": "xls2csv",
       "source_words": 174,
       "word_recall": 0.7011,
       "number_recall": 0.5378,
       "pages": 9,
+      "tagged": true,
       "fonts_requested": [
         "arial"
       ],
@@ -1128,10 +1245,12 @@
     {
       "file": "490853.xls",
       "type": "xls",
+      "reference": "xls2csv",
       "source_words": 174,
       "word_recall": 0.977,
       "number_recall": 0.9765,
       "pages": 2,
+      "tagged": true,
       "fonts_requested": [
         "arial",
         "p"
@@ -1144,10 +1263,12 @@
     {
       "file": "491485.xls",
       "type": "xls",
+      "reference": "xls2csv",
       "source_words": 119,
       "word_recall": 1.0,
       "number_recall": 1.0,
       "pages": 4,
+      "tagged": true,
       "fonts_requested": [
         "arial"
       ],
@@ -1159,10 +1280,12 @@
     {
       "file": "503430.xls",
       "type": "xls",
+      "reference": "xls2csv",
       "source_words": 208,
       "word_recall": 1.0,
       "number_recall": 1.0,
       "pages": 16,
+      "tagged": true,
       "fonts_requested": [
         "arial",
         "times",

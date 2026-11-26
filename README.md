@@ -11,9 +11,9 @@ losses, per engine and per invocation, as data.
 
 **Dataset:** [`dataset/conversion-loss-registry.json`](dataset/conversion-loss-registry.json) · CC0
 
-**14 formats · 7 engines · 28 conversions (27 verified)**
+**17 formats · 8 engines · 31 conversions (30 verified)**
 
-Images, PDF and audio. Coverage grows only by measurement.
+Images, PDF, audio and office documents. Coverage grows only by measurement.
 
 ## The data
 
