@@ -102,6 +102,8 @@ more than 8 bits per channel to lose.
 The files are real US-government documents from Govdocs1. They are not
 redistributed here; their SHA-256 digests are, in `corpus/govdocs1/MANIFEST.tsv`.
 
+Version history and what each schema version means: [CHANGELOG.md](CHANGELOG.md).
+
 ## Structure
 
 | Key | Contents |

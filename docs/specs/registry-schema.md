@@ -413,3 +413,9 @@ one in a TOML file: it is the number people repeat.
 The registry is versioned as a whole (`registry/VERSION`). Receipts pin the
 version they were planned against, because a registry update that changes a
 route silently changes a user's output (R§10.3).
+
+`registry/VERSION` is calendar-versioned, `YYYY.MM.N`: bump it when the
+registry's data changes in a way a consumer could observe (an edge, a loss
+value, a count), and record why in `dataset/CHANGELOG.md`. It is separate from
+the dataset's `schema_version`, which is semantic and changes only when the
+published JSON's shape does.

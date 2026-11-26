@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: >-
+  If you use this dataset, please cite it. Each release is archived with its
+  own version; cite the one you used.
+type: dataset
+title: "Convert.To.Huh: a measured dataset of what file-format conversions destroy"
+abstract: >-
+  A CC0 dataset recording, per engine and per exact invocation, what each
+  file-format conversion loses, measured against real specimens rather than
+  documentation. Each entry carries a loss vector over a closed vocabulary of
+  properties, a verification status, the measurement behind it and, where
+  available, how often each loss occurred on real files.
+authors:
+  - name: "Convert.To.Huh contributors"
+repository-code: "https://github.com/Stan2032/Convert.To.Huh"
+license: CC0-1.0
+version: "2026.11.0"
+keywords:
+  - file formats
+  - format conversion
+  - digital preservation
+  - data loss
+  - PRONOM
