@@ -666,6 +666,43 @@ fn word_to_pdf_runs_through_libreoffice_and_keeps_the_text() {
     }
 }
 
+/// A GIF palette holds 256 colours. An image with exactly 256 fits with
+/// nothing lost; image-rs keeps all of them, libvips keeps at most 255 and
+/// quantises the rest (RESEARCH §18.3: four real Govdocs1 PNGs with exactly
+/// 256 colours came back with 203-238). Pins both behaviours.
+#[test]
+fn a_full_256_colour_palette_survives_image_rs_but_not_libvips_gifsave() {
+    use huh_core::engines::{decode, encode, Budget};
+    use std::collections::HashSet;
+    let count = |img: &image::DynamicImage| {
+        img.to_rgba8().pixels().map(|p| p.0).collect::<HashSet<_>>().len()
+    };
+    let b = Budget::default();
+    let src = std::fs::read(root().join("corpus/raster/palette-256.png")).unwrap();
+    let img = decode(&src, "image/png", &b).unwrap();
+    assert_eq!(count(&img), 256, "specimen must have exactly 256 colours");
+
+    let gif = encode(&img, "image/gif", 85).unwrap();
+    assert_eq!(count(&decode(&gif, "image/gif", &b).unwrap()), 256,
+               "image-rs: a palette that fits must survive intact");
+
+    if !engine_present("vips") {
+        eprintln!("skipping libvips half: vips not installed");
+        return;
+    }
+    let dir = std::env::temp_dir().join(format!("huh-pal-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let out = dir.join("out.gif");
+    let st = std::process::Command::new("vips")
+        .arg("gifsave").arg(root().join("corpus/raster/palette-256.png")).arg(&out)
+        .status().unwrap();
+    assert!(st.success());
+    let vgif = std::fs::read(&out).unwrap();
+    std::fs::remove_dir_all(&dir).ok();
+    let n = count(&decode(&vgif, "image/gif", &b).unwrap());
+    assert!(n < 256, "libvips gifsave kept all 256 colours ({n}); revise RESEARCH §18.3");
+}
+
 fn engine_present(prog: &str) -> bool {
     std::process::Command::new("which")
         .arg(prog)

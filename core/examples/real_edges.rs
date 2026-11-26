@@ -9,10 +9,32 @@
 //! how many contradicted the registry, and SSIM.
 //!
 //! Specimens are identified by content (`detect`), never by name.
+use huh_core::engines::{decode, Budget};
 use huh_core::{detect, execute, planner, registry::Registry};
+use std::collections::HashSet;
 use serde_json::{json, Map, Value};
 use std::collections::BTreeMap;
 use std::path::Path;
+
+/// Distinct RGBA colours, and whether any alpha is partial (not 0 or 255).
+///
+/// These see the two losses a GIF target causes that the receipt's own
+/// checks cannot: palette reduction (more than 256 colours in, fewer out) and
+/// one-bit transparency (partial alpha in, only on/off out). Observed on the
+/// output, not inferred from the input.
+fn colours(img: &image::DynamicImage) -> (usize, bool) {
+    let rgba = img.to_rgba8();
+    let mut seen = HashSet::new();
+    let mut partial = false;
+    for p in rgba.pixels() {
+        // A fully transparent pixel is invisible whatever RGB it stores, and
+        // encoders may legitimately rewrite that RGB (lossless WebP does).
+        // Counting it made lossless WebP look like a palette reduction.
+        seen.insert(if p.0[3] == 0 { [0, 0, 0, 0] } else { p.0 });
+        partial |= p.0[3] != 0 && p.0[3] != 255;
+    }
+    (seen.len(), partial)
+}
 
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
@@ -54,13 +76,20 @@ fn main() {
         let mut exercised = BTreeMap::<String, BTreeMap<String, usize>>::new();
         let mut contradictions = Vec::new();
         let mut ssims = Vec::new();
+        let (mut palette_reduced, mut partial_alpha_binarised) = (0usize, 0usize);
         for (name, fmt, bytes) in &specimens {
             if fmt != &e.from {
                 continue;
             }
             match execute::execute(&plan, bytes, 85) {
-                Ok((_, receipt)) => {
+                Ok((out, receipt)) => {
                     ran += 1;
+                    let b = Budget::default();
+                    if let (Ok(a), Ok(z)) = (decode(bytes, &e.from, &b), decode(&out, &e.to, &b)) {
+                        let ((ca, pa), (cz, pz)) = (colours(&a), colours(&z));
+                        palette_reduced += usize::from(cz < ca);
+                        partial_alpha_binarised += usize::from(pa && !pz);
+                    }
                     for m in &receipt.measurements {
                         *exercised.entry(m.property.clone()).or_default()
                             .entry(m.measured.clone()).or_default() += 1;
@@ -91,6 +120,12 @@ fn main() {
         row.insert("failed".into(), json!(failed));
         row.insert("measured".into(), json!(exercised));
         row.insert("contradictions".into(), Value::Array(contradictions));
+        // Files on which the output has fewer distinct colours than the input,
+        // and files whose partial transparency came out on/off only.
+        row.insert("observed".into(), json!({
+            "palette_reduced": palette_reduced,
+            "partial_alpha_binarised": partial_alpha_binarised,
+        }));
         if !ssims.is_empty() {
             row.insert("ssim_min".into(), json!((ssims[0].0 * 1e4).round() / 1e4));
             row.insert("ssim_min_specimen".into(), json!(ssims[0].1));

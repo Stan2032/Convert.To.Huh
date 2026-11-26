@@ -753,7 +753,7 @@
       "measured": {
         "bytes": 22882,
         "engine_build": "vips-8.15.1",
-        "note": "ERROR DIFFUSION, and the outlier again — three times the retained texture of the\nother two engines and 67% more bytes. libvips was also the odd one out on alpha\nflattening (ADR-0012), which is worth noting and not yet worth generalising from.\n\nThe SSIM here (0.9065) is LOWER than image-rs (0.9105) despite dithering being\ngenerally preferred by human viewers. Fidelity scores cannot detect dithering —\nall three engines land within 0.03 — so the policy is the only field that\ndistinguishes them. See §15.3.\n",
+        "note": "ERROR DIFFUSION, and the outlier again — three times the retained texture of the\nother two engines and 67% more bytes. libvips was also the odd one out on alpha\nflattening (ADR-0012), which is worth noting and not yet worth generalising from.\n\nThe SSIM here (0.9065) is LOWER than image-rs (0.9105) despite dithering being\ngenerally preferred by human viewers. Fidelity scores cannot detect dithering —\nall three engines land within 0.03 — so the policy is the only field that\ndistinguishes them. See §15.3.\n\n255-COLOUR CAP, found 2026-11-26 on Govdocs1 (docs/RESEARCH.md §18.3).\nlibvips keeps at most 255 palette colours where GIF allows 256, so an image\nwith EXACTLY 256 colours, which fits a GIF palette with nothing lost, is\nquantised anyway. On four real PNGs with exactly 256 colours the result had\n203-238; image-rs and ImageMagick kept all 256. That is why the real_world\ncount below (15 of 39) exceeds the 11 real PNGs with more than 256 colours,\nwhere every engine must reduce. Reproduce with corpus/raster/palette-256.png\n(libvips gives 254); the test\n`a_full_256_colour_palette_survives_image_rs_but_not_libvips_gifsave` pins it.\n",
         "ssim": 0.9065,
         "texture_retained": 0.58,
         "tool": "core/examples/gif_dither.rs"
@@ -763,7 +763,10 @@
         "files": 39,
         "ran": 39,
         "contradicted": 0,
-        "affected": {},
+        "affected": {
+          "alpha": 1,
+          "color_depth": 15
+        },
         "results": "corpus/govdocs1/edges.json"
       },
       "generational": true
@@ -805,7 +808,10 @@
         "files": 39,
         "ran": 39,
         "contradicted": 0,
-        "affected": {},
+        "affected": {
+          "alpha": 1,
+          "color_depth": 12
+        },
         "results": "corpus/govdocs1/edges.json"
       },
       "generational": true
@@ -1135,7 +1141,10 @@
         "files": 39,
         "ran": 39,
         "contradicted": 0,
-        "affected": {},
+        "affected": {
+          "alpha": 1,
+          "color_depth": 11
+        },
         "results": "corpus/govdocs1/edges.json"
       },
       "generational": false

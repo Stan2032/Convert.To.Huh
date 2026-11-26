@@ -306,7 +306,7 @@ corpus       = "govdocs1"
 files        = 39
 ran          = 39
 contradicted = 0
-affected     = {  }
+affected     = { alpha = 1, color_depth = 11 }
 results      = "corpus/govdocs1/edges.json"
 
 

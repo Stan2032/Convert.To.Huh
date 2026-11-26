@@ -22,9 +22,14 @@ never happened when the instrument simply cannot see it:
   fonts        degraded                no requested font embedded   (office)
   precision    degraded                a stored number not printed exactly (.xls)
 
+  color_depth  lost (to GIF)            output has fewer distinct colours than input
+  alpha        degraded (to GIF)        partial transparency came out on/off only
+
 PNG to GIF declares `alpha = degraded` (one-bit transparency) and
-`color_depth = lost` (palette reduction). The raster harness sees neither, so
-those edges carry no count for them. That was nearly published as zero.
+`color_depth = lost` (palette reduction). The receipt's own checks see
+neither; the first version of this tool published zero for both, which would
+have said the loss never happened. The two GIF rows above come from the
+harness's `observed` counts, which compare input and output directly.
 
 `contradicted` is written only where an automated declared-vs-measured check
 ran (raster). The office runs have none, so it is left out rather than set to
@@ -65,6 +70,12 @@ def raster_blocks() -> dict[tuple, dict]:
         for prop, outcomes in row["measured"].items():
             if prop in RASTER_OCCURRED:
                 affected[prop] = (RASTER_OCCURRED[prop], outcomes)
+        if row["to"] == "image/gif":
+            obs = row.get("observed", {})
+            affected["color_depth"] = (({"lost"}, "occurred"),
+                                       {"occurred": obs.get("palette_reduced", 0)})
+            affected["alpha"] = (({"degraded"}, "occurred"),
+                                 {"occurred": obs.get("partial_alpha_binarised", 0)})
         out[key] = {"corpus": "govdocs1", "files": row["ran"] + sum(row["failed"].values()),
                     "ran": row["ran"], "contradicted": contradicted,
                     "affected": affected, "results": RASTER}

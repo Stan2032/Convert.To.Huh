@@ -17,6 +17,10 @@
         "preserved": 39
       }
     },
+    "observed": {
+      "palette_reduced": 15,
+      "partial_alpha_binarised": 1
+    },
     "ran": 39,
     "ssim_below_0_5": [],
     "ssim_median": 1.0,
@@ -41,6 +45,10 @@
       "geometry": {
         "preserved": 39
       }
+    },
+    "observed": {
+      "palette_reduced": 12,
+      "partial_alpha_binarised": 1
     },
     "ran": 39,
     "ssim_below_0_5": [
@@ -76,6 +84,10 @@
         "preserved": 39
       }
     },
+    "observed": {
+      "palette_reduced": 3,
+      "partial_alpha_binarised": 1
+    },
     "ran": 39,
     "ssim_below_0_5": [
       {
@@ -106,6 +118,10 @@
         "preserved": 40
       }
     },
+    "observed": {
+      "palette_reduced": 0,
+      "partial_alpha_binarised": 0
+    },
     "ran": 40,
     "ssim_below_0_5": [],
     "ssim_median": 1.0,
@@ -130,6 +146,10 @@
       "geometry": {
         "preserved": 39
       }
+    },
+    "observed": {
+      "palette_reduced": 0,
+      "partial_alpha_binarised": 0
     },
     "ran": 39,
     "ssim_below_0_5": [],
@@ -156,6 +176,10 @@
         "preserved": 39
       }
     },
+    "observed": {
+      "palette_reduced": 0,
+      "partial_alpha_binarised": 0
+    },
     "ran": 39,
     "ssim_below_0_5": [],
     "ssim_median": 1.0,
@@ -180,6 +204,10 @@
       "geometry": {
         "preserved": 39
       }
+    },
+    "observed": {
+      "palette_reduced": 11,
+      "partial_alpha_binarised": 1
     },
     "ran": 39,
     "ssim_below_0_5": [],
@@ -206,6 +234,10 @@
         "preserved": 39
       }
     },
+    "observed": {
+      "palette_reduced": 0,
+      "partial_alpha_binarised": 0
+    },
     "ran": 39,
     "ssim_below_0_5": [],
     "ssim_median": 1.0,
@@ -231,6 +263,10 @@
         "preserved": 27
       }
     },
+    "observed": {
+      "palette_reduced": 0,
+      "partial_alpha_binarised": 0
+    },
     "ran": 27,
     "ssim_below_0_5": [],
     "ssim_median": 1.0,
@@ -245,6 +281,10 @@
     "from": "image/tiff",
     "invocation": null,
     "measured": {},
+    "observed": {
+      "palette_reduced": 0,
+      "partial_alpha_binarised": 0
+    },
     "ran": 0,
     "to": "image/png"
   },
@@ -255,6 +295,10 @@
     "from": "image/webp",
     "invocation": null,
     "measured": {},
+    "observed": {
+      "palette_reduced": 0,
+      "partial_alpha_binarised": 0
+    },
     "ran": 0,
     "to": "image/png"
   },
@@ -265,6 +309,10 @@
     "from": "image/bmp",
     "invocation": null,
     "measured": {},
+    "observed": {
+      "palette_reduced": 0,
+      "partial_alpha_binarised": 0
+    },
     "ran": 0,
     "to": "image/png"
   },
@@ -285,6 +333,10 @@
       "geometry": {
         "preserved": 39
       }
+    },
+    "observed": {
+      "palette_reduced": 3,
+      "partial_alpha_binarised": 1
     },
     "ran": 39,
     "ssim_below_0_5": [
@@ -320,6 +372,10 @@
         "preserved": 39
       }
     },
+    "observed": {
+      "palette_reduced": 4,
+      "partial_alpha_binarised": 0
+    },
     "ran": 39,
     "ssim_below_0_5": [],
     "ssim_median": 0.9897,
@@ -344,6 +400,10 @@
       "geometry": {
         "preserved": 39
       }
+    },
+    "observed": {
+      "palette_reduced": 0,
+      "partial_alpha_binarised": 0
     },
     "ran": 39,
     "ssim_below_0_5": [],
@@ -370,6 +430,10 @@
         "preserved": 39
       }
     },
+    "observed": {
+      "palette_reduced": 0,
+      "partial_alpha_binarised": 0
+    },
     "ran": 39,
     "ssim_below_0_5": [],
     "ssim_median": 1.0,
@@ -394,6 +458,10 @@
       "geometry": {
         "preserved": 39
       }
+    },
+    "observed": {
+      "palette_reduced": 3,
+      "partial_alpha_binarised": 1
     },
     "ran": 39,
     "ssim_below_0_5": [

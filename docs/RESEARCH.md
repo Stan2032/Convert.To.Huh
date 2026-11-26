@@ -2019,6 +2019,47 @@ exactly the declared outcome; otherwise the property is left out.
 distinguishable everywhere the dataset reports a count, as `claimed` and
 `verified` already are. Absent is the honest encoding of the first.
 
+### 18.3 Counting what a GIF palette costs, and libvips' 255-colour cap
+
+§18.2 left PNG to GIF without counts because the receipt cannot see palette
+reduction or one-bit transparency. `core/examples/real_edges.rs` now observes
+both directly, comparing input and output: distinct colours (fully transparent
+pixels counted as one, since their RGB is invisible and encoders may rewrite
+it) and whether partial transparency survived.
+
+**The instrument was wrong once first.** Counting RGB under fully transparent
+pixels made lossless WebP look like a palette reduction on one file. Lossless
+WebP may discard that invisible RGB; normalising it removed the false result.
+
+| Engine (PNG → GIF) | Palette reduced, of 39 real PNGs |
+|---|---|
+| image-rs | 11 |
+| ImageMagick | 12 |
+| libvips | 15 |
+
+11 real PNGs have more than 256 colours, so every engine must reduce those,
+and every engine does. image-rs reduces exactly those. ImageMagick's twelfth is
+`303329.png`, the off-screen frame of §18.1. **libvips' four extra are the four
+real PNGs with exactly 256 colours**, which fit a GIF palette with nothing
+lost: libvips requantised them to 203-238 colours.
+
+The mechanism is a cap. On synthetic images libvips keeps 200 and 255 colours
+exactly and reduces 256 (to 255 on a small flat image, 254 on the committed
+specimen `corpus/raster/palette-256.png`); ImageMagick keeps 256. libvips
+reserves at most 255 entries, plausibly one for transparency, and once over
+the cap it requantises the whole image, which on a photograph means many
+colours rather than one. A test pins both sides.
+
+Partial transparency was binarised on the one real PNG that had any, by all
+three engines, as GIF requires.
+
+**Design implication.** The same declared loss, `color_depth = lost` with a
+palette policy, hits 11, 12 or 15 files in 39 depending on the engine, for
+three unrelated reasons: the format's limit, an engine bug, an engine cap.
+Per-edge real-world counts are what make that visible; a format-level claim
+("GIF has 256 colours") would have hidden two of the three.
+
+
 ## Sources
 
 - [Convert To It](https://converttoit.com/) · [Grokipedia: Convert to it](https://grokipedia.com/page/Convert_to_it) · [Convert To It API](https://converttoit.com/api)
