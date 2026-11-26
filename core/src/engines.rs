@@ -54,6 +54,12 @@ impl Default for Budget {
     }
 }
 
+/// True when this crate can decode the format in-process, which is what the
+/// raster measurements in `execute` need.
+pub fn is_raster(id: &str) -> bool {
+    fmt_of(id).is_some()
+}
+
 fn fmt_of(id: &str) -> Option<ImageFormat> {
     match id {
         "image/png" => Some(ImageFormat::Png),

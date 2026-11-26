@@ -193,6 +193,9 @@ fn main() -> ExitCode {
                     if let Some(s) = receipt.ssim {
                         eprintln!("SSIM vs original: {s:.4}");
                     }
+                    if let Some(why) = &receipt.unmeasured {
+                        eprintln!("not measured: {why}");
+                    }
                     let bad: Vec<_> = receipt.measurements.iter().filter(|m| m.contradicts).collect();
                     for m in &receipt.measurements {
                         eprintln!(

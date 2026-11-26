@@ -540,6 +540,34 @@ fn the_engine_that_runs_is_the_engine_that_was_planned() {
     }
 }
 
+/// Audio routes used to fail before any engine ran: execution decoded every
+/// input as an image first, so a WAV got "no image-rs decoder" even though the
+/// plan had chosen ffmpeg. Now the planned engine runs, and the receipt says
+/// the result was not measured in-process instead of implying it was.
+#[test]
+fn audio_routes_run_the_planned_engine_and_say_they_were_not_measured() {
+    let r = reg();
+    let wav = std::fs::read(root().join("corpus/audio/highfreq-mono.wav")).expect("specimen");
+
+    // lgpl picks ffmpeg; gpl excludes ffmpeg's lgpl-only entry and picks
+    // GStreamer, whose invocation uses `location=IN` placeholders.
+    for (profile, program) in [("lgpl", "ffmpeg"), ("gpl", "gst-launch-1.0")] {
+        let pol = Policy { build_profile: profile.into(), ..Default::default() };
+        let plan = Planner::new(&r, &pol).plan("audio/wav", "audio/flac").expect("route exists");
+        let hop = &plan.hops[0];
+        if !engine_present(program) {
+            eprintln!("skipping {profile}: {program} not installed");
+            continue;
+        }
+        let (out, receipt) = execute::execute(&plan, &wav, 85)
+            .unwrap_or_else(|e| panic!("{profile} via {}: {e}", hop.engine));
+        assert_eq!(&out[..4], b"fLaC", "{} did not write FLAC", hop.engine);
+        assert!(receipt.hops[0].starts_with(&hop.engine));
+        assert!(receipt.measurements.is_empty() && receipt.unmeasured.is_some(),
+                "an unmeasured route must say so in the receipt");
+    }
+}
+
 fn engine_present(prog: &str) -> bool {
     std::process::Command::new("which")
         .arg(prog)

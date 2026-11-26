@@ -49,6 +49,10 @@ pub struct Receipt {
     pub declared_loss: crate::loss::LossVector,
     pub measurements: Vec<Measurement>,
     pub ssim: Option<f64>,
+    /// Why `measurements` is empty, when no in-process check applies to this
+    /// pair of formats. Absent when the result was measured.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub unmeasured: Option<String>,
     pub rationale: String,
     pub wall_ms: u128,
 }
@@ -88,46 +92,90 @@ fn run_hop(
             let img = engines::decode(bytes, from_format, budget)?;
             engines::encode(&img, &hop.to, quality)
         }
-        "libvips" => run_libvips(hop, bytes, from_format),
-        other => Err(ConvertError::InputUnsupported(format!(
-            "plan selects engine `{other}`, which this build cannot execute. \
-             Refusing rather than substituting a different engine: the plan's \
-             loss vector and this receipt describe `{other}` (ADR-0013)."
-        ))),
+        other => match programs_for(other) {
+            Some(programs) => run_invocation(hop, programs, bytes, from_format),
+            None => Err(ConvertError::InputUnsupported(format!(
+                "plan selects engine `{other}`, which this build cannot execute. \
+                 Refusing rather than substituting a different engine: the plan's \
+                 loss vector and this receipt describe `{other}` (ADR-0013)."
+            ))),
+        },
     }
 }
 
-/// Run libvips as the registry recorded it.
+/// The programs an engine's invocation may start with. The invocation is
+/// registry data; this check keeps a typo there (or an edge filed under the
+/// wrong engine) from running a program the plan never named.
+fn programs_for(engine: &str) -> Option<&'static [&'static str]> {
+    Some(match engine {
+        "libvips" => &["vips"],
+        "ffmpeg" => &["ffmpeg"],
+        "sox" => &["sox"],
+        "gstreamer" => &["gst-launch-1.0"],
+        "imagemagick" => &["convert", "magick"],
+        _ => return None,
+    })
+}
+
+/// Run an external engine exactly as the registry recorded it.
 ///
 /// The edge's `invocation` is the recipe, not a description of one: running
-/// anything else would measure a different edge. `IN` and `OUT` are the only
-/// placeholders, substituted with scratch paths.
-fn run_libvips(
+/// anything else would measure a different edge. Placeholders are `IN` and
+/// `OUT` as whole tokens, `key=IN` / `key=OUT` (GStreamer's `location=`), and
+/// `OUT.<ext>` where the extension matches the target. Anything else carrying
+/// a placeholder is refused rather than guessed at.
+fn run_invocation(
     hop: &crate::planner::Hop,
+    programs: &[&str],
     bytes: &[u8],
     from_format: &str,
 ) -> Result<Vec<u8>, ConvertError> {
     let Some(invocation) = hop.invocation.as_deref() else {
         return Err(ConvertError::InputUnsupported(format!(
-            "the libvips edge {} -> {} records no invocation, so there is no \
+            "the {} edge {} -> {} records no invocation, so there is no \
              way to run the call that was measured (ADR-0013, rule 8)",
-            hop.from, hop.to
+            hop.engine, hop.from, hop.to
         )));
     };
 
+    let mut tokens = invocation.split_whitespace();
+    let program = tokens.next().unwrap_or_default();
+    if !programs.contains(&program) {
+        return Err(ConvertError::InputUnsupported(format!(
+            "the {} edge {} -> {} starts with `{program}`, expected one of {:?}; \
+             refusing to run it",
+            hop.engine, hop.from, hop.to, programs
+        )));
+    }
+
     let scratch = crate::subprocess::Scratch::new("exec")?;
-    let in_path = scratch.join(&format!("in.{}", ext_for(from_format)));
-    let out_path = scratch.join(&format!("out.{}", ext_for(&hop.to)));
+    let in_ext = ext_for(from_format);
+    let out_ext = ext_for(&hop.to);
+    let in_path = scratch.join(&format!("in.{in_ext}"));
+    let out_path = scratch.join(&format!("out.{out_ext}"));
     std::fs::write(&in_path, bytes)
         .map_err(|e| ConvertError::Internal(format!("write hop input: {e}")))?;
 
-    let mut tokens = invocation.split_whitespace();
-    let program = tokens.next().unwrap_or("vips");
+    let out_with_ext = format!("OUT.{out_ext}");
     let mut cmd = crate::subprocess::External::new(program);
     for t in tokens {
         cmd = match t {
             "IN" => cmd.path_arg(&in_path),
             "OUT" => cmd.path_arg(&out_path),
+            t if t == out_with_ext => cmd.path_arg(&out_path),
+            t if t.ends_with("=IN") => {
+                cmd.arg(format!("{}{}", &t[..t.len() - 2], in_path.display()))
+            }
+            t if t.ends_with("=OUT") => {
+                cmd.arg(format!("{}{}", &t[..t.len() - 3], out_path.display()))
+            }
+            t if t.split(['=', '.', ',', ':']).any(|p| p == "IN" || p == "OUT") => {
+                return Err(ConvertError::InputUnsupported(format!(
+                    "invocation token `{t}` in the {} edge {} -> {} carries a \
+                     placeholder this executor does not understand",
+                    hop.engine, hop.from, hop.to
+                )));
+            }
             other => cmd.arg(other),
         };
     }
@@ -147,17 +195,25 @@ fn ext_for(format_id: &str) -> &'static str {
         "image/webp" => "webp",
         "image/tiff" => "tif",
         "image/bmp" => "bmp",
+        "audio/wav" => "wav",
+        "audio/mpeg" => "mp3",
+        "audio/flac" => "flac",
+        "application/pdf" => "pdf",
         _ => "bin",
     }
 }
 
-/// Execute a plan over raster hops, then measure what actually happened.
+/// Execute a plan, then measure what actually happened where this crate can.
 pub fn execute(plan: &Plan, input: &[u8], quality: u8) -> Result<(Vec<u8>, Receipt), ConvertError> {
     let started = std::time::Instant::now();
     let budget = Budget::default();
-
-    let original = engines::decode(input, &plan.source, &budget)?;
-    let before = engines::observe(&original);
+    if input.len() as u64 > budget.max_input_bytes {
+        return Err(ConvertError::BudgetExceeded(format!(
+            "input is {} bytes, limit is {}",
+            input.len(),
+            budget.max_input_bytes
+        )));
+    }
 
     let mut current_bytes = input.to_vec();
     let mut current_format = plan.source.clone();
@@ -170,10 +226,66 @@ pub fn execute(plan: &Plan, input: &[u8], quality: u8) -> Result<(Vec<u8>, Recei
         current_format = hop.to.clone();
     }
 
-    let result = engines::decode(&current_bytes, &current_format, &budget)?;
+    // --- Declared vs measured. This is the falsification step. ---
+    //
+    // Raster in and out: decoded and compared in-process. An empty route is a
+    // copy and has nothing to measure. Anything else is run but not measured
+    // here, and the receipt says so rather than implying it was checked.
+    let declared = &plan.totals.loss;
+    let (measurements, ssim, unmeasured) =
+        if engines::is_raster(&plan.source) && engines::is_raster(&current_format) {
+            let (m, s) = measure_raster(plan, input, &current_bytes, &current_format, &budget)?;
+            (m, s, None)
+        } else if plan.hops.is_empty() {
+            (Vec::new(), None, None)
+        } else {
+            (Vec::new(), None, Some(format!(
+                "{} -> {} is not measured in-process; audio entries in the dataset \
+                 are measured with tools/measure_audio.py",
+                plan.source, current_format
+            )))
+        };
+
+    let receipt = Receipt {
+        registry_version: plan.registry_version.clone(),
+        input_sha256: sha256(input),
+        output_sha256: sha256(&current_bytes),
+        input_bytes: input.len(),
+        output_bytes: current_bytes.len(),
+        source_format: plan.source.clone(),
+        target_format: plan.target.clone(),
+        hops: hop_labels,
+        engine_versions: plan
+            .hops
+            .iter()
+            .map(|h| format!("{}@{}", h.engine, h.engine_version))
+            .collect(),
+        quality,
+        contains_synthesis: plan.totals.contains_synthesis,
+        declared_loss: declared.clone(),
+        measurements,
+        ssim,
+        unmeasured,
+        rationale: plan.rationale.clone(),
+        wall_ms: started.elapsed().as_millis(),
+    };
+
+    Ok((current_bytes, receipt))
+}
+
+/// Decode both ends in-process and compare the raster properties.
+fn measure_raster(
+    plan: &Plan,
+    input: &[u8],
+    output: &[u8],
+    output_format: &str,
+    budget: &Budget,
+) -> Result<(Vec<Measurement>, Option<f64>), ConvertError> {
+    let original = engines::decode(input, &plan.source, budget)?;
+    let before = engines::observe(&original);
+    let result = engines::decode(output, output_format, budget)?;
     let after = engines::observe(&result);
 
-    // --- Declared vs measured. This is the falsification step. ---
     let mut measurements = Vec::new();
     let declared = &plan.totals.loss;
 
@@ -256,29 +368,51 @@ pub fn execute(plan: &Plan, input: &[u8], quality: u8) -> Result<(Vec<u8>, Recei
     // Worst case across backgrounds. A conversion that only looks faithful
     // against a flattering background is not faithful (RESEARCH.md §13.9).
     let ssim = fidelity::content_equivalence(&original, &result);
+    Ok((measurements, ssim))
+}
 
-    let receipt = Receipt {
-        registry_version: plan.registry_version.clone(),
-        input_sha256: sha256(input),
-        output_sha256: sha256(&current_bytes),
-        input_bytes: input.len(),
-        output_bytes: current_bytes.len(),
-        source_format: plan.source.clone(),
-        target_format: plan.target.clone(),
-        hops: hop_labels,
-        engine_versions: plan
-            .hops
-            .iter()
-            .map(|h| format!("{}@{}", h.engine, h.engine_version))
-            .collect(),
-        quality,
-        contains_synthesis: plan.totals.contains_synthesis,
-        declared_loss: declared.clone(),
-        measurements,
-        ssim,
-        rationale: plan.rationale.clone(),
-        wall_ms: started.elapsed().as_millis(),
-    };
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-    Ok((current_bytes, receipt))
+    fn hop(engine: &str, invocation: &str) -> crate::planner::Hop {
+        crate::planner::Hop {
+            index: 0,
+            engine: engine.into(),
+            op: "Transcode".into(),
+            from: "audio/wav".into(),
+            to: "audio/flac".into(),
+            from_kind: "AudioPCM".into(),
+            to_kind: "AudioPCM".into(),
+            loss: crate::loss::LossVector::new(),
+            isolation: "gvisor".into(),
+            estimated_ms: 0,
+            verification_status: "verified".into(),
+            engine_version: "test".into(),
+            invocation: Some(invocation.into()),
+        }
+    }
+
+    #[test]
+    fn an_invocation_naming_another_program_is_refused() {
+        let h = hop("ffmpeg", "sox IN OUT");
+        let e = run_invocation(&h, programs_for("ffmpeg").unwrap(), b"x", "audio/wav")
+            .unwrap_err();
+        assert!(e.to_string().contains("expected one of"), "{e}");
+    }
+
+    #[test]
+    fn an_unrecognised_placeholder_is_refused_not_passed_through() {
+        // `IN:0` is not a form this executor substitutes. Passing it through
+        // would hand the engine a literal "IN:0" and measure nothing real.
+        let h = hop("ffmpeg", "ffmpeg -i IN:0 OUT");
+        let e = run_invocation(&h, programs_for("ffmpeg").unwrap(), b"x", "audio/wav")
+            .unwrap_err();
+        assert!(e.to_string().contains("placeholder"), "{e}");
+    }
+
+    #[test]
+    fn engines_without_a_known_program_are_not_run() {
+        assert!(programs_for("whisper-cpp").is_none());
+    }
 }
