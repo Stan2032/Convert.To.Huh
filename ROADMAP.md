@@ -13,18 +13,16 @@ the scope line in [README.md](README.md), which CI checks against the registry.
 
 ## Next, in priority order
 
-1. **Rank by `loss_policy`.** Two routes that both lose alpha are currently
-   ranked equally, though one turns transparency black and one does not.
-2. **A document fidelity metric.** PDF cleaning is verified by the absence of
+1. **A document fidelity metric.** PDF cleaning is verified by the absence of
    payloads, not by how faithful the rebuild is.
-3. **Count more losses on real files.** The dataset now publishes how often
+2. **Count more losses on real files.** The dataset now publishes how often
    each loss occurred on real files (`real_world`, schema 1.1.0), but only
-   where an observation can see it. PNG to GIF palette and transparency loss,
-   signal fidelity and text are not yet counted; each needs an observation
-   that detects the declared outcome, not a threshold.
-4. **Decide where output size goes.** `huh clean` makes real PDFs a median 23×
+   where an observation can see it. Signal fidelity, metadata and text are
+   not yet counted; each needs an observation that detects the declared
+   outcome, not a threshold.
+3. **Decide where output size goes.** `huh clean` makes real PDFs a median 23×
    larger (R§18). No tracked property can say so.
-5. **Video.** `signal_fidelity` will likely need its metric recorded alongside
+4. **Video.** `signal_fidelity` will likely need its metric recorded alongside
    it, because perceptual video metrics diverge sharply (ADR-0014).
 
 ## Not planned

@@ -46,10 +46,10 @@ fn build_profile_prunes_before_search() {
     // proposed and then failing. LibreOffice is gpl-only, so lgpl sees fewer.
     let r = reg();
     let lgpl = Planner::new(&r, &Policy {
-        build_profile: "lgpl".into(), allow_unverified: true
+        build_profile: "lgpl".into(), allow_unverified: true, ..Default::default()
     });
     let gpl = Planner::new(&r, &Policy {
-        build_profile: "gpl".into(), allow_unverified: true
+        build_profile: "gpl".into(), allow_unverified: true, ..Default::default()
     });
     assert_ne!(lgpl.eligible_count(), gpl.eligible_count(),
         "build profiles must actually change the graph");
@@ -364,6 +364,50 @@ fn loss_equivalent_routes_collapse_to_one_choice() {
     let p = Planner::new(&r, &Policy::default());
     let plans = p.plan_ranked("a", "b", 5);
     assert_eq!(plans.len(), 1, "identical loss signatures must deduplicate");
+}
+
+/// ADR-0012: routes that lose the same property but replace it differently
+/// are different choices. PNG to JPEG via composite_black, composite_white and
+/// discard_channel used to collapse into ONE offered route.
+#[test]
+fn routes_differing_only_in_policy_are_separate_choices() {
+    let r = reg();
+    let plans = Planner::new(&r, &Policy::default()).plan_ranked("image/png", "image/jpeg", 6);
+    let policies: std::collections::BTreeSet<_> = plans.iter()
+        .filter_map(|p| p.loss_policy.get("alpha").cloned())
+        .collect();
+    for want in ["composite_black", "composite_white", "discard_channel"] {
+        assert!(policies.contains(want), "{want} missing from offered routes: {policies:?}");
+    }
+}
+
+#[test]
+fn a_stated_preference_ranks_the_matching_policy_first() {
+    let r = reg();
+    let pol = Policy {
+        prefer: [("alpha".to_string(), "composite_white".to_string())].into(),
+        ..Default::default()
+    };
+    let p = Planner::new(&r, &pol);
+    let best = p.plan("image/png", "image/jpeg").expect("route");
+    assert_eq!(best.loss_policy.get("alpha").map(String::as_str), Some("composite_white"));
+    let ranked = p.plan_ranked("image/png", "image/jpeg", 6);
+    assert_eq!(ranked[0].loss_policy.get("alpha").map(String::as_str), Some("composite_white"));
+}
+
+#[test]
+fn a_preference_never_buys_a_route_that_loses_more() {
+    // The cheap route loses alpha WITH the preferred policy; the faithful one
+    // keeps alpha. Preferring how alpha is lost must not make losing it win.
+    let mut r = synthetic();
+    r.edges[0].loss_policy.insert("alpha".into(), "composite_white".into());
+    let pol = Policy {
+        prefer: [("alpha".to_string(), "composite_white".to_string())].into(),
+        ..Default::default()
+    };
+    let best = Planner::new(&r, &pol).plan("a", "b").expect("route");
+    assert_eq!(best.totals.loss.get("alpha"), Some(LossValue::Preserved),
+               "a preference outweighed fidelity");
 }
 
 #[test]

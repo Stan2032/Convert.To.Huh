@@ -29,6 +29,14 @@ const GENERATIONAL_PENALTY: f64 = 0.3;
 /// that cost the user the same thing, prefer the faster one.
 const TIME_TIEBREAK_PER_MS: f64 = 0.00001;
 
+/// Added per hop whose policy for a property differs from the user's stated
+/// preference (`Policy::prefer`). Half of one degraded property (0.4), so a
+/// preference reorders routes that lose the same things but can never buy a
+/// route that loses more. ADR-0012: `alpha = lost` via `composite_black` and
+/// via `composite_white` are both correct and look nothing alike, and only the
+/// user knows which they want.
+const PREFERENCE_MISMATCH: f64 = 0.2;
+
 pub fn edge_cost(e: &Edge) -> f64 {
     let mut c = DEPTH_COST;
     for v in e.loss.0.values() {
@@ -86,6 +94,9 @@ pub struct Plan {
     pub target: String,
     pub hops: Vec<Hop>,
     pub totals: Totals,
+    /// What replaced each lost property, composed along the route (the first
+    /// hop to destroy a property decides). Part of the loss signature.
+    pub loss_policy: std::collections::BTreeMap<String, String>,
     /// Generated from `totals.loss`, never hand-written (invariant 8).
     pub rationale: String,
 }
@@ -93,14 +104,16 @@ pub struct Plan {
 impl Plan {
     /// Two routes with the same signature offer the user the same trade-off,
     /// whatever engines they pass through. Used to deduplicate alternatives.
+    ///
+    /// Includes policies. Without them, PNG to JPEG via `composite_black`,
+    /// `composite_white` and `discard_channel` collapsed into ONE offered
+    /// choice, though they produce visibly different images (ADR-0012).
     pub fn loss_signature(&self) -> String {
-        self.totals
-            .loss
-            .0
-            .iter()
+        let mut parts: Vec<String> = self.totals.loss.0.iter()
             .map(|(k, v)| format!("{k}={}", v.as_str()))
-            .collect::<Vec<_>>()
-            .join(",")
+            .collect();
+        parts.extend(self.loss_policy.iter().map(|(k, p)| format!("{k}~{p}")));
+        parts.join(",")
     }
 
     /// A short label for what this route is FOR, derived from its loss vector.
@@ -116,13 +129,20 @@ impl Plan {
         if lost.is_empty() {
             return "faithful — nothing tracked is lost".into();
         }
+        // Name what replaced a lost property, so routes that differ only in
+        // policy are distinguishable in a list, not only in the rationale.
+        let how: Vec<String> = self.loss_policy.iter()
+            .filter(|(k, _)| lost.contains(&k.as_str()))
+            .map(|(k, p)| format!("{k} via {p}"))
+            .collect();
+        let suffix = if how.is_empty() { String::new() } else { format!(" ({})", how.join(", ")) };
         if lost.contains(&"alpha") && lost.len() == 1 {
-            return "flattened — transparency is discarded".into();
+            return format!("flattened — transparency is discarded{suffix}");
         }
         if lost.contains(&"metadata") && lost.len() == 1 {
             return "stripped — pixels intact, metadata discarded".into();
         }
-        format!("lossy — discards {}", lost.join(", "))
+        format!("lossy — discards {}{suffix}", lost.join(", "))
     }
 }
 
@@ -148,6 +168,7 @@ pub struct Planner<'a> {
     /// Indices into `reg.edges` that are eligible under current policy.
     eligible: Vec<usize>,
     adjacency: HashMap<String, Vec<usize>>,
+    prefer: std::collections::BTreeMap<String, String>,
 }
 
 pub struct Policy {
@@ -158,11 +179,15 @@ pub struct Policy {
     /// rule 6). `capability-cartographer` sets it true to probe new edges —
     /// that is how the bootstrap chicken-and-egg is resolved.
     pub allow_unverified: bool,
+    /// Preferred policy per property, e.g. `alpha -> composite_white`. Routes
+    /// whose policy differs rank lower (`PREFERENCE_MISMATCH`); routes are
+    /// never excluded for it. Empty by default: no preference.
+    pub prefer: std::collections::BTreeMap<String, String>,
 }
 
 impl Default for Policy {
     fn default() -> Self {
-        Policy { build_profile: "lgpl".into(), allow_unverified: false }
+        Policy { build_profile: "lgpl".into(), allow_unverified: false, prefer: Default::default() }
     }
 }
 
@@ -183,10 +208,18 @@ impl<'a> Planner<'a> {
         for &i in &eligible {
             adjacency.entry(reg.edges[i].from.clone()).or_default().push(i);
         }
-        Planner { reg, eligible, adjacency }
+        Planner { reg, eligible, adjacency, prefer: policy.prefer.clone() }
     }
 
     pub fn eligible_count(&self) -> usize { self.eligible.len() }
+
+    /// `edge_cost` plus the preference penalty for this planner's policy.
+    fn cost(&self, e: &Edge) -> f64 {
+        let mismatches = self.prefer.iter()
+            .filter(|(prop, want)| e.loss_policy.get(*prop).is_some_and(|have| have != *want))
+            .count();
+        edge_cost(e) + mismatches as f64 * PREFERENCE_MISMATCH
+    }
 
     /// Dijkstra, with optional bans. The bans are what Yen's algorithm needs
     /// to force the search away from routes it has already found.
@@ -244,7 +277,7 @@ impl<'a> Planner<'a> {
                 if !e.requires.is_empty() && !e.requires.iter().all(|r| here.contains(r)) {
                     continue;
                 }
-                let next_cost = cost + edge_cost(e);
+                let next_cost = cost + self.cost(e);
                 let mut np = path.clone();
                 np.push(ei);
                 let key = (e.to.clone(), capabilities(seed, &np));
@@ -265,7 +298,7 @@ impl<'a> Planner<'a> {
             return None;
         }
         let e = &self.reg.edges[edge_index];
-        Some(self.materialize(&e.from, &e.to, &[edge_index], edge_cost(e)))
+        Some(self.materialize(&e.from, &e.to, &[edge_index], self.cost(e)))
     }
 
     pub fn plan(&self, from: &str, to: &str) -> Option<Plan> {
@@ -314,7 +347,7 @@ impl<'a> Planner<'a> {
                 if let Some((spur, _)) = self.shortest(&spur_node, to, &banned_edges, &banned_nodes, root) {
                     let mut total: Vec<usize> = root.to_vec();
                     total.extend(spur);
-                    let cost: f64 = total.iter().map(|&e| edge_cost(&self.reg.edges[e])).sum();
+                    let cost: f64 = total.iter().map(|&e| self.cost(&self.reg.edges[e])).sum();
                     let known = accepted.iter().chain(candidates.iter()).any(|(p, _)| *p == total);
                     if !known {
                         candidates.push((total, cost));
@@ -386,6 +419,8 @@ impl<'a> Planner<'a> {
             }
         }
         let rationale = total_loss.explain_with(&policies);
+        // A policy only describes a property the route actually lost.
+        policies.retain(|k, _| total_loss.get(k).is_some_and(|v| v != LossValue::Preserved));
         Plan {
             registry_version: self.reg.version.clone(),
             source: from.to_string(),
@@ -397,6 +432,7 @@ impl<'a> Planner<'a> {
                 estimated_ms: ms,
                 cost,
             },
+            loss_policy: policies,
             rationale,
         }
     }

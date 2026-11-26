@@ -30,7 +30,7 @@ All in `core/src/`, one Rust crate.
 |---|---|
 | `registry.rs` | Loads `registry/formats`, `engines`, `edges`. |
 | `detect.rs` | Content-first detection by signature. The extension is recorded separately and only breaks ties (ADR-0005). |
-| `planner.rs` | Dijkstra plus Yen's k-shortest paths over **verified** edges. Engines outside the active build profile are pruned before search (ADR-0007). Every plan carries a plain-language explanation generated from its loss vector. |
+| `planner.rs` | Dijkstra plus Yen's k-shortest paths over **verified** edges. Engines outside the active build profile are pruned before search (ADR-0007). Routes that lose the same properties but replace them differently (`loss_policy`, ADR-0012) are separate choices, and `--prefer alpha=composite_white` ranks a matching policy first without ever outweighing fidelity. Every plan carries a plain-language explanation generated from its loss vector. |
 | `loss.rs` | The closed property vocabulary and composition rules (`docs/specs/loss-vector.md`). |
 | `engines.rs`, `subprocess.rs` | Engine adapters. In-process for image-rs; external programs run with argument vectors, timeouts, classified failures and a self-removing scratch directory. |
 | `execute.rs` | Runs a plan hop by hop through the engine each edge names, executing its recorded invocation verbatim, and emits a receipt: digests, route, declared vs measured loss. Raster results are measured in-process; other results are marked unmeasured in the receipt (audio is measured with `tools/measure_audio.py`). |

@@ -65,6 +65,10 @@ effect:  Loses transparency and metadata — transparent areas become black.
          Reduces colour depth and fine detail. Keeps colour accuracy and resolution.
 ```
 
+Where engines lose a property in different ways, say which you want:
+`--prefer alpha=composite_white` picks the route that turns transparency white.
+`huh plan image/png image/jpeg -k 5` lists every distinct choice.
+
 **`huh clean`** — rebuilds a file from its parsed content, discarding metadata,
 hidden chunks, trailing data and active content, and reports what that cost.
 

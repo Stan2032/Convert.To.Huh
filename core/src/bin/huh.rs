@@ -25,7 +25,7 @@ fn usage() -> ExitCode {
         "huh — a planner over a typed conversion graph\n\n\
          USAGE:\n  \
            huh detect <file>\n  \
-           huh plan <from> <to> [-k N] [--allow-unverified] [--profile lgpl|gpl]\n  \
+           huh plan <from> <to> [-k N] [--allow-unverified] [--profile lgpl|gpl] [--prefer prop=policy]\n  \
            huh suggest <file> [--allow-unverified]   what can this become, and what does each cost?\n  \
            huh convert <in> <out> [--quality 1-100] [--allow-unverified] [--receipt out.json]\n  \
            huh clean <in> <out> [--dpi N] [--report r.json]   detect, rebuild, report\n  \
@@ -45,9 +45,16 @@ fn opt(args: &[String], name: &str) -> Option<String> {
 }
 
 fn policy_from(args: &[String]) -> planner::Policy {
+    // `--prefer alpha=composite_white`, repeatable: rank routes whose policy
+    // for that property matches above those whose policy differs (ADR-0012).
+    let prefer = args.windows(2)
+        .filter(|w| w[0] == "--prefer")
+        .filter_map(|w| w[1].split_once('=').map(|(k, v)| (k.to_string(), v.to_string())))
+        .collect();
     planner::Policy {
         build_profile: opt(args, "--profile").unwrap_or_else(|| "lgpl".into()),
         allow_unverified: flag(args, "--allow-unverified"),
+        prefer,
     }
 }
 
@@ -106,7 +113,8 @@ fn main() -> ExitCode {
                 for (i, pl) in plans.iter().enumerate() {
                     eprintln!("  [{}] {}", i + 1, pl.intent_label());
                     eprintln!("      route: {}", pl.hops.iter()
-                        .map(|h| h.to.clone()).collect::<Vec<_>>().join(" -> "));
+                        .map(|h| format!("{} --{}--> {}", h.from, h.engine, h.to))
+                        .collect::<Vec<_>>().join("  |  "));
                     eprintln!("      cost:  {:.2}", pl.totals.cost);
                     eprintln!("      {}\n", pl.rationale);
                 }
@@ -397,7 +405,7 @@ fn main() -> ExitCode {
                 let pol = planner::Policy { build_profile: pol_name.into(), ..Default::default() };
                 let verified = planner::Planner::new(&reg, &pol).eligible_count();
                 let pol_all = planner::Policy {
-                    build_profile: pol_name.into(), allow_unverified: true
+                    build_profile: pol_name.into(), allow_unverified: true, ..Default::default()
                 };
                 let all = planner::Planner::new(&reg, &pol_all).eligible_count();
                 println!("  profile {pol_name:<5} {verified} verified edges eligible, {all} including unverified");
