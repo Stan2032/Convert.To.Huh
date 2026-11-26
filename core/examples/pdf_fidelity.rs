@@ -32,10 +32,13 @@ const CLEAN_DPI: u32 = 150;
 /// size change is reported separately rather than hidden.
 const ROUNDING_PX: u32 = 2;
 
+/// Render pages in colour. Not `-gray`: poppler's CMYK-to-grey differs from
+/// CMYK-to-RGB-then-luma, which is the path `huh clean`'s pages take, so a
+/// grey render scored a faithful CMYK page 0.755 (Govdocs1 025835.pdf).
 fn render(pdf: &Path, dir: &Path, prefix: &str, dpi: u32) -> Vec<image::DynamicImage> {
     let out = dir.join(prefix);
     let st = Command::new("pdftoppm")
-        .args(["-r", &dpi.to_string(), "-gray", "-png"])
+        .args(["-r", &dpi.to_string(), "-png"])
         .arg(pdf)
         .arg(&out)
         .status()
