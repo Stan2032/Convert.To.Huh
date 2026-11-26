@@ -23,10 +23,6 @@ concurrency       = "process-per-job"
 crash_expected    = false
 default_timeout_s = 900
 
-[runtimes]
-native = true
-wasm   = true
-
 [notes]
 text = """
 MEASURED BUILD 2026-08-22: ffmpeg 6.1.1 (Ubuntu 7:6.1.1-3ubuntu5). The audio

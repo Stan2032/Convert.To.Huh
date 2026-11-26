@@ -16,8 +16,8 @@ misattributed — the reported symptom is rarely where the problem is.
 plan, and every engine version (`docs/specs/conversion-plan.md`). Reproduce
 that exact plan before changing anything.
 
-**2. Isolate the hop.** Hops are content-addressed and persisted (ADR-0008), so
-you can inspect intermediates directly. Do not debug a 5-hop plan as a unit.
+**2. Isolate the hop.** Re-run the plan one hop at a time and inspect each
+intermediate. Do not debug a 5-hop plan as a unit.
 Find the first hop whose output is wrong — which is frequently *earlier* than
 the hop that reported the error, because a bad intermediate often only becomes
 fatal downstream.

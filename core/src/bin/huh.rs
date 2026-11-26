@@ -1,11 +1,9 @@
 //! `huh` — the CLI for Convert.To.Huh.
 //!
-//!   huh detect <file>
-//!   huh plan <from-format> <to-format> [--allow-unverified] [--profile P]
-//!   huh convert <in> <out> [--quality N] [--allow-unverified] [--receipt R.json]
-//!   huh graph
+//! Produces and checks the conversion-loss dataset (ADR-0011). Run with no
+//! arguments for usage.
 
-use huh_core::{clean, detect, execute, export, planner, registry::Registry, sanitize};
+use huh_core::{clean, detect, execute, export, planner, registry::Registry};
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
@@ -27,11 +25,10 @@ fn usage() -> ExitCode {
         "huh — a planner over a typed conversion graph\n\n\
          USAGE:\n  \
            huh detect <file>\n  \
-           huh plan <from> <to> [-k N] [--allow-unverified] [--profile lgpl|gpl] [--runtime native|wasm]\n  \
+           huh plan <from> <to> [-k N] [--allow-unverified] [--profile lgpl|gpl]\n  \
            huh suggest <file> [--allow-unverified]   what can this become, and what does each cost?\n  \
            huh convert <in> <out> [--quality 1-100] [--allow-unverified] [--receipt out.json]\n  \
            huh clean <in> <out> [--dpi N] [--report r.json]   detect, rebuild, report\n  \
-           huh sanitize <in> <out> [--to <format-id>] [--quality 1-100] [--report r.json]\n  \
            huh graph\n  \
            huh export [--out FILE]      emit the registry as a public dataset\n\n\
          Formats are registry ids, e.g. image/png, image/jpeg."
@@ -51,7 +48,6 @@ fn policy_from(args: &[String]) -> planner::Policy {
     planner::Policy {
         build_profile: opt(args, "--profile").unwrap_or_else(|| "lgpl".into()),
         allow_unverified: flag(args, "--allow-unverified"),
-        runtime: opt(args, "--runtime").unwrap_or_else(|| "native".into()),
     }
 }
 
@@ -94,9 +90,9 @@ fn main() -> ExitCode {
             let pol = policy_from(&args);
             let p = planner::Planner::new(&reg, &pol);
             eprintln!(
-                "registry {} — {} of {} edges eligible (profile={}, runtime={}, unverified={})",
+                "registry {} — {} of {} edges eligible (profile={}, unverified={})",
                 reg.version, p.eligible_count(), reg.edges.len(),
-                pol.build_profile, pol.runtime, pol.allow_unverified
+                pol.build_profile, pol.allow_unverified
             );
             let k: usize = opt(&args, "-k").and_then(|v| v.parse().ok()).unwrap_or(1);
             if k > 1 {
@@ -305,84 +301,29 @@ fn main() -> ExitCode {
                         eprintln!("\nproperties destroyed: {}", report.properties_lost.join(", "));
                         eprintln!("(that is the COST of cleaning, not a bug — see docs/specs/loss-vector.md)");
                     }
-                    if let Some(s) = report.sanitize.as_ref().and_then(|s| s.content_ssim) {
-                        eprintln!("content intact: SSIM {s:.4}");
-                    }
+                    let faithful = match report.sanitize.as_ref() {
+                        Some(sr) => {
+                            match (sr.content_ssim, sr.content_preserved) {
+                                (Some(s), true) => eprintln!("content intact: SSIM {s:.4}"),
+                                (Some(s), false) => eprintln!(
+                                    "WARNING: content CHANGED, SSIM {s:.4} — the rebuild was not faithful"),
+                                (None, _) => eprintln!(
+                                    "WARNING: content not comparable (geometry changed)"),
+                            }
+                            sr.content_preserved
+                        }
+                        None => true,
+                    };
                     if let Some(r) = opt(&args, "--report") {
                         let _ = std::fs::write(&r, serde_json::to_string_pretty(&report).unwrap());
                         eprintln!("report:  {r}");
                     }
+                    // A rebuild that mangles the content is a failure, even
+                    // though it is technically "clean".
+                    if !faithful { return ExitCode::from(4); }
                     ExitCode::SUCCESS
                 }
                 Err(e) => { eprintln!("clean failed: {e}"); ExitCode::FAILURE }
-            }
-        }
-
-        "sanitize" => {
-            let (Some(inp), Some(outp)) = (args.get(1), args.get(2)) else { return usage() };
-            let bytes = match std::fs::read(inp) {
-                Ok(b) => b,
-                Err(e) => { eprintln!("{inp}: {e}"); return ExitCode::FAILURE; }
-            };
-            let name = Path::new(inp).file_name().map(|s| s.to_string_lossy().to_string());
-            let d = detect::detect(&reg, &bytes, name.as_deref());
-            if d.detected_by == "unknown" {
-                eprintln!(
-                    "refused: cannot identify {inp} by content.\n\
-                     Sanitizing means parsing content and rebuilding it. An \
-                     unidentified file cannot be parsed, so there is nothing to \
-                     rebuild from — passing the bytes through unchanged would be \
-                     the one genuinely dangerous outcome."
-                );
-                return ExitCode::from(3);
-            }
-            let target = opt(&args, "--to").unwrap_or_else(|| d.format.clone());
-            let quality: u8 = opt(&args, "--quality").and_then(|q| q.parse().ok()).unwrap_or(95);
-
-            eprintln!("detected {} (by {}, confidence {:.2})", d.format, d.detected_by, d.confidence);
-            if d.extension_mismatch {
-                eprintln!("NOTE:    extension disagrees with content — sanitizing by CONTENT type.");
-            }
-
-            match sanitize::sanitize(&bytes, &d.format, &target, quality) {
-                Ok((out, report)) => {
-                    if let Err(e) = std::fs::write(outp, &out) {
-                        eprintln!("{outp}: {e}");
-                        return ExitCode::FAILURE;
-                    }
-                    eprintln!("\nrebuilt {} -> {} ({} -> {} bytes)",
-                              d.format, target, report.input_bytes, report.output_bytes);
-                    if report.passengers.is_empty() {
-                        eprintln!("no non-content data found");
-                    } else {
-                        eprintln!("\nremoved {} passenger(s), {} bytes:",
-                                  report.passengers.len(), report.passenger_bytes);
-                        for p in &report.passengers {
-                            eprintln!("  {:<16} {:<12} {:>6} B   {}",
-                                      p.kind, p.label, p.bytes, p.note);
-                        }
-                    }
-                    match report.content_ssim {
-                        Some(s) if report.content_preserved =>
-                            eprintln!("\ncontent intact: SSIM {s:.4}"),
-                        Some(s) =>
-                            eprintln!("\nWARNING: content CHANGED, SSIM {s:.4} — the rebuild was not faithful"),
-                        None =>
-                            eprintln!("\nWARNING: content not comparable (geometry changed)"),
-                    }
-                    if !report.properties_lost.is_empty() {
-                        eprintln!("properties destroyed: {}", report.properties_lost.join(", "));
-                    }
-                    if let Some(r) = opt(&args, "--report") {
-                        let _ = std::fs::write(&r, serde_json::to_string_pretty(&report).unwrap());
-                        eprintln!("report:  {r}");
-                    }
-                    // A rebuild that mangles the content is a failure, even though
-                    // it is technically "sanitized".
-                    if !report.content_preserved { return ExitCode::from(4); }
-                    ExitCode::SUCCESS
-                }
-                Err(e) => { eprintln!("sanitize failed: {e}"); ExitCode::FAILURE }
             }
         }
 
@@ -437,7 +378,7 @@ fn main() -> ExitCode {
                 let pol = planner::Policy { build_profile: pol_name.into(), ..Default::default() };
                 let verified = planner::Planner::new(&reg, &pol).eligible_count();
                 let pol_all = planner::Policy {
-                    build_profile: pol_name.into(), allow_unverified: true, ..Default::default()
+                    build_profile: pol_name.into(), allow_unverified: true
                 };
                 let all = planner::Planner::new(&reg, &pol_all).eligible_count();
                 println!("  profile {pol_name:<5} {verified} verified edges eligible, {all} including unverified");

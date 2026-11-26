@@ -25,9 +25,6 @@ Contract: `docs/specs/conversion-plan.md`.
   (ADR-0007) or above the permitted hostility class are removed from the graph,
   so an illegal route cannot be proposed and then fail at runtime. A legally
   unavailable route does not exist.
-- Runtime-profile awareness: planning for `browser` and `server` yields
-  different graphs. Estimate peak memory and decide *before* execution whether
-  the job fits on-device (ADR-0006).
 
 ## Techniques adopted from the reference implementation
 

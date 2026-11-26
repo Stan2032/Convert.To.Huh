@@ -34,9 +34,9 @@ diagnosis. `input_malformed`, `input_unsupported`, `budget_exceeded`,
 `internal`. `sandbox_violation` is never retried and always alerts — an engine
 attempting a forbidden syscall is either exploited or exploitable.
 
-**Be honest about `memory_model`.** The planner's browser-vs-server decision
-depends on it (ADR-0006). Marking a whole-file engine as `streaming` produces
-confident wrong estimates and out-of-memory failures in users' tabs.
+**Be honest about `memory_model`.** It is published in the dataset and the
+planner's cost estimates use it. Marking a whole-file engine as `streaming`
+produces confident wrong estimates and out-of-memory failures.
 
 **Sever delegation.** No delegate binaries on `PATH`. ImageMagick must not be
 able to reach Ghostscript, ever.

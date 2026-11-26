@@ -1,6 +1,6 @@
 # 0002 — One core, compiled to native and WASM
 
-Status: **accepted** · 2026-08-20
+Status: **superseded** by [ADR-0015](0015-scope-is-the-dataset.md) · 2026-08-20
 
 ## Context
 

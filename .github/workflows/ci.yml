@@ -82,21 +82,3 @@ jobs:
         run: |
           cargo build --manifest-path core/Cargo.toml --release
           ./tools/verify_edges.sh 85
-
-  wasm:
-    name: Core compiles to wasm32 (ADR-0002)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          # Keep the token out of .git/config, where any later step could read it.
-          persist-credentials: false
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: wasm32-unknown-unknown
-      - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: core
-      # One planner, two runtimes. If this breaks, browser and server can drift.
-      - name: Build for wasm32
-        run: cargo build --manifest-path core/Cargo.toml --lib --target wasm32-unknown-unknown --release

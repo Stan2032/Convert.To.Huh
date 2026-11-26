@@ -30,6 +30,9 @@ Details and sources: `docs/RESEARCH.md §4`.
 **Isolation tier by declared hostility.** WASM for engines we compile; gVisor
 default for native; Firecracker microVM for `hostility: extreme`. You assign
 the class — integrators propose, you decide, and revising upward is normal.
+These tiers are published data for consumers; this repository enforces only
+process-level isolation (`core/src/subprocess.rs`, ADR-0015), and must say so
+wherever it could be mistaken for more.
 gVisor costs 10–30% on I/O-heavy work but near zero on compute-heavy work,
 which is what conversion is, so the default tier is affordable.
 

@@ -1,6 +1,6 @@
 # 0008 — Plan execution is a state machine over persisted hops
 
-Status: **accepted** · 2026-08-20
+Status: **superseded** by [ADR-0015](0015-scope-is-the-dataset.md) · 2026-08-20
 
 ## Context
 

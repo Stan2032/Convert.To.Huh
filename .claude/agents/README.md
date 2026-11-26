@@ -1,6 +1,6 @@
 # Agents
 
-Fifteen specialists. The division is by **recurring problem with its own
+Eleven specialists. The division is by **recurring problem with its own
 invariants**, not by layer of the stack — because the hard parts of this project
 are not layers. Keeping a registry honest, deciding what a cross-domain
 conversion *means*, and containing a memory-unsafe parser are three different
@@ -23,14 +23,6 @@ skills that happen to touch the same files.
 | `route-planner-engineer` | Graph search, cost model, ranking | Pathfinding, the cost function, plan determinism, or the planner picking a route that looks wrong |
 | `semantic-bridge-designer` | Cross-domain semantics | Deciding what a conversion between unlike kinds should *mean*; classifying an operation; designing intent options; whether a conversion should exist |
 
-### The doing
-
-| Agent | Owns | Use when |
-|---|---|---|
-| `pipeline-architect` | Server orchestration | Execution state machine, hop caching and resume, storage lifecycle, uploads, backpressure, observability |
-| `wasm-runtime-engineer` | Browser execution | WASM builds, cross-origin isolation, OPFS, memory budgets, WebCodecs, bundle size, local-vs-server |
-| `api-contract-designer` | Public interfaces | HTTP API, CLI, plan and receipt wire formats, error responses, versioning |
-
 ### The checking
 
 | Agent | Owns | Use when |
@@ -38,7 +30,6 @@ skills that happen to touch the same files.
 | `sandbox-warden` | Threat model, sandbox | Anything security-shaped. **Has veto power over engine integration.** |
 | `fidelity-analyst` | Quality measurement | Fidelity harness, calibrating declared loss against measured, quality regressions |
 | `corpus-keeper` | Test corpus | Adding specimens, reference files, fuzz seeds, minimized reproductions, specimen licensing |
-| `perf-profiler` | Performance | Benchmarks, budgets, validating the planner's cost estimates against reality |
 | `conversion-forensics` | Debugging | A specific file fails, converts wrong, is misidentified, or is far slower than estimated |
 
 ### The keeping-honest
@@ -56,9 +47,8 @@ The dependencies are real, and mostly flow toward verification:
 format-registry-curator ─┐
 engine-integrator ───────┼─▶ capability-cartographer ─▶ route-planner-engineer
 corpus-keeper ───────────┘            ▲                          │
-                                      │                          ▼
-                          fidelity-analyst ◀────────── pipeline-architect
-                                                        wasm-runtime-engineer
+                                      │
+                          fidelity-analyst
 
 sandbox-warden           ─── vetoes ──▶ engine-integrator
 license-compliance-officer ─ gates ───▶ engine-integrator

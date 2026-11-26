@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-Fourteen binding decisions. An ADR constrains what may be built; if your work
+Fifteen decisions, twelve of them in force. An ADR constrains what may be built; if your work
 requires violating one, **stop and revisit the ADR first** rather than working
 around it. Reversal means a new ADR that supersedes the old one and states what
 changed our mind — never a quiet edit.
@@ -12,19 +12,20 @@ preference wearing a decision's clothes.
 | # | Decision | Status |
 |---|---|---|
 | [0001](0001-plan-routes-not-pairs.md) | Plan routes; do not tabulate pairs | accepted |
-| [0002](0002-one-core-two-runtimes.md) | One core, compiled to native and WASM | accepted |
+| [0002](0002-one-core-two-runtimes.md) | One core, compiled to native and WASM | superseded by 0015 |
 | [0003](0003-engines-are-hostile.md) | Engines are hostile and unreliable | accepted |
 | [0004](0004-loss-is-a-vector.md) | Loss is a vector, not a scalar | accepted |
 | [0005](0005-never-trust-the-extension.md) | Never trust the extension | accepted |
-| [0006](0006-local-first-with-computed-escape.md) | Local-first, with a computed escape to the server | accepted |
+| [0006](0006-local-first-with-computed-escape.md) | Local-first, with a computed escape to the server | superseded by 0015 |
 | [0007](0007-build-profiles.md) | Build profiles are a first-class concept | accepted |
-| [0008](0008-plan-execution-state-machine.md) | Plan execution is a state machine over persisted hops | accepted |
+| [0008](0008-plan-execution-state-machine.md) | Plan execution is a state machine over persisted hops | superseded by 0015 |
 | [0009](0009-synthesis-is-never-silent.md) | Synthesis is never silent | accepted |
 | [0010](0010-conversion-is-not-a-cipher.md) | Conversion is not a cipher; it is a canonicalizer | accepted |
 | [0011](0011-the-registry-is-the-deliverable.md) | The registry is the deliverable | accepted |
 | [0012](0012-lost-needs-a-policy-qualifier.md) | `lost` needs a policy qualifier | accepted |
 | [0013](0013-loss-belongs-to-the-invocation.md) | Loss belongs to the invocation, not the engine | accepted |
 | [0014](0014-signal-fidelity-is-a-property.md) | `signal_fidelity` is a tracked property | accepted |
+| [0015](0015-scope-is-the-dataset.md) | Scope is the dataset and the CLI that produces it | accepted |
 
 ## Which ones bite most often
 
@@ -47,6 +48,10 @@ preference wearing a decision's clothes.
   condition 0012 had itself written down. Read the pair together: they are the
   clearest demonstration in this repository that the "what would change our
   mind" section is load-bearing rather than decorative.
+
+- **0015** sets the scope: the dataset and the CLI that produces it. It
+  supersedes the browser, server and orchestration decisions (0002, 0006,
+  0008), which were never built.
 
 ## Reading order for someone new
 

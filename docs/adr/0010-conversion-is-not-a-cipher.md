@@ -242,5 +242,8 @@ engine; that is a start, not a result.
 ## References
 
 - `core/examples/path_channel.rs` — the experiment.
+- `experiments/binary_waterfall.py` and `experiments/pdf_flatten.py` were
+  removed under ADR-0015, as outside the project's scope. Both are recoverable
+  with `git show 448dd73:experiments/<name>`.
 - `docs/RESEARCH.md §5` — engine hostility; why sanitization needs isolation.
 - ADR-0004 — loss as a vector, which supplies the "what was destroyed" report.
