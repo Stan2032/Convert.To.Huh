@@ -1759,6 +1759,58 @@ that could not be right, noticed because someone looked at it rather than
 because a test failed.
 
 
+## 18. Real files: the first real-world tier
+
+Every specimen until now was synthetic, built to exercise one property. That is
+how a loss is found, but it cannot say how often the loss bites on files
+people actually have. Govdocs1 (digitalcorpora.org: ~1 million files from US
+government web servers) supplied the first real-world tier, measured
+2026-11-26.
+
+**Access.** The corpus is on S3, which this environment reaches. Each thread is
+a ~300 MB zip; `tools/fetch_govdocs.py` reads the zip directory and selected
+members with HTTP Range requests, so 110 files cost ~40 MB and 45 seconds.
+Digital Corpora says the files "may be (to the best of our knowledge) freely
+redistributed". That is not CC0, so only a manifest (member, size, SHA-256) is
+committed; the bytes are fetched and verified on demand. The OPF format corpus
+is on GitHub, which the proxy blocks except for raw files.
+
+**Sample.** The first members by name of `thread0.zip`: 40 PDF, 40 JPEG, 27
+GIF, 3 PNG. Identified by content (`huh detect`), all as named.
+`tools/run_govdocs.py` writes `corpus/govdocs1/results.json`.
+
+| Set | Run | Result |
+|---|---|---|
+| 40 PDF | `huh clean` | 40/40 succeeded; **40/40 had extractable text, 0/40 kept it**; page count preserved in all 40 (1,788 pages); output **median 23× the input size** (1.4× to 179×) |
+| 40 JPEG | `huh convert` → PNG | 40/40, SSIM 1.0, no contradictions; colour depth never exercised |
+| 27 GIF | `huh convert` → PNG | 27/27, SSIM 1.0, no contradictions; transparency present in 2 |
+| 3 PNG | `huh convert` → JPEG | 3/3, no contradictions; the one with transparency lost it to black as declared (SSIM 0.334) |
+
+**Findings.**
+
+1. **The declared PDF cost is the typical case.** `huh clean` declares
+   `text_as_text = lost`. Every real PDF sampled had text, so every one paid
+   that cost. The synthetic specimen could only show that the loss exists.
+2. **Size is a cost the loss vector cannot express.** Rendering pages to
+   images made cleaned PDFs a median 23 times larger. No tracked property
+   covers it, because size is not a property of the content. A consumer
+   choosing a sanitisation route would want to know it.
+3. **Real files rarely exercise what the synthetic corpus targets.** No real
+   JPEG, GIF or PNG had more than 8 bits per channel, and only 3 of 70 had
+   transparency. The synthetic specimens are still the right tool for finding
+   a loss; the real tier says how often it matters.
+4. **No contradictions.** Across 110 real files, no measured property
+   contradicted a declared one. That is evidence the verified raster entries
+   hold beyond the specimens they were measured on, within the properties
+   these files exercise.
+
+**Design implications.** Real-world prevalence ("exercised in N of M real
+files") is worth publishing beside each loss, since it separates a loss that
+is theoretical for most users from one that hits everyone. And output size
+needs a home: either a measured cost field on edges or a documented reason it
+stays out of scope.
+
+
 ## Sources
 
 - [Convert To It](https://converttoit.com/) · [Grokipedia: Convert to it](https://grokipedia.com/page/Convert_to_it) · [Convert To It API](https://converttoit.com/api)

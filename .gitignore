@@ -36,3 +36,7 @@ corpus/**/*.avi
 .idea/
 .vscode/
 *.swp
+
+# Govdocs1 real-world tier: fetched by tools/fetch_govdocs.py, not committed
+# (not CC0; see the script). The manifest is committed.
+corpus/govdocs1/files/
