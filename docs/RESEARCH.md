@@ -1853,7 +1853,9 @@ screen. The same GIF decodes four ways:
 libvips `gifsave` and image-rs both write the frame at (0, 0). A negative
 offset (671351.png, x = −720) is clamped to 0 and harmless. Reproduced on a
 synthetic specimen (`corpus/raster/png-with-offset.png`) and pinned by a
-characterisation test that CI runs with ImageMagick installed.
+characterisation test that CI runs with ImageMagick installed. Measured here on
+ImageMagick 6.9.12; the test also passes on CI's ImageMagick 7.1.2-18 (run of
+2026-11-26), so the defect is not confined to the older major version.
 
 **Design implications.**
 
@@ -2048,7 +2050,9 @@ exactly and reduces 256 (to 255 on a small flat image, 254 on the committed
 specimen `corpus/raster/palette-256.png`); ImageMagick keeps 256. libvips
 reserves at most 255 entries, plausibly one for transparency, and once over
 the cap it requantises the whole image, which on a photograph means many
-colours rather than one. A test pins both sides.
+colours rather than one. A test pins both sides, and passes on libvips
+8.15.1 here and 8.18.0 in CI (2026-11-26), so the cap persists across those
+releases.
 
 Partial transparency was binarised on the one real PNG that had any, by all
 three engines, as GIF requires.
