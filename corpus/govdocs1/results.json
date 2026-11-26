@@ -1,6 +1,74 @@
 {
   "source": "Govdocs1, members listed in MANIFEST.tsv",
   "summary": {
+    "application/octet-stream": {
+      "files": 60,
+      "succeeded": 0,
+      "failed": {
+        "040/040090.ppt": "no route exercised for application/octet-stream",
+        "042/042295.ppt": "no route exercised for application/octet-stream",
+        "049/049331.doc": "no route exercised for application/octet-stream",
+        "049/049978.doc": "no route exercised for application/octet-stream",
+        "050/050294.xls": "no route exercised for application/octet-stream",
+        "070/070770.ppt": "no route exercised for application/octet-stream",
+        "090/090703.doc": "no route exercised for application/octet-stream",
+        "098/098807.doc": "no route exercised for application/octet-stream",
+        "103/103224.ppt": "no route exercised for application/octet-stream",
+        "117/117275.doc": "no route exercised for application/octet-stream",
+        "120/120669.ppt": "no route exercised for application/octet-stream",
+        "124/124256.xls": "no route exercised for application/octet-stream",
+        "127/127725.xls": "no route exercised for application/octet-stream",
+        "140/140201.xls": "no route exercised for application/octet-stream",
+        "142/142669.doc": "no route exercised for application/octet-stream",
+        "146/146109.xls": "no route exercised for application/octet-stream",
+        "149/149115.ppt": "no route exercised for application/octet-stream",
+        "149/149391.xls": "no route exercised for application/octet-stream",
+        "153/153202.xls": "no route exercised for application/octet-stream",
+        "153/153378.doc": "no route exercised for application/octet-stream",
+        "153/153670.ppt": "no route exercised for application/octet-stream",
+        "157/157581.doc": "no route exercised for application/octet-stream",
+        "164/164731.ppt": "no route exercised for application/octet-stream",
+        "167/167086.doc": "no route exercised for application/octet-stream",
+        "177/177770.ppt": "no route exercised for application/octet-stream",
+        "188/188908.xls": "no route exercised for application/octet-stream",
+        "190/190298.ppt": "no route exercised for application/octet-stream",
+        "200/200110.ppt": "no route exercised for application/octet-stream",
+        "206/206498.doc": "no route exercised for application/octet-stream",
+        "210/210687.doc": "no route exercised for application/octet-stream",
+        "221/221800.ppt": "no route exercised for application/octet-stream",
+        "224/224168.xls": "no route exercised for application/octet-stream",
+        "236/236837.xls": "no route exercised for application/octet-stream",
+        "247/247546.xls": "no route exercised for application/octet-stream",
+        "252/252017.doc": "no route exercised for application/octet-stream",
+        "252/252572.doc": "no route exercised for application/octet-stream",
+        "275/275138.doc": "no route exercised for application/octet-stream",
+        "285/285215.doc": "no route exercised for application/octet-stream",
+        "286/286720.xls": "no route exercised for application/octet-stream",
+        "287/287004.ppt": "no route exercised for application/octet-stream",
+        "294/294354.ppt": "no route exercised for application/octet-stream",
+        "300/300839.ppt": "no route exercised for application/octet-stream",
+        "301/301340.doc": "no route exercised for application/octet-stream",
+        "308/308180.doc": "no route exercised for application/octet-stream",
+        "320/320509.doc": "no route exercised for application/octet-stream",
+        "323/323884.ppt": "no route exercised for application/octet-stream",
+        "327/327584.ppt": "no route exercised for application/octet-stream",
+        "328/328128.doc": "no route exercised for application/octet-stream",
+        "328/328783.xls": "no route exercised for application/octet-stream",
+        "332/332930.doc": "no route exercised for application/octet-stream",
+        "369/369699.ppt": "no route exercised for application/octet-stream",
+        "389/389011.ppt": "no route exercised for application/octet-stream",
+        "411/411381.ppt": "no route exercised for application/octet-stream",
+        "465/465032.xls": "no route exercised for application/octet-stream",
+        "477/477301.xls": "no route exercised for application/octet-stream",
+        "481/481128.xls": "no route exercised for application/octet-stream",
+        "490/490684.xls": "no route exercised for application/octet-stream",
+        "490/490853.xls": "no route exercised for application/octet-stream",
+        "491/491485.xls": "no route exercised for application/octet-stream",
+        "503/503430.xls": "no route exercised for application/octet-stream"
+      },
+      "contradicted_registry": {},
+      "measured": {}
+    },
     "application/pdf": {
       "files": 40,
       "succeeded": 40,
@@ -224,6 +292,18 @@
       "bytes_ratio": 13.376
     },
     {
+      "member": "040/040090.ppt",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "042/042295.ppt",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
       "member": "042/042916.jpg",
       "format": "image/jpeg",
       "exit": 0,
@@ -257,6 +337,24 @@
       "text_chars_after": 0,
       "pages_after": 15,
       "bytes_ratio": 9.039
+    },
+    {
+      "member": "049/049331.doc",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "049/049978.doc",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "050/050294.xls",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
     },
     {
       "member": "050/050739.pdf",
@@ -369,6 +467,12 @@
       "bytes_ratio": 16.682
     },
     {
+      "member": "070/070770.ppt",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
       "member": "071/071930.pdf",
       "format": "application/pdf",
       "exit": 0,
@@ -449,6 +553,12 @@
       "bytes_ratio": 178.514
     },
     {
+      "member": "090/090703.doc",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
       "member": "092/092145.pdf",
       "format": "application/pdf",
       "exit": 0,
@@ -477,6 +587,18 @@
       "text_chars_after": 0,
       "pages_after": 2,
       "bytes_ratio": 7.81
+    },
+    {
+      "member": "098/098807.doc",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "103/103224.ppt",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
     },
     {
       "member": "103/103568.pdf",
@@ -544,6 +666,12 @@
       "contradictions": []
     },
     {
+      "member": "117/117275.doc",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
       "member": "118/118130.pdf",
       "format": "application/pdf",
       "exit": 0,
@@ -552,6 +680,12 @@
       "text_chars_after": 0,
       "pages_after": 57,
       "bytes_ratio": 4.043
+    },
+    {
+      "member": "120/120669.ppt",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
     },
     {
       "member": "122/122199.pdf",
@@ -574,6 +708,12 @@
       "bytes_ratio": 21.802
     },
     {
+      "member": "124/124256.xls",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
       "member": "126/126056.jpg",
       "format": "image/jpeg",
       "exit": 0,
@@ -587,6 +727,12 @@
         "color_depth": "not-exercised"
       },
       "contradictions": []
+    },
+    {
+      "member": "127/127725.xls",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
     },
     {
       "member": "127/127867.jpg",
@@ -620,6 +766,18 @@
       "contradictions": []
     },
     {
+      "member": "140/140201.xls",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "142/142669.doc",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
       "member": "143/143961.jpg",
       "format": "image/jpeg",
       "exit": 0,
@@ -635,6 +793,12 @@
       "contradictions": []
     },
     {
+      "member": "146/146109.xls",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
       "member": "148/148876.jpg",
       "format": "image/jpeg",
       "exit": 0,
@@ -648,6 +812,54 @@
         "color_depth": "not-exercised"
       },
       "contradictions": []
+    },
+    {
+      "member": "149/149115.ppt",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "149/149391.xls",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "153/153202.xls",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "153/153378.doc",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "153/153670.ppt",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "157/157581.doc",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "164/164731.ppt",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "167/167086.doc",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
     },
     {
       "member": "167/167569.gif",
@@ -682,6 +894,24 @@
       "contradictions": []
     },
     {
+      "member": "177/177770.ppt",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "188/188908.xls",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "190/190298.ppt",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
       "member": "193/193300.jpg",
       "format": "image/jpeg",
       "exit": 0,
@@ -712,6 +942,12 @@
       "contradictions": []
     },
     {
+      "member": "200/200110.ppt",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
       "member": "205/205348.jpg",
       "format": "image/jpeg",
       "exit": 0,
@@ -725,6 +961,12 @@
         "color_depth": "not-exercised"
       },
       "contradictions": []
+    },
+    {
+      "member": "206/206498.doc",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
     },
     {
       "member": "209/209450.jpg",
@@ -742,6 +984,12 @@
       "contradictions": []
     },
     {
+      "member": "210/210687.doc",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
       "member": "216/216937.jpg",
       "format": "image/jpeg",
       "exit": 0,
@@ -755,6 +1003,12 @@
         "color_depth": "not-exercised"
       },
       "contradictions": []
+    },
+    {
+      "member": "221/221800.ppt",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
     },
     {
       "member": "221/221964.gif",
@@ -773,6 +1027,12 @@
       "contradictions": []
     },
     {
+      "member": "224/224168.xls",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
       "member": "233/233174.jpg",
       "format": "image/jpeg",
       "exit": 0,
@@ -786,6 +1046,30 @@
         "color_depth": "not-exercised"
       },
       "contradictions": []
+    },
+    {
+      "member": "236/236837.xls",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "247/247546.xls",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "252/252017.doc",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "252/252572.doc",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
     },
     {
       "member": "255/255923.gif",
@@ -849,6 +1133,12 @@
       "contradictions": []
     },
     {
+      "member": "275/275138.doc",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
       "member": "281/281194.jpg",
       "format": "image/jpeg",
       "exit": 0,
@@ -862,6 +1152,24 @@
         "color_depth": "not-exercised"
       },
       "contradictions": []
+    },
+    {
+      "member": "285/285215.doc",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "286/286720.xls",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "287/287004.ppt",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
     },
     {
       "member": "291/291276.jpg",
@@ -894,6 +1202,24 @@
       "contradictions": []
     },
     {
+      "member": "294/294354.ppt",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "300/300839.ppt",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "301/301340.doc",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
       "member": "306/306941.jpg",
       "format": "image/jpeg",
       "exit": 0,
@@ -907,6 +1233,48 @@
         "color_depth": "not-exercised"
       },
       "contradictions": []
+    },
+    {
+      "member": "308/308180.doc",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "320/320509.doc",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "323/323884.ppt",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "327/327584.ppt",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "328/328128.doc",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "328/328783.xls",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "332/332930.doc",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
     },
     {
       "member": "333/333762.jpg",
@@ -939,6 +1307,12 @@
       "contradictions": []
     },
     {
+      "member": "369/369699.ppt",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
       "member": "371/371171.jpg",
       "format": "image/jpeg",
       "exit": 0,
@@ -952,6 +1326,12 @@
         "color_depth": "not-exercised"
       },
       "contradictions": []
+    },
+    {
+      "member": "389/389011.ppt",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
     },
     {
       "member": "389/389146.jpg",
@@ -1000,6 +1380,12 @@
       "contradictions": []
     },
     {
+      "member": "411/411381.ppt",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
       "member": "414/414328.jpg",
       "format": "image/jpeg",
       "exit": 0,
@@ -1028,6 +1414,48 @@
         "color_depth": "not-exercised"
       },
       "contradictions": []
+    },
+    {
+      "member": "465/465032.xls",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "477/477301.xls",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "481/481128.xls",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "490/490684.xls",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "490/490853.xls",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "491/491485.xls",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "503/503430.xls",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
     },
     {
       "member": "504/504929.gif",

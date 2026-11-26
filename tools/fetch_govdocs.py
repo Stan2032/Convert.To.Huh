@@ -46,7 +46,8 @@ BASE = "https://digitalcorpora.s3.amazonaws.com/corpora/files/govdocs1/threads/"
 # Chosen by the name extension only to decide what to download; every specimen
 # is identified by content when it is used. PNG is rare in Govdocs1 (3-6 per
 # thread), so it is taken from all ten threads.
-QUOTA = {"thread0.zip": {"pdf": 40, "jpg": 40, "gif": 27, "png": None}}
+QUOTA = {"thread0.zip": {"pdf": 40, "jpg": 40, "gif": 27, "png": None,
+                         "doc": 20, "xls": 20, "ppt": 20}}
 QUOTA |= {f"thread{i}.zip": {"png": None} for i in range(1, 10)}
 
 

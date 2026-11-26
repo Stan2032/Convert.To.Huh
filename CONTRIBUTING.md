@@ -101,7 +101,7 @@ Nothing is quietly overwritten.
 
 ## Checking an entry against real files
 
-`corpus/govdocs1/` is a tier of 146 real files from Govdocs1, fetched on
+`corpus/govdocs1/` is a tier of 206 real files from Govdocs1, fetched on
 demand and verified by SHA-256 (`tools/fetch_govdocs.py`), then run through
 `huh` by `tools/run_govdocs.py`. Use it to show whether a loss you measured on
 a synthetic specimen applies to real files, and how often. Both scripts are

@@ -1871,6 +1871,76 @@ characterisation test that CI runs with ImageMagick installed.
    vocabulary via an ADR; one engine's bug does not justify one yet.
 
 
+## 19. Office documents to PDF: what LibreOffice loses on real files
+
+60 real Govdocs1 documents (the first 20 by name of each of `.doc`, `.xls` and
+`.ppt` in `thread0.zip`) through `soffice --convert-to pdf`, LibreOffice
+24.2.7.2, measured 2026-11-26 with `tools/measure_office.py`. Output:
+`corpus/govdocs1/office.json`.
+
+**All 60 converted. None crashed**, despite `crash_expected = true` on the
+engine (§3.2); that describes large batches through unoserver, not one
+document per process.
+
+| Source | Distinct words in the PDF | Numbers in the PDF exactly | Requested font embedded |
+|---|---|---|---|
+| `.doc` (20) | median 0.997, min 0.968 | (not a loss; see 3 below) | 0 of 20 |
+| `.xls` (18 with text) | median 0.983, min 0.701 | median 0.976, min 0.251 | 0 of 20 |
+| `.ppt` (18 with text) | median 0.990, min 0.768 | 1.0 (6 with numbers) | 0 of 20 |
+
+Reference text comes from catdoc, xls2csv and catppt, not from LibreOffice,
+so the engine does not grade itself.
+
+**The instrument was wrong four times before these numbers held.** Each error
+produced a plausible figure:
+
+1. **Counting occurrences.** catppt prints slide text several times over, so a
+   faithful PDF scored 0.11 to 0.15 on word recall. Recall is now over distinct
+   words.
+2. **Numbers as words.** A spreadsheet stores `2179678` and the PDF prints
+   `2,179,678`; every missing token in the worst `.xls` was a number. Grouping
+   commas are now removed and numbers measured separately.
+3. **Hidden field codes.** catdoc prints table-of-contents bookmark ids such as
+   `_Toc124583466`, which nobody sees. They read as missing numbers in `.doc`,
+   so `.doc` number recall is reported but is not a loss.
+4. **Fonts LibreOffice invents.** Its flat-ODF font list includes its own
+   defaults, so a substitute counted as a surviving requested font. A font now
+   counts as requested only if its whole name occurs in the source bytes
+   (`Inter` matched "international" and "inter-modal" until the match was
+   bounded).
+
+**Findings.**
+
+1. **Text survives.** `.doc` and `.ppt` keep about 99% of distinct words. For
+   PDF output, `text_as_text = preserved` is the right declaration.
+2. **Spreadsheets lose stored precision.** What survives exactly is what was
+   displayed: `1.79197397571441` becomes its formatted value. Median 97.6% of
+   distinct numbers survive; the worst file keeps 25%. This is
+   `precision = degraded`, inherent to printing a spreadsheet rather than a
+   LibreOffice defect.
+3. **Spreadsheet cells clip.** The worst `.xls` word score (0.70, `490684.xls`)
+   is a long text cell, a glossary, cut at its neighbour's edge, so its words
+   never reach the PDF.
+4. **Fonts are always substituted here.** No document kept a requested font:
+   Arial and Times New Roman became Liberation Sans and Serif (metric
+   compatible), others fell back to DejaVu or Inter. **This depends on the
+   installed fonts, not only on the engine**: this environment has no Microsoft
+   core fonts. A `fonts` loss recorded for this edge has to name the font
+   environment, or it describes a machine rather than a conversion.
+5. **One unresolved case.** `300839.ppt` keeps 77% of distinct words. The
+   missing text (`dominates`, `slide after next`) is in the raw file but in
+   neither the slides, the speaker notes, the hidden slides nor LibreOffice's
+   own model of the presentation. It may be PowerPoint "fast save" residue,
+   which a PDF dropping would be correct, or an import gap. Telling them apart
+   needs PowerPoint.
+
+**Design implications.** These are the first office edges with evidence.
+Making them first-class needs (a) format entries for the three binary Office
+formats, (b) detection that reads the OLE2 directory, since all three share the
+signature `D0 CF 11 E0`, and (c) a way for a `fonts` value to state the font
+environment it was measured in.
+
+
 ## Sources
 
 - [Convert To It](https://converttoit.com/) · [Grokipedia: Convert to it](https://grokipedia.com/page/Convert_to_it) · [Convert To It API](https://converttoit.com/api)
