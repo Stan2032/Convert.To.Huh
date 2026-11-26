@@ -87,7 +87,7 @@ verified_at = "2026-08-23"
 verified_by = "capability-cartographer"
 
 [edge.verification.measured]
-tool          = "tools/measure_audio.py --snr"
+tool          = "tools/measure_audio.py --snr --dc"
 engine_build  = "SoX v14.4.2"
 snr_db        = 5.09
 snr_db_nodither = 11.11
@@ -109,6 +109,14 @@ The consequence for the schema is clear even though the cause is not:
 before ADR-0012. It needs a policy vocabulary — `dither`, `truncate`, `round`
 are the obvious candidates — and that vocabulary should not be written until
 someone can explain the remaining gap, or it will encode a guess.
+
+RESOLVED (this paragraph and the two above are kept as the record): the gap
+was rounding versus truncation, §14.6, and `policy = "round"` now says so. A
+third engine, GStreamer, rounds as well and with dither off produces samples
+byte-identical to `sox -D` (§14.7). Re-measured 2026-11-26 with `--dc`: `sox -D`
+reads +0.0014 steps, centred. The dithered SNR moves run to run (5.09 to 5.16 dB
+across four runs) because SoX's dither is random; 5.09 is one run, not a
+constant.
 
 Specimen note: measured on QUIET content, where 8-bit quantisation is
 catastrophic. The same conversion on loud content scores around 50 dB and the

@@ -442,6 +442,18 @@
       "license_verified": true
     },
     {
+      "id": "gstreamer",
+      "name": "GStreamer",
+      "version_pin": ">=1.24,<2",
+      "license": "LGPL-2.1-or-later",
+      "build_profiles": [
+        "lgpl",
+        "gpl"
+      ],
+      "patent_exposure": "codec-dependent",
+      "license_verified": true
+    },
+    {
       "id": "image-rs",
       "name": "image-rs (Rust `image` crate)",
       "version_pin": ">=0.25,<0.26",
@@ -641,9 +653,9 @@
       "measured": {
         "dc_offset_counts": -0.4975,
         "engine_build": "ffmpeg 6.1.1",
-        "note": "TRUNCATES where SoX rounds, introducing exactly half an LSB of DC offset — mean\noutput 127.5025 where offset-binary u8 centres on 128 (docs/RESEARCH.md §14.6).\n\nOn this specimen the signal peaks at 1.28 counts, so half a count is 39% of peak\nand dominates the 3.8 dB SNR. On loud content the same offset is inaudible and\nthe two engines would look identical. The divergence is real and its visibility\nis entirely a property of the specimen.\n\nThe `policy = \"truncate\"` qualifier here is the whole reason ADR-0012 exists:\nthis edge and the SoX one both report bit_depth = degraded, both correctly, and\none of them shifts your audio by half a count.\n",
+        "note": "TRUNCATES where SoX rounds, introducing exactly half an LSB of DC offset — mean\noutput 127.5025 where offset-binary u8 centres on 128 (docs/RESEARCH.md §14.6).\n\nOn this specimen the signal peaks at 1.28 counts, so half a count is 39% of peak\nand dominates the 3.8 dB SNR. On loud content the same offset is inaudible and\nthe two engines would look identical. The divergence is real and its visibility\nis entirely a property of the specimen.\n\nThe `policy = \"truncate\"` qualifier here is the whole reason ADR-0012 exists:\nthis edge and the SoX one both report bit_depth = degraded, both correctly, and\none of them shifts your audio by half a count.\n\nTHE OUTLIER, CONFIRMED 2026-11-26. A third engine settled which behaviour is the\nodd one out: GStreamer 1.24.2 with dither off writes samples byte-identical to\n`sox -D` (registry/edges/gstreamer.toml). Two independent engines round; ffmpeg\ntruncates. The DC offset is now reproducible from the harness: `--dc` reports\n-0.4975 steps of 8-bit, matching the figure first found with a one-off\nhistogram script.\n",
         "snr_db": 3.76,
-        "tool": "tools/measure_audio.py --snr"
+        "tool": "tools/measure_audio.py --snr --dc"
       },
       "generational": true
     },
@@ -713,6 +725,135 @@
         "tool": "core/examples/gif_dither.rs"
       },
       "generational": true
+    },
+    {
+      "from": "audio/wav",
+      "to": "audio/wav",
+      "from_kind": "AudioPCM",
+      "to_kind": "AudioPCM",
+      "engine": "gstreamer",
+      "invocation": "gst-launch-1.0 filesrc location=IN ! wavparse ! audioconvert ! audio/x-raw,format=U8 ! wavenc ! filesink location=OUT",
+      "operation": "Transform",
+      "loss": {
+        "audio_channels": "preserved",
+        "bit_depth": "degraded",
+        "metadata": "lost",
+        "sample_rate": "preserved",
+        "signal_fidelity": "degraded",
+        "time": "preserved"
+      },
+      "loss_policy": {
+        "bit_depth": "round"
+      },
+      "verification": "verified",
+      "specimens": [
+        "corpus/audio/quiet-mono.wav"
+      ],
+      "measured": {
+        "dc_offset_counts": 0.0018,
+        "engine_build": "GStreamer 1.24.2",
+        "note": "Default `audioconvert` behaviour: TPDF dither, then ROUND to nearest. The output\nstays centred on 128 (+0.0018 steps), where ffmpeg's sits half a step low.\n\n5.12 dB sits beside SoX's dithered 5.09 to 5.16 dB. Unlike SoX the dither is\ndeterministic: three runs gave 5.12 dB each time, so this figure reproduces\nexactly, where SoX's dithered figure moves in the second decimal place.\n",
+        "snr_db": 5.12,
+        "tool": "tools/measure_audio.py --snr --dc"
+      },
+      "generational": true
+    },
+    {
+      "from": "audio/wav",
+      "to": "audio/wav",
+      "from_kind": "AudioPCM",
+      "to_kind": "AudioPCM",
+      "engine": "gstreamer",
+      "invocation": "gst-launch-1.0 filesrc location=IN ! wavparse ! audioconvert dithering=none ! audio/x-raw,format=U8 ! wavenc ! filesink location=OUT",
+      "operation": "Transform",
+      "loss": {
+        "audio_channels": "preserved",
+        "bit_depth": "degraded",
+        "metadata": "lost",
+        "sample_rate": "preserved",
+        "signal_fidelity": "degraded",
+        "time": "preserved"
+      },
+      "loss_policy": {
+        "bit_depth": "round"
+      },
+      "verification": "verified",
+      "specimens": [
+        "corpus/audio/quiet-mono.wav"
+      ],
+      "measured": {
+        "dc_offset_counts": 0.0014,
+        "engine_build": "GStreamer 1.24.2",
+        "note": "THE TIE-BREAKER. With dither off, GStreamer's 8-bit samples are BYTE-IDENTICAL\nto `sox -D`'s on the same specimen: same 11.11 dB, same +0.0014-step offset,\nsame histogram (129: 16,420 · 127: 16,360 · 128: 11,320).\n\nSo two independent engines round to nearest and one truncates. `truncate` is\nffmpeg's behaviour, not a convention, which is the same shape as the alpha\nfinding (§13.4): two engines agreeing and one differing, where only a third\nengine could say which one was the outlier.\n",
+        "snr_db": 11.11,
+        "tool": "tools/measure_audio.py --snr --dc"
+      },
+      "generational": true
+    },
+    {
+      "from": "audio/wav",
+      "to": "audio/wav",
+      "from_kind": "AudioPCM",
+      "to_kind": "AudioPCM",
+      "engine": "gstreamer",
+      "invocation": "gst-launch-1.0 filesrc location=IN ! wavparse ! audioconvert ! audio/x-raw,channels=1 ! wavenc ! filesink location=OUT",
+      "operation": "Transform",
+      "loss": {
+        "audio_channels": "lost",
+        "bit_depth": "preserved",
+        "metadata": "lost",
+        "sample_rate": "preserved",
+        "signal_fidelity": "degraded",
+        "time": "preserved"
+      },
+      "loss_policy": {
+        "audio_channels": "downmix_average"
+      },
+      "verification": "verified",
+      "specimens": [
+        "corpus/audio/stereo-distinct.wav"
+      ],
+      "measured": {
+        "channels": "2 -> 1",
+        "engine_build": "GStreamer 1.24.2",
+        "left_440hz_retained": 0.25,
+        "note": "THIRD ENGINE, SAME ANSWER. The left channel's 440 Hz tone comes back at 0.2500\nof its power, which is what averaging predicts, and the samples are\nbit-identical to `ffmpeg -ac 1` (SoX already matched ffmpeg): run\n`tools/measure_audio.py FFMPEG_MONO.wav GST_MONO.wav --snr` and it reports an\ninfinite SNR. Three independent\nengines average, so `downmix_average` is a convention rather than a habit.\n\nThat answers the caution recorded on the ffmpeg downmix edge, that two engines\nagreeing is how the alpha investigation started before a third one differed.\nHere the third one agreed.\n",
+        "snr_vs_ffmpeg": "infinite (bit-identical)",
+        "tool": "tools/measure_audio.py --bands 440"
+      },
+      "generational": false
+    },
+    {
+      "from": "audio/wav",
+      "to": "audio/flac",
+      "from_kind": "AudioPCM",
+      "to_kind": "AudioPCM",
+      "engine": "gstreamer",
+      "invocation": "gst-launch-1.0 filesrc location=IN ! wavparse ! audioconvert ! flacenc ! filesink location=OUT",
+      "operation": "Transcode",
+      "loss": {
+        "audio_channels": "preserved",
+        "bit_depth": "preserved",
+        "metadata": "lost",
+        "sample_rate": "preserved",
+        "signal_fidelity": "preserved",
+        "time": "preserved"
+      },
+      "verification": "verified",
+      "specimens": [
+        "corpus/audio/highfreq-mono.wav",
+        "corpus/audio/broadband-mono.wav",
+        "corpus/audio/transient-mono.wav",
+        "corpus/audio/stereo-distinct.wav"
+      ],
+      "measured": {
+        "all_octaves_retained": 1.0,
+        "engine_build": "GStreamer 1.24.2",
+        "note": "Lossless, as FLAC must be. Recorded because it is the control for this engine:\nthe harness reads 1.0000 in every octave band through GStreamer's pipeline as\nwell as ffmpeg's, so the GStreamer measurements above are about the\nconversions, not about the harness meeting a new decode path.\n",
+        "snr_db": "infinite (bit-identical)",
+        "tool": "tools/measure_audio.py --broadband --snr"
+      },
+      "generational": false
     },
     {
       "from": "image/png",
@@ -1228,10 +1369,10 @@
       ],
       "measured": {
         "engine_build": "SoX v14.4.2",
-        "note": "DISAGREES WITH FFMPEG, and not only because of dither.\n\n  ffmpeg default            3.8 dB\n  ffmpeg -dither_method 0   3.8 dB   (flag had no visible effect)\n  sox default               5.2 dB\n  sox -D (dither disabled) 11.1 dB\n\nDither explains sox's own 5.9 dB spread — it trades SNR for the removal of\ncorrelated distortion, which is the intended bargain. It does NOT explain the\n7.3 dB gap between sox -D and ffmpeg. That cause is UNKNOWN and deliberately not\nguessed at; see docs/RESEARCH.md §14.5.\n\nThe consequence for the schema is clear even though the cause is not:\n`bit_depth = degraded` is under-specified in exactly the way `alpha = lost` was\nbefore ADR-0012. It needs a policy vocabulary — `dither`, `truncate`, `round`\nare the obvious candidates — and that vocabulary should not be written until\nsomeone can explain the remaining gap, or it will encode a guess.\n\nSpecimen note: measured on QUIET content, where 8-bit quantisation is\ncatastrophic. The same conversion on loud content scores around 50 dB and the\nengines would look identical. A property is only measurable on a specimen that\nexercises it.\n",
+        "note": "DISAGREES WITH FFMPEG, and not only because of dither.\n\n  ffmpeg default            3.8 dB\n  ffmpeg -dither_method 0   3.8 dB   (flag had no visible effect)\n  sox default               5.2 dB\n  sox -D (dither disabled) 11.1 dB\n\nDither explains sox's own 5.9 dB spread — it trades SNR for the removal of\ncorrelated distortion, which is the intended bargain. It does NOT explain the\n7.3 dB gap between sox -D and ffmpeg. That cause is UNKNOWN and deliberately not\nguessed at; see docs/RESEARCH.md §14.5.\n\nThe consequence for the schema is clear even though the cause is not:\n`bit_depth = degraded` is under-specified in exactly the way `alpha = lost` was\nbefore ADR-0012. It needs a policy vocabulary — `dither`, `truncate`, `round`\nare the obvious candidates — and that vocabulary should not be written until\nsomeone can explain the remaining gap, or it will encode a guess.\n\nRESOLVED (this paragraph and the two above are kept as the record): the gap\nwas rounding versus truncation, §14.6, and `policy = \"round\"` now says so. A\nthird engine, GStreamer, rounds as well and with dither off produces samples\nbyte-identical to `sox -D` (§14.7). Re-measured 2026-11-26 with `--dc`: `sox -D`\nreads +0.0014 steps, centred. The dithered SNR moves run to run (5.09 to 5.16 dB\nacross four runs) because SoX's dither is random; 5.09 is one run, not a\nconstant.\n\nSpecimen note: measured on QUIET content, where 8-bit quantisation is\ncatastrophic. The same conversion on loud content scores around 50 dB and the\nengines would look identical. A property is only measurable on a specimen that\nexercises it.\n",
         "snr_db": 5.09,
         "snr_db_nodither": 11.11,
-        "tool": "tools/measure_audio.py --snr"
+        "tool": "tools/measure_audio.py --snr --dc"
       },
       "generational": true
     },
@@ -1257,9 +1398,9 @@
   ],
   "counts": {
     "formats": 14,
-    "engines": 8,
-    "edges_total": 24,
-    "edges_verified": 23,
+    "engines": 9,
+    "edges_total": 28,
+    "edges_verified": 27,
     "edges_claimed": 1,
     "edges_refuted": 0
   }

@@ -1467,6 +1467,41 @@ specimen lesson for the third time.
    would have been a permanent vocabulary error.
 
 
+### 14.7 Third audio engine: ffmpeg is the outlier
+
+§14.6 established that ffmpeg truncates and SoX rounds, but two engines cannot
+say which one is unusual. **GStreamer 1.24.2** (`audioconvert`, LGPL) was added
+as the third, measured 2026-11-26 with `tools/measure_audio.py --snr --dc` on
+the same quiet specimen:
+
+| Invocation | SNR | DC shift (8-bit steps) |
+|---|---|---|
+| `ffmpeg -c:a pcm_u8` | 3.76 dB | **−0.4975** |
+| `sox -D … -b 8` | 11.11 dB | +0.0014 |
+| `gst … audioconvert dithering=none` | 11.11 dB | +0.0014 |
+| `sox … -b 8` (dithered) | 5.09–5.16 dB | ≈0 |
+| `gst … audioconvert` (TPDF dither, default) | 5.12 dB | +0.0018 |
+
+With dither off, GStreamer's samples are **byte-identical** to `sox -D`'s. Two
+independent engines round to nearest; ffmpeg truncates. Downmix agreed across
+all three: GStreamer's mono output is bit-identical to `ffmpeg -ac 1`.
+
+Two smaller findings:
+
+- **GStreamer's dither is deterministic and SoX's is not.** Three GStreamer
+  runs gave 5.12 dB each; SoX gave 5.09, 5.14, 5.16. A dithered SNR recorded
+  from SoX is one sample from a distribution and should be read that way.
+- **The DC-offset finding was itself unreproducible until now.** §14.6's
+  −0.4975 came from a one-off histogram script. `measure_audio.py --dc` now
+  reports it, with self-tests, so the claim that ffmpeg truncates can be
+  checked by anyone.
+
+**Design implication.** `policy = "truncate"` on the ffmpeg edge describes an
+engine-specific choice, not a common convention, which is the case ADR-0012
+and ADR-0013 exist for: the same `bit_depth = degraded` hides a half-step DC
+shift in one of three engines. A consumer choosing a 16-to-8-bit route on
+quiet material should prefer a `round` edge.
+
 ## 15. The pattern behind the policy qualifiers
 
 Three policy vocabularies now exist — `alpha`, `audio_channels`, `bit_depth` —

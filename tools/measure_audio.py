@@ -4,6 +4,7 @@
     python3 tools/measure_audio.py --self-test
     python3 tools/measure_audio.py ORIGINAL.wav CONVERTED.mp3 [--bands 1000,15000]
     python3 tools/measure_audio.py ORIGINAL.wav CONVERTED.mp3 --broadband
+    python3 tools/measure_audio.py ORIGINAL.wav CONVERTED.wav --snr --dc
 
 WHY THIS EXISTS
 ---------------
@@ -242,6 +243,35 @@ def snr_db(orig: list[float], conv: list[float]) -> float | None:
     return 10.0 * math.log10(signal / noise)
 
 
+def dc_shift(orig: list[float], conv: list[float]) -> float:
+    """Change in mean level (DC), on the [-1, 1] scale.
+
+    The measurement behind `bit_depth` policy `truncate` versus `round`
+    (docs/RESEARCH.md §14.6). Rounding to nearest leaves a zero-centred signal
+    centred; truncating shifts it down by half a quantisation step. SNR alone
+    cannot tell the two apart from dither, which is why this is separate.
+    """
+    return sum(conv) / len(conv) - sum(orig) / len(orig)
+
+
+def native_bits(path: Path) -> int | None:
+    """Sample width of a PCM WAV as written, before decode widens it.
+
+    Needed to express a DC shift in the converted file's own quantisation
+    steps — "half a step" is the finding, and it is only visible in those units.
+    """
+    b = path.read_bytes()
+    if b[:4] != b"RIFF" or b[8:12] != b"WAVE":
+        return None
+    i = 12
+    while i + 8 <= len(b):
+        size = struct.unpack("<I", b[i + 4:i + 8])[0]
+        if b[i:i + 4] == b"fmt ":
+            return struct.unpack("<H", b[i + 22:i + 24])[0]
+        i += 8 + size + (size & 1)
+    return None
+
+
 def octave_bands(rate: int) -> list[tuple[float, float, str]]:
     """Octave bands up to Nyquist — the honest shape for broadband content.
 
@@ -324,7 +354,17 @@ def self_test() -> int:
     print(f"  [{'PASS' if ok else 'FAIL'}] SNR refuses misaligned lengths")
     failures += not ok
 
-    print(f"\nself-test: {8 - failures}/8 passed")
+    # 8. DC shift: none for identical input, and a constant offset is reported
+    #    exactly — the ffmpeg-truncates finding rests on this number.
+    ok = abs(dc_shift(a, a)) < 1e-12
+    print(f"  [{'PASS' if ok else 'FAIL'}] identical signal has zero DC shift")
+    failures += not ok
+    v = dc_shift(a, [x - 0.5 / 128 for x in a])
+    ok = abs(v * 128 + 0.5) < 1e-9
+    print(f"  [{'PASS' if ok else 'FAIL'}] half an 8-bit step down reads -0.5 steps ({v * 128:+.4f})")
+    failures += not ok
+
+    print(f"\nself-test: {10 - failures}/10 passed")
     return 1 if failures else 0
 
 
@@ -338,6 +378,8 @@ def main() -> int:
                     help="report octave bands across the spectrum")
     ap.add_argument("--snr", action="store_true",
                     help="report signal-to-noise ratio in dB (needs equal lengths)")
+    ap.add_argument("--dc", action="store_true",
+                    help="report DC shift, in steps of the converted file's bit depth")
     ap.add_argument("--rate", type=int, default=RATE_DEFAULT)
     ap.add_argument("--self-test", action="store_true")
     args = ap.parse_args()
@@ -380,6 +422,14 @@ def main() -> int:
             print(f"  {'SNR':<16} infinite (bit-identical)")
         else:
             print(f"  {'SNR':<16} {v:.2f} dB")
+    if args.dc:
+        v = dc_shift(co[0], cc[0])
+        bits = native_bits(Path(args.converted))
+        if bits:
+            steps = v * 2 ** (bits - 1)
+            print(f"  {'DC shift':<16} {steps:+.4f} steps of {bits}-bit")
+        else:
+            print(f"  {'DC shift':<16} {v:+.6f} (full scale = 1)")
     return 0
 
 

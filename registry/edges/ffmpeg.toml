@@ -268,7 +268,7 @@ verified_at = "2026-08-23"
 verified_by = "capability-cartographer"
 
 [edge.verification.measured]
-tool         = "tools/measure_audio.py --snr"
+tool         = "tools/measure_audio.py --snr --dc"
 engine_build = "ffmpeg 6.1.1"
 snr_db       = 3.76
 dc_offset_counts = -0.4975
@@ -284,4 +284,11 @@ is entirely a property of the specimen.
 The `policy = "truncate"` qualifier here is the whole reason ADR-0012 exists:
 this edge and the SoX one both report bit_depth = degraded, both correctly, and
 one of them shifts your audio by half a count.
+
+THE OUTLIER, CONFIRMED 2026-11-26. A third engine settled which behaviour is the
+odd one out: GStreamer 1.24.2 with dither off writes samples byte-identical to
+`sox -D` (registry/edges/gstreamer.toml). Two independent engines round; ffmpeg
+truncates. The DC offset is now reproducible from the harness: `--dc` reports
+-0.4975 steps of 8-bit, matching the figure first found with a one-off
+histogram script.
 """
