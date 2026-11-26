@@ -4,6 +4,14 @@ on:
   push:
     branches: ["**"]
   pull_request:
+  # Weekly, against whatever engine versions the runner's Ubuntu ships. The
+  # characterisation tests pin recorded engine behaviour (ImageMagick's
+  # off-screen GIF frame, libvips' 255-colour cap, LibreOffice's output), so
+  # a failure here with no code change means an engine changed behaviour and
+  # the registry entry describing it needs revisiting.
+  schedule:
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
 
 # These jobs only read the repository. Default token scope is wider than that,
 # and a workflow that never needs write access should not be handed it.
