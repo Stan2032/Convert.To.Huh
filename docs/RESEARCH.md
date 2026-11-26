@@ -1769,14 +1769,17 @@ government web servers) supplied the first real-world tier, measured
 
 **Access.** The corpus is on S3, which this environment reaches. Each thread is
 a ~300 MB zip; `tools/fetch_govdocs.py` reads the zip directory and selected
-members with HTTP Range requests, so 110 files cost ~40 MB and 45 seconds.
+members with HTTP Range requests, so the first 110 files cost ~40 MB and 45
+seconds.
 Digital Corpora says the files "may be (to the best of our knowledge) freely
 redistributed". That is not CC0, so only a manifest (member, size, SHA-256) is
 committed; the bytes are fetched and verified on demand. The OPF format corpus
 is on GitHub, which the proxy blocks except for raw files.
 
 **Sample.** The first members by name of `thread0.zip`: 40 PDF, 40 JPEG, 27
-GIF, 3 PNG. Identified by content (`huh detect`), all as named.
+GIF. PNG is rare in Govdocs1 (3 to 6 per thread), so all 39 PNGs from the ten
+threads were taken (added in §18.1; the first run had only thread0's 3).
+Identified by content (`huh detect`), all as named.
 `tools/run_govdocs.py` writes `corpus/govdocs1/results.json`.
 
 | Set | Run | Result |
@@ -1784,7 +1787,7 @@ GIF, 3 PNG. Identified by content (`huh detect`), all as named.
 | 40 PDF | `huh clean` | 40/40 succeeded; **40/40 had extractable text, 0/40 kept it**; page count preserved in all 40 (1,788 pages); output **median 23× the input size** (1.4× to 179×) |
 | 40 JPEG | `huh convert` → PNG | 40/40, SSIM 1.0, no contradictions; colour depth never exercised |
 | 27 GIF | `huh convert` → PNG | 27/27, SSIM 1.0, no contradictions; transparency present in 2 |
-| 3 PNG | `huh convert` → JPEG | 3/3, no contradictions; the one with transparency lost it to black as declared (SSIM 0.334) |
+| 39 PNG | `huh convert` → JPEG | 39/39, no contradictions; the 2 with transparency lost it as declared (SSIM 0.334 and −0.067, §18.1) |
 
 **Findings.**
 
@@ -1796,10 +1799,10 @@ GIF, 3 PNG. Identified by content (`huh detect`), all as named.
    covers it, because size is not a property of the content. A consumer
    choosing a sanitisation route would want to know it.
 3. **Real files rarely exercise what the synthetic corpus targets.** No real
-   JPEG, GIF or PNG had more than 8 bits per channel, and only 3 of 70 had
+   JPEG, GIF or PNG had more than 8 bits per channel, and only 4 of 106 had
    transparency. The synthetic specimens are still the right tool for finding
    a loss; the real tier says how often it matters.
-4. **No contradictions.** Across 110 real files, no measured property
+4. **No contradictions.** Across 146 real files, no measured property
    contradicted a declared one. That is evidence the verified raster entries
    hold beyond the specimens they were measured on, within the properties
    these files exercise.
@@ -1809,6 +1812,63 @@ files") is worth publishing beside each loss, since it separates a loss that
 is theoretical for most users from one that hits everyone. And output size
 needs a home: either a measured cost field on edges or a documented reason it
 stays out of scope.
+
+
+### 18.1 Every verified image edge, on real files
+
+`huh convert` exercises only the planner's cheapest route, so most verified
+edges never met a real file. `Planner::plan_edge` builds a one-hop plan for a
+named edge, and `core/examples/real_edges.rs` runs every verified raster edge
+over every real specimen of its source format (identified by content), through
+the same `execute` path and declared-vs-measured checks as `huh convert`. The
+PNG sample grew to 39 by taking every PNG from all ten Govdocs1 threads.
+Output: `corpus/govdocs1/edges.json`.
+
+14 edges ran on 39 PNG, 40 JPEG or 27 GIF files each: **no failures and no
+contradictions.** No real file had more than 8 bits per channel, so
+`color_depth` was never exercised; 2 PNGs and 2 GIFs had transparency.
+
+The harness lists every result with SSIM below 0.5 for a person to read. Two
+edge families produced them:
+
+- **PNG to JPEG (three edges): explained.** The low scores are exactly the two
+  PNGs with transparency, which all three edges declare `alpha = lost`. The
+  worst-case-background SSIM (§13.9) scores the flattened result against the
+  other background, as designed.
+- **ImageMagick PNG to GIF: not explained.** 303329.png and 189036.png scored
+  0.0 and 0.0006, and no declared property accounts for it.
+
+**The cause** is the PNG `oFFs` chunk, a print-page offset that changes nothing
+about the pixels. `convert IN OUT.gif` writes it as the GIF frame position but
+leaves the logical screen at the image size, so the frame falls outside the
+screen. The same GIF decodes four ways:
+
+| Decoder | Result |
+|---|---|
+| image-rs | 117×64, all black |
+| libvips | 226×183, canvas enlarged |
+| ffmpeg | refuses: "Invalid top position: 119" |
+| ImageMagick | intact |
+
+libvips `gifsave` and image-rs both write the frame at (0, 0). A negative
+offset (671351.png, x = −720) is clamped to 0 and harmless. Reproduced on a
+synthetic specimen (`corpus/raster/png-with-offset.png`) and pinned by a
+characterisation test that CI runs with ImageMagick installed.
+
+**Design implications.**
+
+1. **Receipts did not catch this.** Every declared-vs-measured row agreed:
+   size unchanged, alpha as declared. The falsification step checks only the
+   properties it can observe, and placement is not one. SSIM caught it, and
+   only because a person read the low scores. A loss the vocabulary has no
+   word for is invisible to the checks built on the vocabulary, the same hole
+   §13.7 found for lossy compression.
+2. **Synthetic specimens could not have found it.** Nobody writes an `oFFs`
+   chunk into a test image without already suspecting it. That is the case
+   for the real-world tier in one example.
+3. **Not forced into `geometry`.** Placement is not resolution. If more
+   placement defects appear, a property for canvas placement belongs in the
+   vocabulary via an ADR; one engine's bug does not justify one yet.
 
 
 ## Sources

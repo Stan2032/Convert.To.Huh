@@ -117,4 +117,23 @@ note = """
 Nearest-palette, siding with image-rs against libvips two-to-one — the same
 split as alpha flattening. Uses 252 colours where the others use 255; the
 three-colour difference is unexplained and not worth chasing until it matters.
+
+REAL-WORLD DEFECT, found 2026-11-26 on Govdocs1 (docs/RESEARCH.md §18.1). A PNG
+carrying an `oFFs` page offset comes out as a GIF whose frame sits AT that
+offset while the logical screen stays the image's own size, so the frame lies
+outside the visible area. 2 of 39 real PNGs (303329, 189036); a negative offset
+is clamped to 0 and is harmless. Decoders then disagree about the same file:
+
+  image-rs     117x64, all black
+  libvips      226x183, canvas enlarged to hold the frame
+  ffmpeg       refuses: "Invalid top position: 119"
+  ImageMagick  reads it back intact
+
+libvips `gifsave` and image-rs write the frame at (0, 0). Reproduce with
+`corpus/raster/png-with-offset.png`; the test
+`imagemagick_moves_an_offset_png_outside_the_gif_screen` pins the behaviour.
+
+No tracked property records this. `geometry` is resolution, which is
+unchanged; the pixels survive; the loss is where they are placed. Noted here
+rather than forced into a property that means something else.
 """

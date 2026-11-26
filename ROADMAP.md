@@ -18,7 +18,7 @@ the scope line in [README.md](README.md), which CI checks against the registry.
    payloads, not by how faithful the rebuild is.
 3. **Publish real-world prevalence.** The Govdocs1 tier (R§18) shows how often
    a loss is exercised on real files. That belongs beside each loss in the
-   dataset, and the tier should grow beyond one thread and four formats.
+   dataset, and the tier should grow beyond four formats.
 4. **Decide where output size goes.** `huh clean` makes real PDFs a median 23×
    larger (R§18). No tracked property can say so.
 5. **Video.** `signal_fidelity` will likely need its metric recorded alongside

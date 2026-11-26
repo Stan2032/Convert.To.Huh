@@ -62,11 +62,13 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends libvips-tools poppler-utils \
-            ffmpeg gstreamer1.0-tools gstreamer1.0-plugins-base gstreamer1.0-plugins-good
+            ffmpeg gstreamer1.0-tools gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
+            imagemagick
           vips --version
           pdftoppm -v
           ffmpeg -version | head -1
           gst-launch-1.0 --version | head -1
+          convert -version | head -1
 
       - name: Regenerate the corpus
         # Specimens are generated, not committed, so this also proves the

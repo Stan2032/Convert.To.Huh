@@ -718,7 +718,7 @@
       "measured": {
         "bytes": 14774,
         "engine_build": "ImageMagick 6.9.12",
-        "note": "Nearest-palette, siding with image-rs against libvips two-to-one — the same\nsplit as alpha flattening. Uses 252 colours where the others use 255; the\nthree-colour difference is unexplained and not worth chasing until it matters.\n",
+        "note": "Nearest-palette, siding with image-rs against libvips two-to-one — the same\nsplit as alpha flattening. Uses 252 colours where the others use 255; the\nthree-colour difference is unexplained and not worth chasing until it matters.\n\nREAL-WORLD DEFECT, found 2026-11-26 on Govdocs1 (docs/RESEARCH.md §18.1). A PNG\ncarrying an `oFFs` page offset comes out as a GIF whose frame sits AT that\noffset while the logical screen stays the image's own size, so the frame lies\noutside the visible area. 2 of 39 real PNGs (303329, 189036); a negative offset\nis clamped to 0 and is harmless. Decoders then disagree about the same file:\n\n  image-rs     117x64, all black\n  libvips      226x183, canvas enlarged to hold the frame\n  ffmpeg       refuses: \"Invalid top position: 119\"\n  ImageMagick  reads it back intact\n\nlibvips `gifsave` and image-rs write the frame at (0, 0). Reproduce with\n`corpus/raster/png-with-offset.png`; the test\n`imagemagick_moves_an_offset_png_outside_the_gif_screen` pins the behaviour.\n\nNo tracked property records this. `geometry` is resolution, which is\nunchanged; the pixels survive; the loss is where they are placed. Noted here\nrather than forced into a property that means something else.\n",
         "palette_size": 252,
         "ssim": 0.8799,
         "texture_retained": 0.2,

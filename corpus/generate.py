@@ -153,6 +153,33 @@ def gen_alpha_hard_edge(w=64, h=64):
     write_png(OUT / "rgba-hard-edge.png", w, h, 8, 6, rows)
 
 
+def gen_png_with_offset(w=117, h=64):
+    """An ordinary image carrying an `oFFs` page offset of (109, 119).
+
+    Reduced from Govdocs1 303329.png, a real file (docs/RESEARCH.md §18).
+    `oFFs` records where the image sits on a printed page and changes nothing
+    about its pixels, so most tools ignore it. ImageMagick does not: `convert
+    IN OUT.gif` writes the offset as the GIF frame position without enlarging
+    the logical screen, which puts the whole frame outside the visible area.
+    Decoders then disagree about what the GIF contains.
+    """
+    rows = []
+    for y in range(h):
+        row = bytearray()
+        for x in range(w):
+            row += bytes((40 + (x * 180) // w, 60 + (y * 160) // h, 200))
+        rows.append(bytes(row))
+    raw = b"".join(b"\x00" + r for r in rows)
+    png = (b"\x89PNG\r\n\x1a\n"
+           + chunk(b"IHDR", struct.pack(">IIBBBBB", w, h, 8, 2, 0, 0, 0))
+           + chunk(b"oFFs", struct.pack(">iiB", 109, 119, 0))  # unit 0 = pixels
+           + chunk(b"IDAT", zlib.compress(raw, 9))
+           + chunk(b"IEND", b""))
+    path = OUT / "png-with-offset.png"
+    path.write_bytes(png)
+    print(f"  {path.name:<28} {len(png):>7} bytes  {w}x{h} (oFFs 109,119)")
+
+
 if __name__ == "__main__":
     OUT.mkdir(parents=True, exist_ok=True)
     print("generating corpus specimens:")
@@ -162,4 +189,5 @@ if __name__ == "__main__":
     gen_opaque_rgba()
     gen_png_with_passengers()
     gen_alpha_hard_edge()
+    gen_png_with_offset()
     print("done")

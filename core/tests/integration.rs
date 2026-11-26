@@ -568,6 +568,50 @@ fn audio_routes_run_the_planned_engine_and_say_they_were_not_measured() {
     }
 }
 
+/// ImageMagick writes a PNG's `oFFs` page offset as the GIF frame position
+/// without enlarging the logical screen, so the frame lands entirely outside
+/// the visible area. Found on two real Govdocs1 PNGs (RESEARCH §18.1); the
+/// registry's receipts did not flag it, because no tracked property changed.
+///
+/// A characterisation test: it pins what the engine does, so the registry
+/// note describing it is re-checked on every CI run. If ImageMagick changes
+/// behaviour this fails, and the note must be revised.
+#[test]
+fn imagemagick_moves_an_offset_png_outside_the_gif_screen() {
+    if !engine_present("convert") {
+        eprintln!("skipping: ImageMagick not installed");
+        return;
+    }
+    let dir = std::env::temp_dir().join(format!("huh-offs-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let out = dir.join("out.gif");
+    let st = std::process::Command::new("convert")
+        .arg(root().join("corpus/raster/png-with-offset.png"))
+        .arg(&out)
+        .status()
+        .expect("convert runs");
+    assert!(st.success());
+    let b = std::fs::read(&out).unwrap();
+    std::fs::remove_dir_all(&dir).ok();
+
+    let screen = (u16::from_le_bytes([b[6], b[7]]), u16::from_le_bytes([b[8], b[9]]));
+    let mut i = 13 + if b[10] & 0x80 != 0 { 3 << ((b[10] & 7) + 1) } else { 0 };
+    while b[i] == 0x21 {
+        i += 2;
+        while b[i] != 0 {
+            i += b[i] as usize + 1;
+        }
+        i += 1;
+    }
+    assert_eq!(b[i], 0x2C, "expected an image descriptor");
+    let left = u16::from_le_bytes([b[i + 1], b[i + 2]]);
+    let top = u16::from_le_bytes([b[i + 3], b[i + 4]]);
+    assert_eq!(screen, (117, 64), "logical screen");
+    assert_eq!((left, top), (109, 119), "frame position carries the oFFs offset");
+    // Outside if it starts past the edge on either axis; here top 119 >= height 64.
+    assert!(left >= screen.0 || top >= screen.1, "frame lies wholly outside the screen");
+}
+
 fn engine_present(prog: &str) -> bool {
     std::process::Command::new("which")
         .arg(prog)

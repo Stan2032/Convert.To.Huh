@@ -120,7 +120,7 @@ def summarise(rows: list[dict]) -> dict:
 def main() -> int:
     if not HUH.is_file():
         sys.exit("build first: cargo build --release --manifest-path core/Cargo.toml")
-    members = [line.split("\t")[0] for line in MANIFEST.read_text().splitlines()
+    members = [line.split("\t")[1] for line in MANIFEST.read_text().splitlines()
                if line and not line.startswith("#")]
     rows = []
     with tempfile.TemporaryDirectory() as td:
@@ -139,7 +139,7 @@ def main() -> int:
                 row |= {"exit": None, "error": f"no route exercised for {fmt}"}
             rows.append(row)
             print(f"  {m:<20} {fmt:<18} exit={row['exit']}", flush=True)
-    result = {"source": "Govdocs1 thread0, members listed in MANIFEST.tsv",
+    result = {"source": "Govdocs1, members listed in MANIFEST.tsv",
               "summary": summarise(rows), "files": rows}
     OUT.write_text(json.dumps(result, indent=2) + "\n")
     print(json.dumps(result["summary"], indent=2))

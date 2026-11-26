@@ -1,5 +1,5 @@
 {
-  "source": "Govdocs1 thread0, members listed in MANIFEST.tsv",
+  "source": "Govdocs1, members listed in MANIFEST.tsv",
   "summary": {
     "application/pdf": {
       "files": 40,
@@ -47,22 +47,22 @@
       }
     },
     "image/png": {
-      "files": 3,
-      "succeeded": 3,
+      "files": 39,
+      "succeeded": 39,
       "failed": {},
       "contradicted_registry": {},
-      "ssim_min": 0.334,
-      "ssim_median": 0.9523,
+      "ssim_min": -0.067,
+      "ssim_median": 0.9686,
       "measured": {
         "alpha": {
-          "lost": 1,
-          "not-present-in-input": 2
+          "lost": 2,
+          "not-present-in-input": 37
         },
         "geometry": {
-          "preserved": 3
+          "preserved": 39
         },
         "color_depth": {
-          "not-exercised": 3
+          "not-exercised": 39
         }
       }
     }
@@ -1541,6 +1541,582 @@
         "image-rs [Transcode] image/gif -> image/png"
       ],
       "ssim": 1.0,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "045/045353.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.987033833625977,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "141/141403.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9685898453412605,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "733/733542.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9172175279427699,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "734/734518.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9687814710341346,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "309/309402.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9681737690392445,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "338/338101.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9826104193748649,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "696/696048.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9895501677764036,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "768/768492.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9428273366849754,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "128/128941.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9774202053443256,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "292/292073.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9679041767021759,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "702/702198.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.8804317488346824,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "711/711714.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.898336938745881,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "111/111263.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9913680419747158,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "928/928298.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9159277330036214,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "952/952647.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9801063874265409,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "303/303329.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.984239420560849,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "371/371180.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9764664662952103,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "385/385178.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9685788563108845,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "671/671351.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9888316656917552,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "798/798893.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9584870211807637,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "929/929866.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9773069246710548,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "102/102372.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9606260990179883,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "456/456162.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9838243348442325,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "920/920477.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9688916473495621,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "114/114040.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9554546324206933,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "325/325026.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9690464083888299,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "737/737154.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9228886270103048,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "189/189036.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9793943526775036,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "746/746512.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.94592877991026,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "762/762833.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9004475953487852,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "768/768226.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9072549253906,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "892/892995.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9876140610676049,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "338/338815.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9692657560480055,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "358/358113.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9683355526546973,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "681/681410.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": -0.06697472694222706,
+      "measurements": {
+        "alpha": "lost",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "748/748180.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9765290717304888,
       "measurements": {
         "alpha": "not-present-in-input",
         "geometry": "preserved",

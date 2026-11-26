@@ -99,7 +99,7 @@ conversion run are enough. See [CONTRIBUTING.md](CONTRIBUTING.md).
 |---|---|
 | [`dataset/`](dataset/) | The published dataset and its schema. |
 | [`registry/`](registry/) | Source data: formats, engines, measured conversions. |
-| [`corpus/`](corpus/) | Synthetic specimens (committed, reproducible via `corpus/generate*.py`) and a real-world tier of 110 Govdocs1 files, fetched by digest. |
+| [`corpus/`](corpus/) | Synthetic specimens (committed, reproducible via `corpus/generate*.py`) and a real-world tier of 146 Govdocs1 files, fetched by digest. |
 | [`core/`](core/) | Rust: detection, planning, sanitization, export. |
 | [`tools/`](tools/) | Validators and measurement harnesses, run in CI. |
 | [`docs/`](docs/) | Architecture, decision records, research notes. |

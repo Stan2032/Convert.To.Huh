@@ -1,0 +1,414 @@
+[
+  {
+    "contradictions": [],
+    "engine": "libvips",
+    "failed": {},
+    "from": "image/png",
+    "invocation": "vips gifsave IN OUT",
+    "measured": {
+      "alpha": {
+        "not-present-in-input": 37,
+        "preserved": 2
+      },
+      "color_depth": {
+        "not-exercised": 39
+      },
+      "geometry": {
+        "preserved": 39
+      }
+    },
+    "ran": 39,
+    "ssim_below_0_5": [],
+    "ssim_median": 1.0,
+    "ssim_min": 0.9665,
+    "ssim_min_specimen": "920477.png",
+    "to": "image/gif"
+  },
+  {
+    "contradictions": [],
+    "engine": "imagemagick",
+    "failed": {},
+    "from": "image/png",
+    "invocation": "convert IN OUT.gif",
+    "measured": {
+      "alpha": {
+        "not-present-in-input": 37,
+        "preserved": 2
+      },
+      "color_depth": {
+        "not-exercised": 39
+      },
+      "geometry": {
+        "preserved": 39
+      }
+    },
+    "ran": 39,
+    "ssim_below_0_5": [
+      {
+        "specimen": "303329.png",
+        "ssim": 0.0
+      },
+      {
+        "specimen": "189036.png",
+        "ssim": 0.0006
+      }
+    ],
+    "ssim_median": 1.0,
+    "ssim_min": 0.0,
+    "ssim_min_specimen": "303329.png",
+    "to": "image/gif"
+  },
+  {
+    "contradictions": [],
+    "engine": "image-rs",
+    "failed": {},
+    "from": "image/png",
+    "invocation": null,
+    "measured": {
+      "alpha": {
+        "lost": 2,
+        "not-present-in-input": 37
+      },
+      "color_depth": {
+        "not-exercised": 39
+      },
+      "geometry": {
+        "preserved": 39
+      }
+    },
+    "ran": 39,
+    "ssim_below_0_5": [
+      {
+        "specimen": "681410.png",
+        "ssim": -0.0586
+      },
+      {
+        "specimen": "726912.png",
+        "ssim": 0.396
+      }
+    ],
+    "ssim_median": 0.9833,
+    "ssim_min": -0.0586,
+    "ssim_min_specimen": "681410.png",
+    "to": "image/jpeg"
+  },
+  {
+    "contradictions": [],
+    "engine": "image-rs",
+    "failed": {},
+    "from": "image/jpeg",
+    "invocation": null,
+    "measured": {
+      "color_depth": {
+        "not-exercised": 40
+      },
+      "geometry": {
+        "preserved": 40
+      }
+    },
+    "ran": 40,
+    "ssim_below_0_5": [],
+    "ssim_median": 1.0,
+    "ssim_min": 1.0,
+    "ssim_min_specimen": "020269.jpg",
+    "to": "image/png"
+  },
+  {
+    "contradictions": [],
+    "engine": "image-rs",
+    "failed": {},
+    "from": "image/png",
+    "invocation": null,
+    "measured": {
+      "alpha": {
+        "not-present-in-input": 37,
+        "preserved": 2
+      },
+      "color_depth": {
+        "not-exercised": 39
+      },
+      "geometry": {
+        "preserved": 39
+      }
+    },
+    "ran": 39,
+    "ssim_below_0_5": [],
+    "ssim_median": 1.0,
+    "ssim_min": 1.0,
+    "ssim_min_specimen": "045353.png",
+    "to": "image/tiff"
+  },
+  {
+    "contradictions": [],
+    "engine": "image-rs",
+    "failed": {},
+    "from": "image/png",
+    "invocation": null,
+    "measured": {
+      "alpha": {
+        "not-present-in-input": 37,
+        "preserved": 2
+      },
+      "color_depth": {
+        "not-exercised": 39
+      },
+      "geometry": {
+        "preserved": 39
+      }
+    },
+    "ran": 39,
+    "ssim_below_0_5": [],
+    "ssim_median": 1.0,
+    "ssim_min": 1.0,
+    "ssim_min_specimen": "045353.png",
+    "to": "image/webp"
+  },
+  {
+    "contradictions": [],
+    "engine": "image-rs",
+    "failed": {},
+    "from": "image/png",
+    "invocation": null,
+    "measured": {
+      "alpha": {
+        "not-present-in-input": 37,
+        "preserved": 2
+      },
+      "color_depth": {
+        "not-exercised": 39
+      },
+      "geometry": {
+        "preserved": 39
+      }
+    },
+    "ran": 39,
+    "ssim_below_0_5": [],
+    "ssim_median": 1.0,
+    "ssim_min": 0.9582,
+    "ssim_min_specimen": "726912.png",
+    "to": "image/gif"
+  },
+  {
+    "contradictions": [],
+    "engine": "image-rs",
+    "failed": {},
+    "from": "image/png",
+    "invocation": null,
+    "measured": {
+      "alpha": {
+        "not-present-in-input": 37,
+        "preserved": 2
+      },
+      "color_depth": {
+        "not-exercised": 39
+      },
+      "geometry": {
+        "preserved": 39
+      }
+    },
+    "ran": 39,
+    "ssim_below_0_5": [],
+    "ssim_median": 1.0,
+    "ssim_min": 1.0,
+    "ssim_min_specimen": "045353.png",
+    "to": "image/bmp"
+  },
+  {
+    "contradictions": [],
+    "engine": "image-rs",
+    "failed": {},
+    "from": "image/gif",
+    "invocation": null,
+    "measured": {
+      "alpha": {
+        "not-present-in-input": 25,
+        "preserved": 2
+      },
+      "color_depth": {
+        "not-exercised": 27
+      },
+      "geometry": {
+        "preserved": 27
+      }
+    },
+    "ran": 27,
+    "ssim_below_0_5": [],
+    "ssim_median": 1.0,
+    "ssim_min": 1.0,
+    "ssim_min_specimen": "129996.gif",
+    "to": "image/png"
+  },
+  {
+    "contradictions": [],
+    "engine": "image-rs",
+    "failed": {},
+    "from": "image/tiff",
+    "invocation": null,
+    "measured": {},
+    "ran": 0,
+    "to": "image/png"
+  },
+  {
+    "contradictions": [],
+    "engine": "image-rs",
+    "failed": {},
+    "from": "image/webp",
+    "invocation": null,
+    "measured": {},
+    "ran": 0,
+    "to": "image/png"
+  },
+  {
+    "contradictions": [],
+    "engine": "image-rs",
+    "failed": {},
+    "from": "image/bmp",
+    "invocation": null,
+    "measured": {},
+    "ran": 0,
+    "to": "image/png"
+  },
+  {
+    "contradictions": [],
+    "engine": "libvips",
+    "failed": {},
+    "from": "image/png",
+    "invocation": "vips jpegsave IN OUT",
+    "measured": {
+      "alpha": {
+        "lost": 2,
+        "not-present-in-input": 37
+      },
+      "color_depth": {
+        "not-exercised": 39
+      },
+      "geometry": {
+        "preserved": 39
+      }
+    },
+    "ran": 39,
+    "ssim_below_0_5": [
+      {
+        "specimen": "681410.png",
+        "ssim": -0.067
+      },
+      {
+        "specimen": "726912.png",
+        "ssim": 0.334
+      }
+    ],
+    "ssim_median": 0.9686,
+    "ssim_min": -0.067,
+    "ssim_min_specimen": "681410.png",
+    "to": "image/jpeg"
+  },
+  {
+    "contradictions": [],
+    "engine": "libvips",
+    "failed": {},
+    "from": "image/png",
+    "invocation": "vips webpsave IN OUT",
+    "measured": {
+      "alpha": {
+        "not-present-in-input": 37,
+        "preserved": 2
+      },
+      "color_depth": {
+        "not-exercised": 39
+      },
+      "geometry": {
+        "preserved": 39
+      }
+    },
+    "ran": 39,
+    "ssim_below_0_5": [],
+    "ssim_median": 0.9897,
+    "ssim_min": 0.8774,
+    "ssim_min_specimen": "702198.png",
+    "to": "image/webp"
+  },
+  {
+    "contradictions": [],
+    "engine": "libvips",
+    "failed": {},
+    "from": "image/png",
+    "invocation": "vips tiffsave IN OUT",
+    "measured": {
+      "alpha": {
+        "not-present-in-input": 37,
+        "preserved": 2
+      },
+      "color_depth": {
+        "not-exercised": 39
+      },
+      "geometry": {
+        "preserved": 39
+      }
+    },
+    "ran": 39,
+    "ssim_below_0_5": [],
+    "ssim_median": 1.0,
+    "ssim_min": 1.0,
+    "ssim_min_specimen": "045353.png",
+    "to": "image/tiff"
+  },
+  {
+    "contradictions": [],
+    "engine": "libvips",
+    "failed": {},
+    "from": "image/png",
+    "invocation": "vips webpsave IN OUT --lossless",
+    "measured": {
+      "alpha": {
+        "not-present-in-input": 37,
+        "preserved": 2
+      },
+      "color_depth": {
+        "not-exercised": 39
+      },
+      "geometry": {
+        "preserved": 39
+      }
+    },
+    "ran": 39,
+    "ssim_below_0_5": [],
+    "ssim_median": 1.0,
+    "ssim_min": 1.0,
+    "ssim_min_specimen": "045353.png",
+    "to": "image/webp"
+  },
+  {
+    "contradictions": [],
+    "engine": "libvips",
+    "failed": {},
+    "from": "image/png",
+    "invocation": "vips jpegsave IN OUT --background 255",
+    "measured": {
+      "alpha": {
+        "lost": 2,
+        "not-present-in-input": 37
+      },
+      "color_depth": {
+        "not-exercised": 39
+      },
+      "geometry": {
+        "preserved": 39
+      }
+    },
+    "ran": 39,
+    "ssim_below_0_5": [
+      {
+        "specimen": "681410.png",
+        "ssim": -0.0579
+      },
+      {
+        "specimen": "726912.png",
+        "ssim": 0.3389
+      }
+    ],
+    "ssim_median": 0.9686,
+    "ssim_min": -0.0579,
+    "ssim_min_specimen": "681410.png",
+    "to": "image/jpeg"
+  }
+]

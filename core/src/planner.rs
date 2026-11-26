@@ -257,6 +257,17 @@ impl<'a> Planner<'a> {
         None
     }
 
+    /// A one-hop plan through one specific edge, or None if the policy makes
+    /// it ineligible. For measurement harnesses: `plan` returns only the
+    /// cheapest route, so an edge that never wins would never be exercised.
+    pub fn plan_edge(&self, edge_index: usize) -> Option<Plan> {
+        if !self.eligible.contains(&edge_index) {
+            return None;
+        }
+        let e = &self.reg.edges[edge_index];
+        Some(self.materialize(&e.from, &e.to, &[edge_index], edge_cost(e)))
+    }
+
     pub fn plan(&self, from: &str, to: &str) -> Option<Plan> {
         self.shortest(from, to, &[], &[], &[])
             .map(|(path, cost)| self.materialize(from, to, &path, cost))
