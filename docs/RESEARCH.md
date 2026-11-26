@@ -2064,6 +2064,47 @@ Per-edge real-world counts are what make that visible; a format-level claim
 ("GIF has 256 colours") would have hidden two of the three.
 
 
+### 18.4 How faithful is a PDF rebuilt from pixels?
+
+`huh clean` renders each page at 150 dpi, JPEG-encodes it at quality 90 and
+builds a fresh PDF around the images. It was verified only by what it
+removes. `core/examples/pdf_fidelity.rs` now measures what it keeps, on the 40
+real Govdocs1 PDFs (1,788 pages), as two numbers, because one number
+conflated two different things.
+
+| Measure | What it isolates | Result |
+|---|---|---|
+| **stored** | each embedded page image vs the original rendered at 150 dpi | median 0.997; **every page ≥ 0.990** |
+| **viewed** | both PDFs rendered at 72 dpi (screen) | median 0.76; file medians 0.55 to 0.97; worst page 0.48 |
+
+Page counts survived in all 40. Five files' pages grew by under half a point,
+because the rebuild rounds each page to whole pixels (595 pt at 150 dpi is
+1,239.6 px, kept as 1,240, which is 595.2 pt).
+
+**The rebuild is faithful; viewing it is not.** The stored image matches the
+original render almost exactly, so the clean itself loses very little. What a
+reader sees is worse because the page is now a picture: a viewer resamples it
+at every zoom, where a vector original was re-rendered crisply. At screen
+resolution that costs a median quarter of the structural similarity. It is a
+real cost of sanitising by rasterising, and it depends on the viewer, which is
+why it is reported apart from the rebuild.
+
+**The instrument was wrong twice before these numbers held.**
+
+1. **One number for two effects.** Re-rendering the cleaned PDF at 150 dpi
+   scored a page 0.87 whose stored image scores 0.995. The renderer resamples
+   an embedded image even at nominally 1:1 scale. That loss belongs to the
+   viewer, so it is now `viewed`, not rebuild fidelity.
+2. **Grey rendering faked a colour loss.** Rendering the originals with
+   `pdftoppm -gray` scored `025835.pdf`, which has CMYK images, at 0.755.
+   Poppler's CMYK-to-grey differs from CMYK-to-RGB-then-luma, the path the
+   clean's pages take. Rendered in colour on both sides it scores 0.991.
+
+**Design implications.** For any conversion that rasterises (PDF to image,
+`huh clean`), fidelity has a storage half and a viewing half, and the viewing
+half has no single value. A `signal_fidelity` figure for such an edge should
+say which it measured (ADR-0014 already requires naming the metric).
+
 ## Sources
 
 - [Convert To It](https://converttoit.com/) · [Grokipedia: Convert to it](https://grokipedia.com/page/Convert_to_it) · [Convert To It API](https://converttoit.com/api)
