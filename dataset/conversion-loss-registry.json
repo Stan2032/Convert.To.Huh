@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2.0",
-  "registry_version": "2026.11.2",
+  "registry_version": "2026.11.3",
   "license": "CC0-1.0",
   "source": "https://github.com/Stan2032/Convert.To.Huh",
   "properties": [
@@ -463,6 +463,79 @@
       "puid_verified": true
     },
     {
+      "id": "video/mp4",
+      "name": "MPEG-4 Part 14 (MP4)",
+      "kinds": [
+        "VideoStream",
+        "AudioPCM"
+      ],
+      "extensions": [
+        "mp4",
+        "m4v"
+      ],
+      "mime_types": [
+        "video/mp4"
+      ],
+      "preserves": [
+        "geometry",
+        "time",
+        "signal_fidelity",
+        "audio_channels",
+        "sample_rate",
+        "metadata"
+      ],
+      "puid": "fmt/199",
+      "puid_verified": true
+    },
+    {
+      "id": "video/webm",
+      "name": "WebM",
+      "kinds": [
+        "VideoStream",
+        "AudioPCM"
+      ],
+      "extensions": [
+        "webm"
+      ],
+      "mime_types": [
+        "video/webm"
+      ],
+      "preserves": [
+        "geometry",
+        "time",
+        "signal_fidelity",
+        "audio_channels",
+        "sample_rate"
+      ],
+      "puid": "fmt/573",
+      "puid_verified": true
+    },
+    {
+      "id": "video/x-matroska",
+      "name": "Matroska",
+      "kinds": [
+        "VideoStream",
+        "AudioPCM"
+      ],
+      "extensions": [
+        "mkv"
+      ],
+      "mime_types": [
+        "video/x-matroska"
+      ],
+      "preserves": [
+        "geometry",
+        "time",
+        "signal_fidelity",
+        "audio_channels",
+        "sample_rate",
+        "bit_depth",
+        "metadata"
+      ],
+      "puid": "fmt/569",
+      "puid_verified": true
+    },
+    {
       "id": "video/x-msvideo",
       "name": "Audio Video Interleave",
       "kinds": [
@@ -724,6 +797,90 @@
         "note": "TRUNCATES where SoX rounds, introducing exactly half an LSB of DC offset — mean\noutput 127.5025 where offset-binary u8 centres on 128 (docs/RESEARCH.md §14.6).\n\nOn this specimen the signal peaks at 1.28 counts, so half a count is 39% of peak\nand dominates the 3.8 dB SNR. On loud content the same offset is inaudible and\nthe two engines would look identical. The divergence is real and its visibility\nis entirely a property of the specimen.\n\nThe `policy = \"truncate\"` qualifier here is the whole reason ADR-0012 exists:\nthis edge and the SoX one both report bit_depth = degraded, both correctly, and\none of them shifts your audio by half a count.\n\nTHE OUTLIER, CONFIRMED 2026-11-26. A third engine settled which behaviour is the\nodd one out: GStreamer 1.24.2 with dither off writes samples byte-identical to\n`sox -D` (registry/edges/gstreamer.toml). Two independent engines round; ffmpeg\ntruncates. The DC offset is now reproducible from the harness: `--dc` reports\n-0.4975 steps of 8-bit, matching the figure first found with a one-off\nhistogram script.\n",
         "snr_db": 3.76,
         "tool": "tools/measure_audio.py --snr --dc"
+      },
+      "generational": true
+    },
+    {
+      "from": "video/x-matroska",
+      "to": "video/webm",
+      "from_kind": "VideoStream",
+      "to_kind": "VideoStream",
+      "engine": "ffmpeg",
+      "invocation": "ffmpeg -i IN -c:v libvpx-vp9 -lossless 1 OUT",
+      "operation": "Transcode",
+      "loss": {
+        "geometry": "preserved",
+        "signal_fidelity": "preserved",
+        "time": "preserved"
+      },
+      "verification": "verified",
+      "specimens": [
+        "corpus/video/reference.mkv"
+      ],
+      "measured": {
+        "engine_build": "ffmpeg 6.1.1",
+        "frames": "50 -> 50",
+        "metric": "SSIM (all planes) and PSNR vs the lossless reference",
+        "note": "The control for the video edges, as FLAC is for audio: VP9's lossless mode\ndecodes BIT-EXACT to the FFV1 reference (SSIM 1.0, infinite PSNR) through the\nsame harness that scores the lossy edges below. A harness that invented loss\nwould invent it here too.\n",
+        "psnr_db": "inf",
+        "ssim": 1.0,
+        "tool": "tools/measure_video.py"
+      },
+      "generational": false
+    },
+    {
+      "from": "video/x-matroska",
+      "to": "video/webm",
+      "from_kind": "VideoStream",
+      "to_kind": "VideoStream",
+      "engine": "ffmpeg",
+      "invocation": "ffmpeg -i IN -c:v libvpx-vp9 -crf 40 -b:v 0 OUT",
+      "operation": "Transcode",
+      "loss": {
+        "geometry": "preserved",
+        "signal_fidelity": "degraded",
+        "time": "preserved"
+      },
+      "verification": "verified",
+      "specimens": [
+        "corpus/video/reference.mkv"
+      ],
+      "measured": {
+        "engine_build": "ffmpeg 6.1.1",
+        "frames": "50 -> 50",
+        "metric": "SSIM (all planes) and PSNR vs the lossless reference",
+        "note": "Constant-quality VP9 (`-crf 40 -b:v 0`). Every frame kept, size and rate\nunchanged; the loss is in the signal alone. ADR-0014 requires naming the\nmetric because video metrics disagree: both SSIM and PSNR are recorded.\n",
+        "psnr_db": 41.04,
+        "ssim": 0.9916,
+        "tool": "tools/measure_video.py"
+      },
+      "generational": true
+    },
+    {
+      "from": "video/x-matroska",
+      "to": "video/mp4",
+      "from_kind": "VideoStream",
+      "to_kind": "VideoStream",
+      "engine": "ffmpeg",
+      "invocation": "ffmpeg -i IN -c:v mpeg4 -q:v 8 OUT",
+      "operation": "Transcode",
+      "loss": {
+        "geometry": "preserved",
+        "signal_fidelity": "degraded",
+        "time": "preserved"
+      },
+      "verification": "verified",
+      "specimens": [
+        "corpus/video/reference.mkv"
+      ],
+      "measured": {
+        "engine_build": "ffmpeg 6.1.1",
+        "frames": "50 -> 50",
+        "metric": "SSIM (all planes) and PSNR vs the lossless reference",
+        "note": "MPEG-4 Part 2 (the native `mpeg4` encoder, LGPL) at fixed quantiser 8.\nLower fidelity than VP9 above on both metrics, as a 1999 codec should be.\n",
+        "psnr_db": 37.72,
+        "ssim": 0.9782,
+        "tool": "tools/measure_video.py"
       },
       "generational": true
     },
@@ -1821,10 +1978,10 @@
     }
   ],
   "counts": {
-    "formats": 17,
+    "formats": 20,
     "engines": 9,
-    "edges_total": 31,
-    "edges_verified": 30,
+    "edges_total": 34,
+    "edges_verified": 33,
     "edges_claimed": 1,
     "edges_refuted": 0
   }

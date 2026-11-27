@@ -7,6 +7,15 @@ Two version numbers, deliberately separate:
 - **`registry_version`** (calendar, `YYYY.MM.N`) changes when the *data*
   changes: an edge added, a loss value corrected, a count updated.
 
+## registry 2026.11.3 · schema 1.2.0
+
+**Data.** Video, first entries: Matroska, WebM and MP4 formats, and three
+ffmpeg edges measured against a lossless FFV1 reference. VP9 lossless
+(SSIM 1.0, the control), VP9 crf 40 (SSIM 0.9916, 41.04 dB) and MPEG-4
+Part 2 q8 (SSIM 0.9782, 37.72 dB). Synthetic specimen only: Govdocs1 has no
+video. Format signatures may now carry `within`, a search window, to tell
+Matroska from WebM by DocType (docs/RESEARCH.md §20).
+
 ## registry 2026.11.2 · schema 1.2.0
 
 **Schema 1.2.0 (additive).** `real_world.size_ratio`: output bytes divided

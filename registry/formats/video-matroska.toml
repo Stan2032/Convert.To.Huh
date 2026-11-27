@@ -1,0 +1,42 @@
+id         = "video/x-matroska"
+name       = "Matroska"
+kinds      = ["VideoStream", "AudioPCM"]
+extensions = ["mkv"]
+mime_types = ["video/x-matroska"]
+puid       = "fmt/569"
+puid_verified = true
+puid_name  = "Matroska"
+spec_url   = "https://www.matroska.org/technical/elements.html"
+
+preserves = ["geometry", "time", "signal_fidelity", "audio_channels", "sample_rate", "bit_depth", "metadata"]
+
+# EBML header, then the DocType "matroska" after variable-length fields.
+[[signatures]]
+offset = 0
+magic  = "1A45DFA3"
+weight = "weak"
+
+[[signatures]]
+offset = 4
+magic  = "4282886D6174726F736B61"   # DocType element, length 8, "matroska"
+weight = "decisive"
+within = 32
+
+[detection]
+priority_over = []
+container_of  = []
+
+[notes]
+text = """
+Added 2026-11-26 for the first video edges (docs/RESEARCH.md §20).
+
+DETECTION. Matroska and WebM share the EBML header 1A45DFA3; the DocType
+element ("matroska" or "webm") identifies them, but sits after
+variable-length header fields. PRONOM writes this as
+1A45DFA3{0-32}4282886D6174726F736B614287; the `within` window on the second
+signature is the same idea, added to the schema for this purpose.
+
+PRONOM VERIFIED 2026-11-26 with tools/verify_pronom.py: fmt/569 "Matroska",
+versions 1-4. `signal_fidelity` is carryable because Matroska holds lossless
+codecs (FFV1 here); the format does not make a stream lossless.
+"""

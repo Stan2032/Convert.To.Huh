@@ -35,6 +35,8 @@ preserves = ["geometry", "color_depth", "color_profile", "alpha", "metadata"]
 offset = 0
 magic  = "89504E470D0A1A0A"       # uppercase hex, whole bytes
 weight = "decisive"               # decisive | strong | weak
+within = 0                        # optional search window: magic may start anywhere
+                                  # in [offset, offset + within]; PRONOM's {0-32}
 # position = "BOF"                # BOF (default) | EOF  — not yet implemented
 
 [detection]

@@ -780,3 +780,31 @@ fn engine_present(prog: &str) -> bool {
         .map(|o| o.status.success())
         .unwrap_or(false)
 }
+
+/// Matroska and WebM share the EBML header (`1A45DFA3`); only the DocType a
+/// few bytes in tells them apart (PRONOM's `{0-32}` window). The reference
+/// must detect as Matroska by content, and its WebM output as WebM.
+#[test]
+fn video_containers_are_told_apart_by_doctype() {
+    let r = reg();
+    let mkv = std::fs::read(root().join("corpus/video/reference.mkv")).expect("specimen");
+    let d = detect::detect(&r, &mkv, Some("clip.webm"));
+    assert_eq!(d.format, "video/x-matroska");
+    assert_eq!(d.detected_by, "signature");
+    assert!(d.extension_mismatch, "a .webm name on a Matroska file must be flagged");
+
+    if !engine_present("ffmpeg") {
+        eprintln!("skipping execution: ffmpeg not installed");
+        return;
+    }
+    let plan = Planner::new(&r, &Policy::default())
+        .plan("video/x-matroska", "video/webm")
+        .expect("a verified route");
+    assert_eq!(plan.hops[0].engine, "ffmpeg");
+    // The cheapest route is the lossless control: nothing in it may be degraded.
+    assert!(plan.hops[0].invocation.as_deref().unwrap_or("").contains("-lossless 1"),
+            "planner should prefer the route that loses nothing");
+    let (webm, _receipt) = execute::execute(&plan, &mkv, 85).expect("conversion runs");
+    let d = detect::detect(&r, &webm, None);
+    assert_eq!(d.format, "video/webm", "output must be WebM by content");
+}

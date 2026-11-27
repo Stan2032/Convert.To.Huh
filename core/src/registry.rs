@@ -11,6 +11,12 @@ pub struct Signature {
     pub offset: u64,
     pub magic: String,
     pub weight: String,
+    /// Search window: the magic may start anywhere from `offset` to
+    /// `offset + within`. PRONOM writes this `{0-32}`. Needed where a marker
+    /// sits after variable-length fields, as Matroska's and WebM's DocType
+    /// does inside the EBML header. Zero (the default) means exactly `offset`.
+    #[serde(default)]
+    pub within: u64,
     /// Signatures sharing a group are ALTERNATIVES (any one matching is
     /// enough); distinct groups are all required. Ungrouped signatures each
     /// form their own group, i.e. they are required.

@@ -127,6 +127,11 @@ pub fn ole2_names(b: &[u8]) -> Vec<String> {
     names
 }
 
+/// A signature matches at its offset, or anywhere in its `within` window.
+fn sig_matches(bytes: &[u8], s: &crate::registry::Signature) -> bool {
+    (0..=s.within).any(|d| hex_matches(bytes, s.offset.saturating_add(d), &s.magic))
+}
+
 /// Detect a format from content, using the extension only to break ties.
 pub fn detect(reg: &Registry, bytes: &[u8], filename: Option<&str>) -> Detected {
     let ext = filename
@@ -153,7 +158,7 @@ pub fn detect(reg: &Registry, bytes: &[u8], filename: Option<&str>) -> Detected 
         }
         let all = groups
             .values()
-            .all(|alts| alts.iter().any(|s| hex_matches(bytes, s.offset, &s.magic)));
+            .all(|alts| alts.iter().any(|s| sig_matches(bytes, s)));
         if !all {
             continue;
         }
@@ -168,7 +173,7 @@ pub fn detect(reg: &Registry, bytes: &[u8], filename: Option<&str>) -> Detected 
         let matched: Vec<&crate::registry::Signature> = f
             .signatures
             .iter()
-            .filter(|s| hex_matches(bytes, s.offset, &s.magic))
+            .filter(|s| sig_matches(bytes, s))
             .collect();
         let weight = if matched.iter().any(|s| s.weight == "decisive") {
             "decisive"

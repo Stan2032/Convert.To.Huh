@@ -2170,6 +2170,49 @@ gradient-heavy, the case JPEG suits.
 as much as a loss does. `size_ratio` lets a consumer see that a lossy route
 is not even the smaller one on content like theirs.
 
+## 20. Video: the first measurements, and why they are synthetic only
+
+**What was measured.** Three ffmpeg edges from a lossless reference
+(`corpus/video/reference.mkv`: FFV1, 320x240, 25 fps, 2 s, 50 frames, made by
+`corpus/generate_video.py` from ffmpeg's `testsrc2`: moving gradients, text
+and a sweeping clock), scored by `tools/measure_video.py` with ffmpeg's own
+`ssim` and `psnr` filters, both streams converted to the reference's pixel
+format first so a format change is not scored as loss:
+
+| Invocation | Target | SSIM (all) | PSNR | Frames |
+|---|---|---|---|---|
+| `-c:v libvpx-vp9 -lossless 1` | WebM | 1.000000 | inf | 50 → 50 |
+| `-c:v libvpx-vp9 -crf 40 -b:v 0` | WebM | 0.991643 | 41.04 dB | 50 → 50 |
+| `-c:v mpeg4 -q:v 8` | MP4 | 0.978231 | 37.72 dB | 50 → 50 |
+
+The lossless VP9 edge is the control, as FLAC is for audio (§17): the same
+harness that scores the lossy edges finds nothing lost there. Geometry, frame
+count and rate were unchanged in all three; the frame count is decoded
+(`ffprobe -count_frames`), not read from the container header, which can lie.
+
+**Detection needed a new mechanism.** Matroska and WebM share their first four
+bytes (the EBML magic `1A45DFA3`); the DocType string (`matroska` or `webm`)
+follows at an offset that depends on the header's variable-length integers.
+PRONOM's signatures for fmt/569 and fmt/573 express this as a `{0-32}` gap.
+Fixed-offset signatures could not, so a signature may now carry `within`
+(bytes past its offset to search; the validator caps it at 4096). The EBML
+magic alone is `weak`; the DocType is decisive.
+
+**Why there is no real-file tier.** Govdocs1 contains no Matroska, WebM or MP4
+files (its crawl predates them). A real-video corpus with clear licensing is
+the gap; until one exists, video edges carry synthetic measurements only, and
+the dataset says so by carrying no `real_world` block for them.
+
+**Licensing shaped the edge list.** The `ffmpeg` engine entry describes the
+LGPL build (ADR-0007), so only LGPL-compatible encoders are recorded: libvpx
+(BSD) and ffmpeg's native MPEG-4 Part 2. H.264 via libx264 is GPL and needs
+its own engine entry under the gpl profile; it is the obvious next edge.
+
+**Design implication.** ADR-0014 anticipated this: SSIM and PSNR order these
+three edges identically here, but their scales differ (VP9 crf 40 and MPEG-4
+q8 are 0.013 apart in SSIM and 3.3 dB apart in PSNR), so neither number can be
+published without naming its metric. Both are recorded on every edge.
+
 ## Sources
 
 - [Convert To It](https://converttoit.com/) · [Grokipedia: Convert to it](https://grokipedia.com/page/Convert_to_it) · [Convert To It API](https://converttoit.com/api)

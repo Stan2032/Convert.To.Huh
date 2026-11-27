@@ -229,6 +229,9 @@ fn ext_for(format_id: &str) -> &'static str {
         "application/msword" => "doc",
         "application/vnd.ms-excel" => "xls",
         "application/vnd.ms-powerpoint" => "ppt",
+        "video/x-matroska" => "mkv",
+        "video/webm" => "webm",
+        "video/mp4" => "mp4",
         _ => "bin",
     }
 }

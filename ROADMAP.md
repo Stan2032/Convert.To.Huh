@@ -9,7 +9,7 @@ the scope line in [README.md](README.md), which CI checks against the registry.
 | PDF | Sanitization measured on 40 real PDFs, including visual fidelity of the rebuild (stored and as viewed) |
 | Audio (WAV, MP3, FLAC) | Measured across three engines (ffmpeg, SoX, GStreamer), on tonal, broadband and transient specimens |
 | Office (DOC, XLS, PPT) | LibreOffice to PDF measured on synthetic specimens and 60 real documents |
-| Video | Not started |
+| Video (MKV, WebM, MP4) | ffmpeg measured on a synthetic lossless reference (SSIM and PSNR); no real-file tier yet |
 
 ## Next, in priority order
 
@@ -18,8 +18,9 @@ the scope line in [README.md](README.md), which CI checks against the registry.
    where an observation can see it (now including metadata). Signal fidelity and text are
    not yet counted; each needs an observation that detects the declared
    outcome, not a threshold.
-2. **Video.** `signal_fidelity` will likely need its metric recorded alongside
-   it, because perceptual video metrics diverge sharply (ADR-0014).
+2. **Video beyond the first three edges.** H.264 under the gpl profile, a
+   second engine (GStreamer) for agreement, and a real-video corpus with
+   clear licensing (Govdocs1 has none).
 
 ## Not planned
 

@@ -25,6 +25,8 @@ corpus/**/*.mp4
 corpus/**/*.mkv
 corpus/**/*.avi
 !corpus/**/*.min.*
+# The video reference (382 KB, FFV1): edges in registry/edges/ffmpeg.toml cite it.
+!corpus/video/reference.mkv
 
 # Conversion scratch
 /scratch/

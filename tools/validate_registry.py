@@ -133,6 +133,9 @@ def check_formats(formats: dict[str, dict], f: Findings) -> dict[str, dict]:
                 f.error(fname, f"signature[{i}] weight must be one of {sorted(SIGNATURE_WEIGHTS)}")
             if not isinstance(sig.get("offset"), int) or sig.get("offset", -1) < 0:
                 f.error(fname, f"signature[{i}] needs a non-negative integer offset")
+            w = sig.get("within", 0)
+            if not isinstance(w, int) or isinstance(w, bool) or not 0 <= w <= 4096:
+                f.error(fname, f"signature[{i}] `within` must be an integer window of 0-4096 bytes")
 
         # registry-schema.md: OLE2 formats share one signature, so each must name
         # the directory stream that identifies it, and only OLE2 formats may.

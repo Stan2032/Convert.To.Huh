@@ -91,6 +91,10 @@ jobs:
         # generator still produces what the tests expect.
         run: python3 corpus/generate.py
 
+      - name: Video harness self-test
+        # Identical streams must score SSIM 1 / PSNR inf, a blurred copy less.
+        run: python3 tools/measure_video.py --self-test
+
       - name: Clippy
         run: cargo clippy --manifest-path core/Cargo.toml --all-targets -- -D warnings
 
