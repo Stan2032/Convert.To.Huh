@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2.0",
-  "registry_version": "2026.11.4",
+  "registry_version": "2026.11.5",
   "license": "CC0-1.0",
   "source": "https://github.com/Stan2032/Convert.To.Huh",
   "properties": [
@@ -1211,6 +1211,34 @@
       "generational": false
     },
     {
+      "from": "video/x-matroska",
+      "to": "video/webm",
+      "from_kind": "VideoStream",
+      "to_kind": "VideoStream",
+      "engine": "gstreamer",
+      "invocation": "gst-launch-1.0 filesrc location=IN ! decodebin ! videoconvert ! vp9enc min-quantizer=0 max-quantizer=0 ! webmmux ! filesink location=OUT",
+      "operation": "Transcode",
+      "loss": {
+        "geometry": "preserved",
+        "signal_fidelity": "preserved",
+        "time": "degraded"
+      },
+      "verification": "verified",
+      "specimens": [
+        "corpus/video/reference.mkv"
+      ],
+      "measured": {
+        "engine_build": "GStreamer 1.24.2",
+        "frames": "50 -> 49 in 9 of 10 runs; 50 -> 50 in 1",
+        "metric": "SSIM (all planes) and PSNR over frames present in both streams; decoded frame count",
+        "note": "INTERMITTENTLY DROPS THE LAST FRAME. Ten runs: nine wrote 49 frames (1.96 s\nof a 2.00 s clip), one wrote all 50. Every frame that IS written decodes\nbit-exact to the FFV1 reference (SSIM 1.0, infinite PSNR), so the loss is in\n`time` alone. libvpx's VP9 encoder is lossless at quantiser 0; vp9enc has no\n`lossless` property, and pinning min- and max-quantizer to 0 reaches it.\n\nCause, isolated stage by stage (10 runs each): demux alone, and FFV1 decode\nalone, always pass 50 frames; the full chain loses the last one only with the\ndecoder multithreaded, and never with `avdec_ffv1 max-threads=1` (5 of 5 runs\ngave 50 bit-exact frames, agreeing with ffmpeg's VP9 lossless edge). The\ndecoder finishes its last frame after EOS has already been handled when a slow\nelement sits downstream. Reported upstream in 2016 as GNOME bug 774190\n(\"avdec_ffv1: When using multiple threads decoder doesn't wait until all\nthreads finish\"), closed RESOLVED INCOMPLETE; present in gst-libav 1.24.1.\n\n`time = \"degraded\"`, not `preserved`, because a planner must assume the run\nit gets is one of the nine.\n",
+        "psnr_db": "inf",
+        "ssim": 1.0,
+        "tool": "tools/measure_video.py"
+      },
+      "generational": false
+    },
+    {
       "from": "image/png",
       "to": "image/jpeg",
       "from_kind": "Raster",
@@ -2075,8 +2103,8 @@
   "counts": {
     "formats": 20,
     "engines": 10,
-    "edges_total": 37,
-    "edges_verified": 36,
+    "edges_total": 38,
+    "edges_verified": 37,
     "edges_claimed": 1,
     "edges_refuted": 0
   }

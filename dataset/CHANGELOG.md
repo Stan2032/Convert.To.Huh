@@ -7,6 +7,20 @@ Two version numbers, deliberately separate:
 - **`registry_version`** (calendar, `YYYY.MM.N`) changes when the *data*
   changes: an edge added, a loss value corrected, a count updated.
 
+## registry 2026.11.5 · schema 1.2.0
+
+**Data.** GStreamer as a second VP9 engine: Matroska to WebM through
+`decodebin` and `vp9enc` at quantiser 0. Every frame written is bit-exact,
+but the last frame was dropped in 9 of 10 runs (a multithreaded-decoder race,
+GNOME bug 774190), so the edge declares `time: degraded`. With the decoder
+single-threaded, GStreamer agrees bit-for-bit with ffmpeg's VP9 lossless edge
+(docs/RESEARCH.md §20.3).
+
+**Tooling.** `tools/measure_video.py` scored a dropped frame as picture loss
+(SSIM 0.998 where every kept frame was exact). It now compares only frames
+present in both streams and reports `frames_compared`. The six published video
+measurements are unaffected.
+
 ## registry 2026.11.4 · schema 1.2.0
 
 **Data.** H.264 and H.265, under a new `ffmpeg-gpl` engine (GPL build,

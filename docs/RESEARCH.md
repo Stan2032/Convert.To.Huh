@@ -2278,6 +2278,54 @@ outright, which hid it. Labels now name degraded properties
 (`reduced — degrades signal_fidelity`), and a test holds label and
 explanation to the same vector.
 
+### 20.3 A second engine: GStreamer drops the last frame, and the harness blamed the picture
+
+GStreamer (`vp9enc`, libvpx) was added as a second VP9 engine so the lossless
+control is not one implementation agreeing with itself. It needed
+`gstreamer1.0-libav` for an FFV1 decoder. Two things went wrong, one of them
+in this repository.
+
+**The harness reported a dropped frame as picture loss.** The first GStreamer
+run scored SSIM 0.998 and 40.65 dB, which reads as "nearly lossless". Per-frame
+PSNR showed frames 1 to 49 at infinity and frame 50 at 23.66 dB. The output
+had only 49 frames, and ffmpeg's `ssim`/`psnr` filters by default repeat the
+shorter stream's last frame to the end, so reference frame 50 was compared
+with output frame 49. `tools/measure_video.py` now compares only frames both
+streams have (`shortest=1:repeatlast=0`), reports `frames_compared`, and has a
+self-test for exactly this case. All six earlier video measurements reproduce
+unchanged; each kept all 50 frames.
+
+**GStreamer intermittently loses the final frame.** Counting buffers at each
+stage, ten runs each:
+
+| Pipeline | Frames out |
+|---|---|
+| `matroskademux` alone | 50 in 10/10 |
+| `+ avdec_ffv1` (default threads) | 50 in 10/10 |
+| full chain to `vp9enc`, `avdec_ffv1 max-threads=1` | 50 in 10/10 |
+| full chain, default threads | **49 in 9/10**, 50 in 1/10 |
+| `decodebin` chain to WebM (the recorded edge) | **49 in 9/10**, 50 in 1/10 |
+
+The decoder finishes its last frame too late at end of stream, but only when a
+slow element sits downstream, which is why decoding alone never shows it. The
+encoder's debug log confirms `handle_frame` is called 49 times. This matches
+GNOME bug 774190 (2016, "avdec_ffv1: When using multiple threads decoder
+doesn't wait until all threads finish"), closed RESOLVED INCOMPLETE and
+reproduced here on gst-libav 1.24.1. Every frame GStreamer does write is
+bit-exact, and with the decoder single-threaded the result agrees with
+ffmpeg's VP9 lossless edge: two engines, one answer, once the race is removed.
+
+**Not every invocation has a twin.** GStreamer's `vp9enc` offers VBR, CBR and
+constrained quality, but not libvpx's pure constant-quality mode, which is
+what ffmpeg's `-crf 40 -b:v 0` selects. The lossy VP9 edge therefore has no
+GStreamer counterpart to compare against.
+
+**Design implication.** A loss that occurs on some runs and not others is still
+a loss; the edge declares `time = degraded` and records the rate (9 of 10),
+because a planner cannot choose which run it gets. And a fidelity metric
+computed over misaligned streams measures the misalignment: the harness must
+establish which frames correspond before scoring any of them.
+
 ## Sources
 
 - [Convert To It](https://converttoit.com/) · [Grokipedia: Convert to it](https://grokipedia.com/page/Convert_to_it) · [Convert To It API](https://converttoit.com/api)
