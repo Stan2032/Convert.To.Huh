@@ -446,6 +446,48 @@ def tool_artifacts(tool: str) -> list[str]:
     return found
 
 
+# Rule 15. An engine that claims only `lgpl` must not be measured invoking a
+# component its LGPL build does not contain. The list is ffmpeg's own, from
+# `configure` at n6.1.1: EXTERNAL_LIBRARY_GPL_LIST (as encoder/decoder names)
+# plus every filter whose `_deps` include `gpl`. The measured binary can be a
+# GPL build (Ubuntu's is) and still describe the LGPL build faithfully, but
+# only while every invocation stays inside the LGPL subset (RESEARCH §20.1).
+GPL_ONLY = {
+    "ffmpeg": {
+        "codecs": {"libx264", "libx264rgb", "libx265", "libxvid", "libxavs",
+                   "libxavs2", "libdavs2", "avisynth"},
+        "filters": {"blackframe", "boxblur", "boxblur_opencl", "colormatrix",
+                    "cover_rect", "cropdetect", "delogo", "eq", "find_rect", "fspp",
+                    "histeq", "hqdn3d", "interlace", "kerndeint", "mcdeint",
+                    "mpdecimate", "mptestsrc", "nnedi", "owdenoise", "perspective",
+                    "phase", "pp7", "pp", "pullup", "repeatfields", "sab",
+                    "signature", "smartblur", "spp", "stereo3d", "super2xsai",
+                    "tinterlace", "uspp", "vaguedenoiser", "frei0r", "frei0r_src",
+                    "rubberband", "vidstabdetect", "vidstabtransform"},
+    },
+}
+CODEC_FLAGS = re.compile(r"^-(?:c|codec|vcodec|acodec)(?::[avs](?::\d+)?)?$")
+FILTER_FLAGS = re.compile(r"^-(?:vf|af|lavfi|filter_complex|filter(?::[av])?)$")
+
+
+def gpl_components(engine: str, invocation: str) -> list[str]:
+    """The GPL-only components an invocation names, for rule 15."""
+    table = GPL_ONLY.get(engine)
+    if not table or not invocation:
+        return []
+    toks = invocation.split()
+    found = []
+    for flag, val in zip(toks, toks[1:]):
+        if CODEC_FLAGS.match(flag) and val in table["codecs"]:
+            found.append(f"encoder `{val}`")
+        elif FILTER_FLAGS.match(flag):
+            for f in re.split(r"[,;]", val.strip("'\"")):
+                name = re.sub(r"\[[^\]]*\]", "", f).split("=")[0].strip()
+                if name in table["filters"]:
+                    found.append(f"filter `{name}`")
+    return found
+
+
 def check_edges(edge_files: dict[str, dict], formats: dict[str, dict],
                 engines: dict[str, dict], f: Findings) -> int:
     count = 0
@@ -598,6 +640,14 @@ def check_edges(edge_files: dict[str, dict], formats: dict[str, dict],
                 problems = real_world_problems(rw, edge.get("loss") or {}, status)
                 for p in problems:
                     f.error(where, f"[real_world] {p} — registry-schema.md rule 14")
+
+            # Rule 15: an lgpl-only engine cannot invoke a GPL-only component.
+            profiles = ((engines.get(engine) or {}).get("license") or {}).get("build_profiles", [])
+            if "gpl" not in profiles:
+                for comp in gpl_components(engine, edge.get("invocation") or ""):
+                    f.error(where, f"invokes GPL-only {comp}, but engine `{engine}` claims "
+                                   f"only {profiles}: the route would not exist in the build "
+                                   f"this entry describes — registry-schema.md rule 15")
 
             # Rule 8: a verified edge for an engine that is invoked as a
             # subprocess must record HOW (ADR-0013). Warning rather than error:
@@ -1038,6 +1088,23 @@ def self_test() -> int:
             failures += 1
             print(f"         expected {expect!r}, got: {got!r}")
 
+    # Rule 15: GPL-only components on an lgpl-only engine.
+    for name, inv, expect in [
+        ("libx264 encoder flagged", "ffmpeg -i IN -c:v libx264 -crf 23 OUT", ["encoder `libx264`"]),
+        ("stream-indexed codec flag flagged", "ffmpeg -i IN -c:v:0 libx265 OUT", ["encoder `libx265`"]),
+        ("GPL filter inside a chain flagged", "ffmpeg -i IN -vf scale=640:-2,hqdn3d=4 OUT",
+         ["filter `hqdn3d`"]),
+        ("labelled filtergraph flagged", "ffmpeg -i IN -lavfi [0:v]eq=contrast=2[o] OUT", ["filter `eq`"]),
+        ("LGPL encoders pass", "ffmpeg -i IN -c:v libvpx-vp9 -lossless 1 OUT", []),
+        ("a value that merely looks like a filter name passes", "ffmpeg -i IN -metadata title=eq OUT", []),
+    ]:
+        got = gpl_components("ffmpeg", inv)
+        ok = got == expect
+        print(f"  [{'PASS' if ok else 'FAIL'}] rule 15: {name}")
+        if not ok:
+            failures += 1
+            print(f"         expected {expect!r}, got: {got!r}")
+
     # Rule 14: real-world counts.
     loss = {"alpha": "lost", "geometry": "preserved"}
     good = {"corpus": "govdocs1", "files": 39, "ran": 39, "contradicted": 0,
@@ -1066,7 +1133,7 @@ def self_test() -> int:
             failures += 1
             print(f"         expected {expect!r}, got: {got!r}")
 
-    total = len(SELF_TESTS) + len(ENGINE_SELF_TESTS) + 1 + 3 + 7 + len(rw_cases)
+    total = len(SELF_TESTS) + len(ENGINE_SELF_TESTS) + 1 + 3 + 7 + len(rw_cases) + 6
     print(f"\nself-test: {total - failures}/{total} passed")
     return 1 if failures else 0
 

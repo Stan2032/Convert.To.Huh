@@ -8,7 +8,7 @@ spdx            = "LGPL-2.1-or-later"
 build_profiles  = ["lgpl"]
 patent_exposure = "h264-h265-mpegla"
 verified        = true
-checked         = "2026-08-20"
+checked         = "2026-11-27"
 source          = "https://www.ffmpeg.org/legal.html"
 
 [security]
@@ -44,6 +44,17 @@ build this manifest describes.
 
 Rule 11 now rejects any edge whose engine_build falls outside its engine's pin,
 so the two cannot drift apart again.
+
+CORRECTION 2026-11-27: "6.1.1 as shipped by Ubuntu is the LGPL build this
+manifest describes" was WRONG. `ffmpeg -buildconf` on the measured binary shows
+`--enable-gpl --enable-libx264 --enable-libx265 --enable-libxvid
+--enable-librubberband --enable-libvidstab --enable-frei0r`, and `ffmpeg -L`
+prints the GPL. The measurements still describe the LGPL build, because every
+invocation recorded against this entry uses only components an LGPL build
+contains (libmp3lame, libvpx, native flac/pcm/mpeg4, swresample), checked
+against EXTERNAL_LIBRARY_GPL_LIST and the gpl filter deps in ffmpeg's own
+`configure` at n6.1.1. Rule 15 now enforces that for every edge
+(docs/RESEARCH.md §20.1).
 
 
 VERSION PIN CORRECTED 2026-08-20. This manifest originally pinned ">=7.1,<8",

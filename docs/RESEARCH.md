@@ -2213,6 +2213,34 @@ three edges identically here, but their scales differ (VP9 crf 40 and MPEG-4
 q8 are 0.013 apart in SSIM and 3.3 dB apart in PSNR), so neither number can be
 published without naming its metric. Both are recorded on every edge.
 
+### 20.1 The measured ffmpeg was never the LGPL build
+
+The `ffmpeg` engine entry stated that Ubuntu's 6.1.1 "is the LGPL build this
+manifest describes". Checking which encoders were LGPL-safe for the video
+edges turned up the opposite: `ffmpeg -buildconf` shows `--enable-gpl` with
+libx264, libx265, libxvid, rubberband, vidstab and frei0r, and `ffmpeg -L`
+prints the GPL. Every ffmpeg measurement in the registry, audio and video, was
+taken on a GPL build.
+
+The data survives, by a narrower argument than the note made. ffmpeg's
+`configure` (n6.1.1) names what an LGPL build lacks: `EXTERNAL_LIBRARY_GPL_LIST`
+(avisynth, frei0r, libcdio, libdavs2, librubberband, libvidstab, libx264,
+libx265, libxavs, libxavs2, libxvid), 34 filters with `gpl` in their
+dependencies, and 5 more that need one of those libraries (frei0r, rubberband,
+vidstab). None of the seven recorded invocations uses any of them, so the
+same commands give the same output on an LGPL build of the same version.
+
+A second build was tried as an empirical control and rejected: PyAV's wheels
+bundle an ffmpeg whose libraries report "LGPL version 3 or later" while their
+configure line includes `--enable-libx264`, and they are ffmpeg 8, not 6.1.1.
+A control that differs in two ways at once settles neither.
+
+**Design implication.** The binary an edge is measured on and the build its
+engine entry describes are different facts, and the registry recorded only the
+second. Rule 15 now rejects any edge on an `lgpl`-only engine that invokes a
+GPL-only component, so the argument above is checked on every commit rather
+than made once in prose.
+
 ## Sources
 
 - [Convert To It](https://converttoit.com/) · [Grokipedia: Convert to it](https://grokipedia.com/page/Convert_to_it) · [Convert To It API](https://converttoit.com/api)

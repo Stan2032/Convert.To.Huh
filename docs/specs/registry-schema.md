@@ -357,6 +357,27 @@ and it passed. What rule 13 catches is the blunter form — a citation naming
 nothing runnable at all, which is what the remaining four audio edges did. See
 `RESEARCH.md §17.1`.
 
+## An LGPL engine cannot invoke a GPL component (rule 15)
+
+An edge whose engine claims only the `lgpl` build profile must not name, in
+its `invocation`, an encoder, decoder or filter that exists only in a GPL
+build. CI rejects it (**rule 15**). For ffmpeg the list is ffmpeg's own,
+taken from `configure` at n6.1.1: the external libraries in
+`EXTERNAL_LIBRARY_GPL_LIST` (`libx264`, `libx265`, `libxvid`, ...) and every
+filter whose dependencies include `gpl` or one of those libraries (`hqdn3d`,
+`eq`, `pp`, `vidstab*`, ...): 8 codec names and 39 filters.
+Codecs are read from `-c`/`-codec` flags and filters from `-vf`, `-af`,
+`-lavfi` and `-filter_complex` graphs, so a value that merely spells a filter
+name elsewhere does not trip it.
+
+Why it is needed: the binary an edge is measured on need not be the build its
+engine entry describes. Ubuntu's ffmpeg is configured `--enable-gpl`; the
+registry's `ffmpeg` entry describes the LGPL build. That is sound only while
+every recorded invocation stays inside the LGPL subset, and nothing checked it
+(`RESEARCH.md §20.1`). A GPL-only route on an `lgpl` engine is exactly what
+ground rule 6 forbids: a route the planner would offer that does not exist in
+the build being shipped.
+
 ## Behaviour on real files (rule 14)
 
 A verified edge may carry the counts from running it over real files, beside
