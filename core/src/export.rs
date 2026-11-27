@@ -14,7 +14,7 @@ use crate::registry::Registry;
 use serde::Serialize;
 
 /// Bump on any breaking change to the emitted shape. Consumers pin this.
-pub const SCHEMA_VERSION: &str = "1.1.0";
+pub const SCHEMA_VERSION: &str = "1.2.0";
 
 #[derive(Debug, Serialize)]
 pub struct PropertyDoc {
@@ -99,7 +99,8 @@ pub struct EdgeOut {
     pub measured: std::collections::BTreeMap<String, serde_json::Value>,
     /// How the edge behaved on real files: how many it ran on, how often each
     /// declared loss actually occurred, and whether anything contradicted it.
-    /// Added in schema 1.1.0; absent where no real-file run exists.
+    /// Added in schema 1.1.0 (`size_ratio` in 1.2.0); absent where no
+    /// real-file run exists.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub real_world: Option<crate::registry::RealWorld>,
     /// True when repeated lossy application compounds (re-encoding generations).
@@ -385,6 +386,9 @@ mod tests {
             assert!(rw.ran <= rw.files, "{id}");
             if let Some(c) = rw.contradicted {
                 assert!(c <= rw.ran, "{id}");
+            }
+            if let Some(sr) = &rw.size_ratio {
+                assert!(sr.min > 0.0 && sr.min <= sr.median && sr.median <= sr.max, "{id}: {sr:?}");
             }
             for (prop, n) in &rw.affected {
                 let declared = e.loss.get(prop).map(String::as_str);

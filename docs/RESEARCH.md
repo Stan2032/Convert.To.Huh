@@ -2137,6 +2137,39 @@ engine because nobody had looked at real metadata. Counting a declared loss
 on real files is how a declared value gets falsified; it is not only
 prevalence.
 
+### 18.6 Output size, published as a cost
+
+§18 left a question open: `huh clean` made real PDFs a median 23x larger, and
+no tracked property could say so, because size is not a property of the
+content. The answer chosen is to publish it beside the real-file counts, as
+`real_world.size_ratio` (schema 1.2.0), not in the loss vector: it is a cost
+of the conversion, like time, not something the content lost.
+
+Measured on the Govdocs1 files (output bytes / input bytes, median):
+
+| Conversion | Median | Range |
+|---|---|---|
+| PNG → JPEG (libvips) | 2.11 | 0.10 to 11.5 |
+| PNG → JPEG (image-rs, q85) | 3.69 | 0.19 to 15.6 |
+| PNG → WebP lossless (libvips) | 0.77 | 0.44 to 0.92 |
+| PNG → TIFF / BMP | 25.5 | 1.4 to 210 |
+| PNG → GIF | 1.07 to 1.10 | 0.36 to 2.3 |
+| JPEG → PNG | 5.50 | 1.4 to 12.5 |
+| DOC → PDF | 1.34 | 0.39 to 2.4 |
+| XLS → PDF | 1.37 | 0.42 to 4.0 |
+| PPT → PDF | 0.68 | 0.13 to 7.1 |
+
+**The surprise: lossy JPEG made most real PNGs larger.** 23 of 39 grew. 28 of
+the 39 have 256 colours or fewer (charts, diagrams, screenshots), where PNG's
+lossless compression beats JPEG and JPEG adds ringing on top. A converter that
+picks JPEG "to save space" loses quality and, on this corpus, usually gains
+size. Only the real-file tier shows it: the synthetic specimens are small and
+gradient-heavy, the case JPEG suits.
+
+**Design implication.** A cost that runs against intuition needs publishing
+as much as a loss does. `size_ratio` lets a consumer see that a lossy route
+is not even the smaller one on content like theirs.
+
 ## Sources
 
 - [Convert To It](https://converttoit.com/) · [Grokipedia: Convert to it](https://grokipedia.com/page/Convert_to_it) · [Convert To It API](https://converttoit.com/api)

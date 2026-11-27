@@ -368,6 +368,7 @@ ran          = 39               # converted without error
 contradicted = 0                # files where a measurement contradicted the loss vector
 affected     = { alpha = 2 }    # per declared loss: files on which it actually occurred
 results      = "corpus/govdocs1/edges.json"   # per-file results, committed
+size_ratio   = { median = 2.114, min = 0.102, max = 11.475 }   # output bytes / input bytes
 ```
 
 Synthetic specimens show a loss exists; these say how often it happens. "Loses
@@ -375,8 +376,13 @@ transparency" means something different when 2 of 39 real PNGs had any.
 
 CI rejects (**rule 14**): the block on an edge that is not `verified`;
 `ran > files`; `contradicted > ran`; an `affected` count above `ran`; an
-`affected` key the edge does not declare, or declares `preserved`; and a
-`results` path that is not in the repository.
+`affected` key the edge does not declare, or declares `preserved`; a
+`results` path that is not in the repository; and a `size_ratio` whose values
+are not positive or not ordered `min <= median <= max`.
+
+`size_ratio` is a cost, not a loss, so it lives here rather than in the loss
+vector: no property of the content says a conversion made the file larger.
+It answers the question R§18 raised when `huh clean` grew real PDFs 23x.
 
 Two rules the validator cannot check, so they live in the generator
 (`tools/real_world_blocks.py`), which writes these blocks from the results

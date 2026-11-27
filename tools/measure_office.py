@@ -118,6 +118,7 @@ def measure(path: Path, work: Path, profile: str) -> dict:
     info = run(["pdfinfo", str(pdf)]).stdout.decode()
     row["pages"] = int(m.group(1)) if (m := re.search(r"Pages:\s+(\d+)", info)) else None
     row["tagged"] = bool(re.search(r"Tagged:\s+yes", info))
+    row["size_ratio"] = round(pdf.stat().st_size / max(1, path.stat().st_size), 3)
 
     embedded = {family(line.split()[0])
                 for line in run(["pdffonts", str(pdf)]).stdout.decode().splitlines()[2:]

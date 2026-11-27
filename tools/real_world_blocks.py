@@ -88,6 +88,7 @@ def raster_blocks() -> dict[tuple, dict]:
         survived = set(row.get("observed", {}).get("metadata_survived_in", []))
         out[key] = {"corpus": "govdocs1", "files": row["ran"] + sum(row["failed"].values()),
                     "ran": row["ran"], "contradicted": contradicted,
+                    "size_ratio": row.get("size_ratio"),
                     "metadata_survived_in": survived,
                     "affected": affected, "results": RASTER}
     return out
@@ -106,8 +107,11 @@ def office_block(src_format: str, loss: dict) -> dict | None:
     if declared(loss, "precision") not in (None, "preserved"):
         affected["precision"] = sum(1 for r in ok if r.get("number_recall") is not None
                                     and r["number_recall"] < 1)
+    sizes = sorted(r["size_ratio"] for r in ok if "size_ratio" in r)
+    size = ({"median": sizes[len(sizes) // 2], "min": sizes[0], "max": sizes[-1]}
+            if sizes else None)
     return {"corpus": "govdocs1", "files": len(rows), "ran": len(ok),
-            "affected": affected, "results": OFFICE}
+            "affected": affected, "results": OFFICE, "size_ratio": size}
 
 
 def render(rw: dict) -> str:
@@ -119,6 +123,9 @@ def render(rw: dict) -> str:
     aff = ", ".join(f"{p} = {n}" for p, n in sorted(rw["affected"].items()))
     lines.append(f"{'affected':<12} = {{ {aff} }}")
     lines.append(f'{"results":<12} = {json.dumps(rw["results"])}')
+    if rw.get("size_ratio"):
+        sr = rw["size_ratio"]
+        lines.append(f"{'size_ratio':<12} = {{ median = {sr['median']}, min = {sr['min']}, max = {sr['max']} }}")
     return "\n".join(lines) + "\n"
 
 

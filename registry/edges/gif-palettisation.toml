@@ -89,6 +89,7 @@ ran          = 39
 contradicted = 0
 affected     = { alpha = 1, color_depth = 15, metadata = 6 }
 results      = "corpus/govdocs1/edges.json"
+size_ratio   = { median = 1.066, min = 0.416, max = 2.32 }
 
 
 [[edge]]
@@ -172,3 +173,4 @@ ran          = 39
 contradicted = 0
 affected     = { alpha = 1, color_depth = 12, metadata = 3 }
 results      = "corpus/govdocs1/edges.json"
+size_ratio   = { median = 1.1, min = 0.379, max = 2.321 }

@@ -70,6 +70,7 @@ files        = 20
 ran          = 20
 affected     = { fonts = 20 }
 results      = "corpus/govdocs1/office.json"
+size_ratio   = { median = 1.335, min = 0.391, max = 2.44 }
 
 
 [[edge]]
@@ -136,6 +137,7 @@ files        = 20
 ran          = 20
 affected     = { fonts = 20, precision = 11 }
 results      = "corpus/govdocs1/office.json"
+size_ratio   = { median = 1.368, min = 0.417, max = 4.015 }
 
 
 [[edge]]
@@ -193,3 +195,4 @@ files        = 20
 ran          = 20
 affected     = { fonts = 20 }
 results      = "corpus/govdocs1/office.json"
+size_ratio   = { median = 0.678, min = 0.133, max = 7.079 }

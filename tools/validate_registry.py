@@ -332,6 +332,14 @@ def real_world_problems(rw: dict, loss: dict, status: str | None) -> list[str]:
             out.append(f"`affected.{prop}` must be a non-negative integer")
         elif "ran" in nums and n > nums["ran"]:
             out.append(f"`affected.{prop}` exceeds `ran`")
+    sr = rw.get("size_ratio")
+    if sr is not None:
+        vals = {k: sr.get(k) for k in ("min", "median", "max")} if isinstance(sr, dict) else {}
+        if not vals or not all(isinstance(v, (int, float)) and not isinstance(v, bool) and v > 0
+                               for v in vals.values()):
+            out.append("`size_ratio` needs positive numbers `min`, `median` and `max`")
+        elif not vals["min"] <= vals["median"] <= vals["max"]:
+            out.append("`size_ratio` must satisfy min <= median <= max")
     results = rw.get("results")
     if isinstance(results, str) and results and not (REGISTRY.parent / results).is_file():
         out.append(f"`results` names `{results}`, which is not in the repository")
@@ -1042,6 +1050,10 @@ def self_test() -> int:
          "`contradicted` exceeds `ran`"),
         ("results file that does not exist", good | {"results": "corpus/nope.json"},
          "verified", "not in the repository"),
+        ("size ratio out of order", good | {"size_ratio": {"min": 2, "median": 1, "max": 3}},
+         "verified", "min <= median <= max"),
+        ("size ratio that is not positive", good | {"size_ratio": {"min": 0, "median": 1, "max": 3}},
+         "verified", "positive numbers"),
     ]
     for name, rw, status, expect in rw_cases:
         got = real_world_problems(rw, loss, status)

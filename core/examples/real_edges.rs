@@ -182,6 +182,7 @@ fn main() {
         let (mut metadata_present, mut metadata_lost, mut metadata_survived) = (0usize, 0usize, 0usize);
         let mut metadata_some_missing = 0usize;
         let mut metadata_survived_in: Vec<String> = vec![];
+        let mut size_ratios: Vec<f64> = vec![];
         for (name, fmt, bytes) in &specimens {
             if fmt != &e.from {
                 continue;
@@ -189,6 +190,7 @@ fn main() {
             match execute::execute(&plan, bytes, 85) {
                 Ok((out, receipt)) => {
                     ran += 1;
+                    size_ratios.push(out.len() as f64 / bytes.len().max(1) as f64);
                     let meta = metadata_payloads(bytes, &e.from);
                     if !meta.is_empty() {
                         metadata_present += 1;
@@ -236,6 +238,17 @@ fn main() {
         row.insert("failed".into(), json!(failed));
         row.insert("measured".into(), json!(exercised));
         row.insert("contradictions".into(), Value::Array(contradictions));
+        // Output bytes over input bytes, per real file. A cost, not a loss:
+        // no tracked property says a conversion made the file 23x larger.
+        size_ratios.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        if !size_ratios.is_empty() {
+            let r3 = |x: f64| (x * 1000.0).round() / 1000.0;
+            row.insert("size_ratio".into(), json!({
+                "median": r3(size_ratios[size_ratios.len() / 2]),
+                "min": r3(size_ratios[0]),
+                "max": r3(*size_ratios.last().unwrap()),
+            }));
+        }
         // Files on which the output has fewer distinct colours than the input,
         // and files whose partial transparency came out on/off only.
         row.insert("observed".into(), json!({

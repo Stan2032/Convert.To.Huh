@@ -98,6 +98,9 @@ more than 8 bits per channel to lose.
   is not the same as zero.
 - `contradicted` absent means no automated check ran, also not zero.
 - `results` points at the per-file data in the repository.
+- `size_ratio` (schema 1.2.0) is output bytes over input bytes across those
+  files: `median`, `min`, `max`. It is a cost, not a loss: PNG to JPEG made
+  most real PNGs larger, which no loss property can say.
 
 The files are real US-government documents from Govdocs1. They are not
 redistributed here; their SHA-256 digests are, in `corpus/govdocs1/MANIFEST.tsv`.

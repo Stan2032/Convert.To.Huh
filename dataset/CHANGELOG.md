@@ -7,6 +7,17 @@ Two version numbers, deliberately separate:
 - **`registry_version`** (calendar, `YYYY.MM.N`) changes when the *data*
   changes: an edge added, a loss value corrected, a count updated.
 
+## registry 2026.11.2 · schema 1.2.0
+
+**Schema 1.2.0 (additive).** `real_world.size_ratio`: output bytes divided
+by input bytes over the real files, as `median`, `min` and `max`. A cost, not
+a loss, so it sits beside the counts rather than in the loss vector.
+
+**Data.** 17 edges carry it. PNG to JPEG made 23 of 39 real PNGs *larger*
+(median 2.1x via libvips, 3.7x via image-rs): most real PNGs are charts with
+256 colours or fewer, where PNG compresses far better than JPEG. Lossless
+WebP shrinks them (0.77x); uncompressed TIFF and BMP grow them about 25x.
+
 ## registry 2026.11.1 · schema 1.1.0
 
 **Correction.** ImageMagick PNG to GIF (`convert IN OUT.gif`) declared

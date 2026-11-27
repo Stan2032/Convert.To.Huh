@@ -151,6 +151,18 @@ pub struct RealWorld {
     pub affected: BTreeMap<String, u32>,
     /// Where the per-file results live, so a count can be checked.
     pub results: String,
+    /// Output bytes over input bytes across those files. A cost, not a loss:
+    /// no tracked property can say a conversion made a file 23x larger.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub size_ratio: Option<SizeRatio>,
+}
+
+/// Distribution of output size over input size, per real file.
+#[derive(Debug, Clone, Deserialize, serde::Serialize, PartialEq)]
+pub struct SizeRatio {
+    pub median: f64,
+    pub min: f64,
+    pub max: f64,
 }
 
 #[derive(Debug, Clone, Deserialize)]

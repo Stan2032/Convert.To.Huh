@@ -63,6 +63,7 @@
       "number_recall": null,
       "pages": 15,
       "tagged": true,
+      "size_ratio": 1.084,
       "fonts_requested": [
         "arial",
         "bookantiqua",
@@ -84,6 +85,7 @@
       "number_recall": null,
       "pages": 1,
       "tagged": true,
+      "size_ratio": 0.395,
       "fonts_requested": [
         "helvetica",
         "tahoma",
@@ -105,6 +107,7 @@
       "number_recall": 1.0,
       "pages": 20,
       "tagged": true,
+      "size_ratio": 2.44,
       "fonts_requested": [
         "arial",
         "bookantiqua",
@@ -135,6 +138,7 @@
       "number_recall": 0.8788,
       "pages": 35,
       "tagged": true,
+      "size_ratio": 1.693,
       "fonts_requested": [
         "arial",
         "arialblack",
@@ -163,6 +167,7 @@
       "number_recall": 0.5833,
       "pages": 1,
       "tagged": true,
+      "size_ratio": 1.393,
       "fonts_requested": [
         "arial",
         "timesnewroman"
@@ -181,6 +186,7 @@
       "number_recall": null,
       "pages": 15,
       "tagged": true,
+      "size_ratio": 1.622,
       "fonts_requested": [
         "timesnewroman"
       ],
@@ -198,6 +204,7 @@
       "number_recall": null,
       "pages": 5,
       "tagged": true,
+      "size_ratio": 1.347,
       "fonts_requested": [
         "arial",
         "georgia",
@@ -220,6 +227,7 @@
       "number_recall": 1.0,
       "pages": 8,
       "tagged": true,
+      "size_ratio": 0.439,
       "fonts_requested": [
         "arial",
         "tahoma",
@@ -240,6 +248,7 @@
       "number_recall": null,
       "pages": 22,
       "tagged": true,
+      "size_ratio": 1.481,
       "fonts_requested": [
         "arial",
         "arialblack",
@@ -266,6 +275,7 @@
       "number_recall": 1.0,
       "pages": 28,
       "tagged": true,
+      "size_ratio": 1.292,
       "fonts_requested": [
         "couriernew",
         "symbol",
@@ -289,6 +299,7 @@
       "number_recall": null,
       "pages": 15,
       "tagged": true,
+      "size_ratio": 0.408,
       "fonts_requested": [
         "symbol",
         "timesnewroman"
@@ -309,6 +320,7 @@
       "number_recall": null,
       "pages": 1,
       "tagged": true,
+      "size_ratio": 1.928,
       "fonts_requested": [
         "arial",
         "futuramdbt"
@@ -327,6 +339,7 @@
       "number_recall": 0.975,
       "pages": 7,
       "tagged": true,
+      "size_ratio": 0.963,
       "fonts_requested": [
         "arial",
         "georgia",
@@ -349,6 +362,7 @@
       "number_recall": 0.9298,
       "pages": 10,
       "tagged": true,
+      "size_ratio": 1.446,
       "fonts_requested": [
         "arial"
       ],
@@ -366,6 +380,7 @@
       "number_recall": null,
       "pages": 7,
       "tagged": true,
+      "size_ratio": 1.335,
       "fonts_requested": [
         "couriernew",
         "msmincho",
@@ -386,6 +401,7 @@
       "number_recall": 0.9226,
       "pages": 6,
       "tagged": true,
+      "size_ratio": 1.479,
       "fonts_requested": [
         "arial"
       ],
@@ -403,6 +419,7 @@
       "number_recall": 1.0,
       "pages": 14,
       "tagged": true,
+      "size_ratio": 1.208,
       "fonts_requested": [
         "arial",
         "garamond",
@@ -425,6 +442,7 @@
       "number_recall": 0.5565,
       "pages": 10,
       "tagged": true,
+      "size_ratio": 0.736,
       "fonts_requested": [
         "arial",
         "timesnewroman"
@@ -443,6 +461,7 @@
       "number_recall": 1.0,
       "pages": 66,
       "tagged": true,
+      "size_ratio": 2.605,
       "fonts_requested": [
         "arial",
         "cambria",
@@ -463,6 +482,7 @@
       "number_recall": 1.0,
       "pages": 3,
       "tagged": true,
+      "size_ratio": 1.72,
       "fonts_requested": [
         "arial",
         "cgtimes(w1)",
@@ -488,6 +508,7 @@
       "number_recall": 1.0,
       "pages": 90,
       "tagged": true,
+      "size_ratio": 0.408,
       "fonts_requested": [
         "arial",
         "bookman",
@@ -517,6 +538,7 @@
       "number_recall": 0.9805,
       "pages": 26,
       "tagged": true,
+      "size_ratio": 1.122,
       "fonts_requested": [
         "arial",
         "castletult",
@@ -536,6 +558,7 @@
       "number_recall": 1.0,
       "pages": 20,
       "tagged": true,
+      "size_ratio": 0.169,
       "fonts_requested": [
         "arial",
         "arialblack",
@@ -559,6 +582,7 @@
       "number_recall": 1.0,
       "pages": 521,
       "tagged": true,
+      "size_ratio": 1.077,
       "fonts_requested": [
         "timesnewroman"
       ],
@@ -576,6 +600,7 @@
       "number_recall": null,
       "pages": 24,
       "tagged": true,
+      "size_ratio": 0.678,
       "fonts_requested": [
         "arial",
         "bookantiqua",
@@ -599,6 +624,7 @@
       "number_recall": null,
       "pages": 27,
       "tagged": true,
+      "size_ratio": 1.057,
       "fonts_requested": [
         "arial"
       ],
@@ -616,6 +642,7 @@
       "number_recall": 1.0,
       "pages": 21,
       "tagged": true,
+      "size_ratio": 0.518,
       "fonts_requested": [
         "arial",
         "georgia",
@@ -639,6 +666,7 @@
       "number_recall": null,
       "pages": 27,
       "tagged": true,
+      "size_ratio": 0.263,
       "fonts_requested": [
         "arial",
         "arialblack",
@@ -662,6 +690,7 @@
       "number_recall": null,
       "pages": 1,
       "tagged": true,
+      "size_ratio": 2.363,
       "fonts_requested": [
         "timesnewroman"
       ],
@@ -679,6 +708,7 @@
       "number_recall": 1.0,
       "pages": 43,
       "tagged": true,
+      "size_ratio": 2.377,
       "fonts_requested": [
         "palatino",
         "symbol",
@@ -700,6 +730,7 @@
       "number_recall": null,
       "pages": 11,
       "tagged": true,
+      "size_ratio": 0.246,
       "fonts_requested": [
         "arial",
         "timesnewroman",
@@ -721,6 +752,7 @@
       "number_recall": 1.0,
       "pages": 2,
       "tagged": true,
+      "size_ratio": 1.368,
       "fonts_requested": [
         "arial"
       ],
@@ -738,6 +770,7 @@
       "number_recall": null,
       "pages": 3,
       "tagged": true,
+      "size_ratio": 1.665,
       "fonts_requested": [
         "arial"
       ],
@@ -755,6 +788,7 @@
       "number_recall": null,
       "pages": 12,
       "tagged": true,
+      "size_ratio": 4.015,
       "fonts_requested": [
         "timesnewroman"
       ],
@@ -773,6 +807,7 @@
       "number_recall": 1.0,
       "pages": 4,
       "tagged": true,
+      "size_ratio": 1.86,
       "fonts_requested": [
         "arialblack",
         "courier",
@@ -793,6 +828,7 @@
       "number_recall": 0.7013,
       "pages": 114,
       "tagged": true,
+      "size_ratio": 1.179,
       "fonts_requested": [
         "arial",
         "arialunicodems",
@@ -820,6 +856,7 @@
       "number_recall": 0.9662,
       "pages": 19,
       "tagged": true,
+      "size_ratio": 1.207,
       "fonts_requested": [
         "akzidenzgroteskbe",
         "arial",
@@ -846,6 +883,7 @@
       "number_recall": null,
       "pages": 1,
       "tagged": true,
+      "size_ratio": 1.083,
       "fonts_requested": [
         "couriernew",
         "garamond",
@@ -869,6 +907,7 @@
       "number_recall": 0.625,
       "pages": 4,
       "tagged": true,
+      "size_ratio": 1.431,
       "fonts_requested": [
         "arial"
       ],
@@ -886,6 +925,7 @@
       "number_recall": null,
       "pages": 36,
       "tagged": true,
+      "size_ratio": 0.952,
       "fonts_requested": [
         "arial",
         "arialblack",
@@ -909,6 +949,7 @@
       "number_recall": null,
       "pages": 9,
       "tagged": true,
+      "size_ratio": 4.014,
       "fonts_requested": [
         "arial",
         "baskervilleoldface",
@@ -933,6 +974,7 @@
       "number_recall": null,
       "pages": 20,
       "tagged": true,
+      "size_ratio": 0.559,
       "fonts_requested": [
         "arial"
       ],
@@ -951,6 +993,7 @@
       "number_recall": null,
       "pages": 4,
       "tagged": true,
+      "size_ratio": 0.84,
       "fonts_requested": [
         "georgia",
         "simsun",
@@ -970,6 +1013,7 @@
       "number_recall": 0.9714,
       "pages": 20,
       "tagged": true,
+      "size_ratio": 2.075,
       "fonts_requested": [
         "arial",
         "couriernew",
@@ -994,6 +1038,7 @@
       "number_recall": null,
       "pages": 4,
       "tagged": true,
+      "size_ratio": 1.488,
       "fonts_requested": [
         "arialblack",
         "couriernew",
@@ -1020,6 +1065,7 @@
       "number_recall": null,
       "pages": 11,
       "tagged": true,
+      "size_ratio": 7.079,
       "fonts_requested": [
         "timesnewroman"
       ],
@@ -1037,6 +1083,7 @@
       "number_recall": 1.0,
       "pages": 25,
       "tagged": true,
+      "size_ratio": 1.309,
       "fonts_requested": [
         "arial",
         "timesnewroman"
@@ -1056,6 +1103,7 @@
       "number_recall": null,
       "pages": 1,
       "tagged": true,
+      "size_ratio": 1.062,
       "fonts_requested": [
         "timesnewroman"
       ],
@@ -1073,6 +1121,7 @@
       "number_recall": 0.9973,
       "pages": 44,
       "tagged": true,
+      "size_ratio": 1.315,
       "fonts_requested": [
         "arial",
         "times",
@@ -1095,6 +1144,7 @@
       "number_recall": 0.9457,
       "pages": 25,
       "tagged": true,
+      "size_ratio": 0.391,
       "fonts_requested": [
         "arial",
         "arialunicodems",
@@ -1120,6 +1170,7 @@
       "number_recall": null,
       "pages": 24,
       "tagged": true,
+      "size_ratio": 4.733,
       "fonts_requested": [
         "arial",
         "timesnewroman"
@@ -1140,6 +1191,7 @@
       "number_recall": null,
       "pages": 27,
       "tagged": true,
+      "size_ratio": 0.425,
       "fonts_requested": [
         "arial",
         "timesnewroman",
@@ -1161,6 +1213,7 @@
       "number_recall": 1.0,
       "pages": 14,
       "tagged": true,
+      "size_ratio": 0.133,
       "fonts_requested": [
         "arial",
         "timesnewroman"
@@ -1180,6 +1233,7 @@
       "number_recall": 1.0,
       "pages": 7,
       "tagged": true,
+      "size_ratio": 0.417,
       "fonts_requested": [
         "courier",
         "timesnewroman"
@@ -1198,6 +1252,7 @@
       "number_recall": 0.9921,
       "pages": 8,
       "tagged": true,
+      "size_ratio": 3.678,
       "fonts_requested": [
         "arial",
         "mssansserif"
@@ -1217,6 +1272,7 @@
       "number_recall": 0.251,
       "pages": 2,
       "tagged": true,
+      "size_ratio": 1.169,
       "fonts_requested": [
         "arial"
       ],
@@ -1234,6 +1290,7 @@
       "number_recall": 0.5378,
       "pages": 9,
       "tagged": true,
+      "size_ratio": 0.89,
       "fonts_requested": [
         "arial"
       ],
@@ -1251,6 +1308,7 @@
       "number_recall": 0.9765,
       "pages": 2,
       "tagged": true,
+      "size_ratio": 0.679,
       "fonts_requested": [
         "arial",
         "p"
@@ -1269,6 +1327,7 @@
       "number_recall": 1.0,
       "pages": 4,
       "tagged": true,
+      "size_ratio": 1.047,
       "fonts_requested": [
         "arial"
       ],
@@ -1286,6 +1345,7 @@
       "number_recall": 1.0,
       "pages": 16,
       "tagged": true,
+      "size_ratio": 1.026,
       "fonts_requested": [
         "arial",
         "times",

@@ -76,6 +76,7 @@ ran          = 39
 contradicted = 0
 affected     = { alpha = 2, color_depth = 0, metadata = 6 }
 results      = "corpus/govdocs1/edges.json"
+size_ratio   = { median = 2.114, min = 0.102, max = 11.475 }
 
 
 [[edge]]
@@ -155,6 +156,7 @@ ran          = 39
 contradicted = 0
 affected     = { color_depth = 0, metadata = 6 }
 results      = "corpus/govdocs1/edges.json"
+size_ratio   = { median = 1.207, min = 0.077, max = 4.12 }
 
 
 [[edge]]
@@ -202,6 +204,7 @@ ran          = 39
 contradicted = 0
 affected     = { metadata = 6 }
 results      = "corpus/govdocs1/edges.json"
+size_ratio   = { median = 25.488, min = 1.36, max = 209.778 }
 
 
 [[edge]]
@@ -271,6 +274,7 @@ ran          = 39
 contradicted = 0
 affected     = { color_depth = 0, metadata = 6 }
 results      = "corpus/govdocs1/edges.json"
+size_ratio   = { median = 0.769, min = 0.438, max = 0.918 }
 
 
 [[edge]]
@@ -330,3 +334,4 @@ ran          = 39
 contradicted = 0
 affected     = { alpha = 2, color_depth = 0, metadata = 6 }
 results      = "corpus/govdocs1/edges.json"
+size_ratio   = { median = 2.114, min = 0.102, max = 11.475 }

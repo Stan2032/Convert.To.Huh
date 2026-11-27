@@ -18,9 +18,7 @@ the scope line in [README.md](README.md), which CI checks against the registry.
    where an observation can see it (now including metadata). Signal fidelity and text are
    not yet counted; each needs an observation that detects the declared
    outcome, not a threshold.
-2. **Decide where output size goes.** `huh clean` makes real PDFs a median 23×
-   larger (R§18). No tracked property can say so.
-3. **Video.** `signal_fidelity` will likely need its metric recorded alongside
+2. **Video.** `signal_fidelity` will likely need its metric recorded alongside
    it, because perceptual video metrics diverge sharply (ADR-0014).
 
 ## Not planned

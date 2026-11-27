@@ -1,6 +1,6 @@
 {
-  "schema_version": "1.1.0",
-  "registry_version": "2026.11.1",
+  "schema_version": "1.2.0",
+  "registry_version": "2026.11.2",
   "license": "CC0-1.0",
   "source": "https://github.com/Stan2032/Convert.To.Huh",
   "properties": [
@@ -768,7 +768,12 @@
           "color_depth": 15,
           "metadata": 6
         },
-        "results": "corpus/govdocs1/edges.json"
+        "results": "corpus/govdocs1/edges.json",
+        "size_ratio": {
+          "median": 1.066,
+          "min": 0.416,
+          "max": 2.32
+        }
       },
       "generational": true
     },
@@ -815,7 +820,12 @@
           "color_depth": 12,
           "metadata": 3
         },
-        "results": "corpus/govdocs1/edges.json"
+        "results": "corpus/govdocs1/edges.json",
+        "size_ratio": {
+          "median": 1.1,
+          "min": 0.379,
+          "max": 2.321
+        }
       },
       "generational": true
     },
@@ -993,7 +1003,12 @@
           "color_depth": 0,
           "metadata": 6
         },
-        "results": "corpus/govdocs1/edges.json"
+        "results": "corpus/govdocs1/edges.json",
+        "size_ratio": {
+          "median": 3.692,
+          "min": 0.188,
+          "max": 15.593
+        }
       },
       "generational": true
     },
@@ -1028,7 +1043,12 @@
         "affected": {
           "metadata": 20
         },
-        "results": "corpus/govdocs1/edges.json"
+        "results": "corpus/govdocs1/edges.json",
+        "size_ratio": {
+          "median": 5.498,
+          "min": 1.412,
+          "max": 12.48
+        }
       },
       "generational": false
     },
@@ -1068,7 +1088,12 @@
         "affected": {
           "metadata": 6
         },
-        "results": "corpus/govdocs1/edges.json"
+        "results": "corpus/govdocs1/edges.json",
+        "size_ratio": {
+          "median": 25.482,
+          "min": 1.36,
+          "max": 209.771
+        }
       },
       "generational": false
     },
@@ -1109,7 +1134,12 @@
           "color_depth": 0,
           "metadata": 6
         },
-        "results": "corpus/govdocs1/edges.json"
+        "results": "corpus/govdocs1/edges.json",
+        "size_ratio": {
+          "median": 1.205,
+          "min": 0.777,
+          "max": 2.891
+        }
       },
       "generational": false
     },
@@ -1155,7 +1185,12 @@
           "color_depth": 11,
           "metadata": 6
         },
-        "results": "corpus/govdocs1/edges.json"
+        "results": "corpus/govdocs1/edges.json",
+        "size_ratio": {
+          "median": 1.065,
+          "min": 0.358,
+          "max": 2.315
+        }
       },
       "generational": false
     },
@@ -1196,7 +1231,12 @@
           "color_depth": 0,
           "metadata": 6
         },
-        "results": "corpus/govdocs1/edges.json"
+        "results": "corpus/govdocs1/edges.json",
+        "size_ratio": {
+          "median": 25.536,
+          "min": 1.362,
+          "max": 209.746
+        }
       },
       "generational": false
     },
@@ -1231,7 +1271,12 @@
         "affected": {
           "metadata": 3
         },
-        "results": "corpus/govdocs1/edges.json"
+        "results": "corpus/govdocs1/edges.json",
+        "size_ratio": {
+          "median": 3.327,
+          "min": 0.703,
+          "max": 7.843
+        }
       },
       "generational": false
     },
@@ -1346,7 +1391,12 @@
         "affected": {
           "fonts": 20
         },
-        "results": "corpus/govdocs1/office.json"
+        "results": "corpus/govdocs1/office.json",
+        "size_ratio": {
+          "median": 1.335,
+          "min": 0.391,
+          "max": 2.44
+        }
       },
       "generational": false
     },
@@ -1387,7 +1437,12 @@
           "fonts": 20,
           "precision": 11
         },
-        "results": "corpus/govdocs1/office.json"
+        "results": "corpus/govdocs1/office.json",
+        "size_ratio": {
+          "median": 1.368,
+          "min": 0.417,
+          "max": 4.015
+        }
       },
       "generational": false
     },
@@ -1423,7 +1478,12 @@
         "affected": {
           "fonts": 20
         },
-        "results": "corpus/govdocs1/office.json"
+        "results": "corpus/govdocs1/office.json",
+        "size_ratio": {
+          "median": 0.678,
+          "min": 0.133,
+          "max": 7.079
+        }
       },
       "generational": false
     },
@@ -1473,7 +1533,12 @@
           "color_depth": 0,
           "metadata": 6
         },
-        "results": "corpus/govdocs1/edges.json"
+        "results": "corpus/govdocs1/edges.json",
+        "size_ratio": {
+          "median": 2.114,
+          "min": 0.102,
+          "max": 11.475
+        }
       },
       "generational": true
     },
@@ -1516,7 +1581,12 @@
           "color_depth": 0,
           "metadata": 6
         },
-        "results": "corpus/govdocs1/edges.json"
+        "results": "corpus/govdocs1/edges.json",
+        "size_ratio": {
+          "median": 1.207,
+          "min": 0.077,
+          "max": 4.12
+        }
       },
       "generational": true
     },
@@ -1555,7 +1625,12 @@
         "affected": {
           "metadata": 6
         },
-        "results": "corpus/govdocs1/edges.json"
+        "results": "corpus/govdocs1/edges.json",
+        "size_ratio": {
+          "median": 25.488,
+          "min": 1.36,
+          "max": 209.778
+        }
       },
       "generational": false
     },
@@ -1600,7 +1675,12 @@
           "color_depth": 0,
           "metadata": 6
         },
-        "results": "corpus/govdocs1/edges.json"
+        "results": "corpus/govdocs1/edges.json",
+        "size_ratio": {
+          "median": 0.769,
+          "min": 0.438,
+          "max": 0.918
+        }
       },
       "generational": false
     },
@@ -1647,7 +1727,12 @@
           "color_depth": 0,
           "metadata": 6
         },
-        "results": "corpus/govdocs1/edges.json"
+        "results": "corpus/govdocs1/edges.json",
+        "size_ratio": {
+          "median": 2.114,
+          "min": 0.102,
+          "max": 11.475
+        }
       },
       "generational": true
     },
