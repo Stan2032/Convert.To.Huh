@@ -109,7 +109,7 @@ fn run_hop(
 fn programs_for(engine: &str) -> Option<&'static [&'static str]> {
     Some(match engine {
         "libvips" => &["vips"],
-        "ffmpeg" => &["ffmpeg"],
+        "ffmpeg" | "ffmpeg-gpl" => &["ffmpeg"],
         "sox" => &["sox"],
         "gstreamer" => &["gst-launch-1.0"],
         "imagemagick" => &["convert", "magick"],

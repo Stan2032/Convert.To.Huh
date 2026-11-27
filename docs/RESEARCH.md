@@ -2241,6 +2241,43 @@ second. Rule 15 now rejects any edge on an `lgpl`-only engine that invokes a
 GPL-only component, so the argument above is checked on every commit rather
 than made once in prose.
 
+### 20.2 H.264 and H.265: the "equivalent defaults" are not equivalent here
+
+With the GPL build recorded as its own engine (`ffmpeg-gpl`, ADR-0007), three
+more edges were measured against the same reference. Every invocation was run
+twice; both encoders produced byte-identical output each time.
+
+| Invocation | SSIM (all) | PSNR | Bytes |
+|---|---|---|---|
+| `-c:v libx264 -qp 0` | 1.000000 | inf | 258,442 |
+| `-c:v libx264 -crf 23` (x264 default) | 0.993465 | 42.47 dB | 69,109 |
+| `-c:v libx265 -crf 28` (x265 default) | 0.985002 | 38.14 dB | 48,540 |
+| reference, FFV1 | 1 | inf | 382,118 |
+
+ffmpeg's H.265 guide (trac.ffmpeg.org/wiki/Encode/H.265, fetched 2026-11-27)
+says x265's default "should visually correspond to libx264 video at CRF 23,
+but result in about half the file size". On this specimen it is 70% of the
+size and lower on both metrics: 0.0085 SSIM and 4.3 dB PSNR below x264's
+default. One 2-second synthetic clip at 320x240 is not a general refutation,
+and "visually" is a perceptual claim neither SSIM nor PSNR measures (x265's
+psychovisual tuning trades exactly these metrics for appearance). It is enough
+to stop the dataset treating the two defaults as interchangeable.
+
+**Design implication.** A conversion's default quality is a property of the
+encoder, not of the codec, and "equivalent" settings across encoders are a
+claim to measure, not assume. Recording each default as its own edge, with
+both metrics, lets a consumer see the gap instead of inheriting the folklore.
+
+**A planner bug the video edges exposed.** `huh plan` labelled the lossy VP9
+route "faithful — nothing tracked is lost" while its explanation, generated
+from the same loss vector, said "Reduces fine detail". The label looked only
+at `lost` properties, never `degraded`, so every route that merely degrades
+(WAV to MP3, lossy VP9, H.264) was called faithful. WAV to MP3 read
+"stripped — pixels intact". The raster routes had always lost something
+outright, which hid it. Labels now name degraded properties
+(`reduced — degrades signal_fidelity`), and a test holds label and
+explanation to the same vector.
+
 ## Sources
 
 - [Convert To It](https://converttoit.com/) · [Grokipedia: Convert to it](https://grokipedia.com/page/Convert_to_it) · [Convert To It API](https://converttoit.com/api)

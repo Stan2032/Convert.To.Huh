@@ -7,6 +7,20 @@ Two version numbers, deliberately separate:
 - **`registry_version`** (calendar, `YYYY.MM.N`) changes when the *data*
   changes: an edge added, a loss value corrected, a count updated.
 
+## registry 2026.11.4 · schema 1.2.0
+
+**Data.** H.264 and H.265, under a new `ffmpeg-gpl` engine (GPL build,
+`gpl` profile only, ADR-0007): x264 lossless (`-qp 0`, SSIM 1.0), x264's
+default crf 23 (SSIM 0.9935, 42.47 dB) and x265's default crf 28 (SSIM
+0.9850, 38.14 dB at 70% of x264's size). The two defaults, documented by
+ffmpeg as visually equivalent, are not equal on either metric here
+(docs/RESEARCH.md §20.2).
+
+**Correction (engine note, not exported).** The measured ffmpeg binary was
+always a GPL build. Every recorded `ffmpeg` invocation uses only components an
+LGPL build contains, so no edge changes; a new validator rule (15) keeps it
+that way (§20.1).
+
 ## registry 2026.11.3 · schema 1.2.0
 
 **Data.** Video, first entries: Matroska, WebM and MP4 formats, and three

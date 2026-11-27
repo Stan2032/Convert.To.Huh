@@ -1,0 +1,44 @@
+id          = "ffmpeg-gpl"
+name        = "FFmpeg (GPL build)"
+version_pin = ">=6.1,<10"
+homepage    = "https://ffmpeg.org/"
+
+[license]
+spdx            = "GPL-2.0-or-later"
+build_profiles  = ["gpl"]
+patent_exposure = "h264-h265-mpegla"
+verified        = true
+checked         = "2026-11-27"
+source          = "https://www.ffmpeg.org/legal.html"
+
+[security]
+hostility   = "high"
+isolation   = "gvisor"
+network     = false
+delegates   = false
+
+[resources]
+memory_model      = "streaming"
+concurrency       = "process-per-job"
+crash_expected    = false
+default_timeout_s = 900
+
+[notes]
+text = """
+The SAME binary as `ffmpeg` (registry/engines/ffmpeg.toml), recorded as a
+separate engine because ADR-0007 says a GPL build is a separate entry, not a
+flag: `--enable-gpl` makes the whole build GPL, and the planner prunes on
+build_profiles BEFORE search. Under the lgpl profile these routes do not
+exist (ground rule 6); rule 15 stops them leaking onto the LGPL entry.
+
+MEASURED BUILD 2026-11-27: ffmpeg 6.1.1 (Ubuntu 7:6.1.1-3ubuntu5), whose
+`-buildconf` shows --enable-gpl --enable-libx264 --enable-libx265, and whose
+`-L` prints the GPL (docs/RESEARCH.md §20.1).
+
+PATENTS are a separate axis from the licence and are recorded separately:
+H.264 and H.265 carry pool licensing whichever licence path is taken.
+
+DETERMINISM: libx264 and libx265 each produced byte-identical output on a
+repeat run of every invocation measured here, so the measurements are
+reproducible on the same build, not just statistically similar.
+"""

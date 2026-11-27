@@ -808,3 +808,42 @@ fn video_containers_are_told_apart_by_doctype() {
     let d = detect::detect(&r, &webm, None);
     assert_eq!(d.format, "video/webm", "output must be WebM by content");
 }
+
+/// H.264 and H.265 need a GPL ffmpeg (ADR-0007). Under the lgpl profile those
+/// routes must not exist at all (ground rule 6); under gpl they must, and the
+/// planner must pick the lossless one when nothing is to be lost.
+#[test]
+fn gpl_video_routes_exist_only_under_the_gpl_profile() {
+    let r = reg();
+    let lgpl = Planner::new(&r, &Policy::default());
+    let plans = lgpl.plan_ranked("video/x-matroska", "video/mp4", 10);
+    assert!(!plans.is_empty(), "MPEG-4 Part 2 is an LGPL route to MP4");
+    assert!(plans.iter().all(|p| p.hops.iter().all(|h| h.engine != "ffmpeg-gpl")),
+            "a GPL engine leaked into the lgpl profile");
+
+    let gpl = Planner::new(&r, &Policy { build_profile: "gpl".into(), ..Default::default() });
+    let best = gpl.plan("video/x-matroska", "video/mp4").expect("gpl route");
+    assert_eq!(best.hops[0].engine, "ffmpeg-gpl");
+    assert!(best.hops[0].invocation.as_deref().unwrap_or("").contains("-qp 0"),
+            "with a lossless H.264 route available, nothing should be degraded");
+}
+
+/// The label and the explanation are generated from the same loss vector, so
+/// they must not contradict each other (ground rule 7). A route that only
+/// degrades was once labelled "faithful — nothing tracked is lost", and WAV to
+/// MP3 "stripped — pixels intact".
+#[test]
+fn intent_label_names_degradation_not_just_loss() {
+    let r = reg();
+    let lossy_vp9 = Planner::new(&r, &Policy::default())
+        .plan_ranked("video/x-matroska", "video/webm", 5);
+    let labels: Vec<String> = lossy_vp9.iter().map(|p| p.intent_label()).collect();
+    assert!(labels.iter().any(|l| l.starts_with("faithful")), "{labels:?}");
+    assert!(labels.iter().any(|l| l.starts_with("reduced — degrades") && l.contains("signal_fidelity")),
+            "the lossy VP9 route must say what it degrades: {labels:?}");
+
+    let mp3 = Planner::new(&r, &Policy::default()).plan("audio/wav", "audio/mpeg").unwrap();
+    let l = mp3.intent_label();
+    assert!(!l.contains("pixels") && !l.contains("intact"), "{l}");
+    assert!(l.contains("degrades") && l.contains("signal_fidelity"), "{l}");
+}

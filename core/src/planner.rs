@@ -123,12 +123,26 @@ impl Plan {
             .filter(|(_, v)| **v == LossValue::Lost)
             .map(|(k, _)| k.as_str())
             .collect();
+        // Degraded properties belong in the label too. Without them, every
+        // route that only degrades (WAV to MP3, lossy VP9, H.264) was labelled
+        // "faithful — nothing tracked is lost" while its own explanation said
+        // "Reduces fine detail": two halves of one plan contradicting each
+        // other (ground rule 7). Found by the first video edges, RESEARCH §20.2.
+        let degraded: Vec<&str> = self.totals.loss.0.iter()
+            .filter(|(_, v)| **v == LossValue::Degraded)
+            .map(|(k, _)| k.as_str())
+            .collect();
         if self.totals.contains_synthesis {
             return "inferred — a model generates content that was not in the input".into();
         }
-        if lost.is_empty() {
+        if lost.is_empty() && degraded.is_empty() {
             return "faithful — nothing tracked is lost".into();
         }
+        if lost.is_empty() {
+            return format!("reduced — degrades {}", degraded.join(", "));
+        }
+        let also = if degraded.is_empty() { String::new() }
+                   else { format!("; degrades {}", degraded.join(", ")) };
         // Name what replaced a lost property, so routes that differ only in
         // policy are distinguishable in a list, not only in the rationale.
         let how: Vec<String> = self.loss_policy.iter()
@@ -137,12 +151,13 @@ impl Plan {
             .collect();
         let suffix = if how.is_empty() { String::new() } else { format!(" ({})", how.join(", ")) };
         if lost.contains(&"alpha") && lost.len() == 1 {
-            return format!("flattened — transparency is discarded{suffix}");
+            return format!("flattened — transparency is discarded{suffix}{also}");
         }
-        if lost.contains(&"metadata") && lost.len() == 1 {
-            return "stripped — pixels intact, metadata discarded".into();
+        if lost.contains(&"metadata") && lost.len() == 1 && degraded.is_empty() {
+            // Not "pixels intact": this label is reached by audio and video too.
+            return "stripped — content intact, metadata discarded".into();
         }
-        format!("lossy — discards {}{suffix}", lost.join(", "))
+        format!("lossy — discards {}{suffix}{also}", lost.join(", "))
     }
 }
 

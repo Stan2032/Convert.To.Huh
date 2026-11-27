@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2.0",
-  "registry_version": "2026.11.3",
+  "registry_version": "2026.11.4",
   "license": "CC0-1.0",
   "source": "https://github.com/Stan2032/Convert.To.Huh",
   "properties": [
@@ -574,6 +574,17 @@
       "license_verified": true
     },
     {
+      "id": "ffmpeg-gpl",
+      "name": "FFmpeg (GPL build)",
+      "version_pin": ">=6.1,<10",
+      "license": "GPL-2.0-or-later",
+      "build_profiles": [
+        "gpl"
+      ],
+      "patent_exposure": "h264-h265-mpegla",
+      "license_verified": true
+    },
+    {
       "id": "ghostscript",
       "name": "Ghostscript",
       "version_pin": ">=10.04,<11",
@@ -669,6 +680,90 @@
     }
   ],
   "edges": [
+    {
+      "from": "video/x-matroska",
+      "to": "video/mp4",
+      "from_kind": "VideoStream",
+      "to_kind": "VideoStream",
+      "engine": "ffmpeg-gpl",
+      "invocation": "ffmpeg -i IN -c:v libx264 -qp 0 OUT",
+      "operation": "Transcode",
+      "loss": {
+        "geometry": "preserved",
+        "signal_fidelity": "preserved",
+        "time": "preserved"
+      },
+      "verification": "verified",
+      "specimens": [
+        "corpus/video/reference.mkv"
+      ],
+      "measured": {
+        "engine_build": "ffmpeg 6.1.1",
+        "frames": "50 -> 50",
+        "metric": "SSIM (all planes) and PSNR vs the lossless reference",
+        "note": "Lossless H.264 (`-qp 0`): bit-exact to the FFV1 reference, at 258,442 bytes\nagainst FFV1's 382,118. The control for the GPL edges, as VP9 lossless is for\nthe LGPL ones. `-qp 0`, not `-crf 0`: only a fixed quantiser of zero is\nlossless by construction.\n",
+        "psnr_db": "inf",
+        "ssim": 1.0,
+        "tool": "tools/measure_video.py"
+      },
+      "generational": false
+    },
+    {
+      "from": "video/x-matroska",
+      "to": "video/mp4",
+      "from_kind": "VideoStream",
+      "to_kind": "VideoStream",
+      "engine": "ffmpeg-gpl",
+      "invocation": "ffmpeg -i IN -c:v libx264 -crf 23 OUT",
+      "operation": "Transcode",
+      "loss": {
+        "geometry": "preserved",
+        "signal_fidelity": "degraded",
+        "time": "preserved"
+      },
+      "verification": "verified",
+      "specimens": [
+        "corpus/video/reference.mkv"
+      ],
+      "measured": {
+        "engine_build": "ffmpeg 6.1.1",
+        "frames": "50 -> 50",
+        "metric": "SSIM (all planes) and PSNR vs the lossless reference",
+        "note": "x264's default quality (crf 23 is what `-c:v libx264` alone gives), so this\nis the H.264 conversion most people actually run. 69,109 bytes.\n",
+        "psnr_db": 42.47,
+        "ssim": 0.9935,
+        "tool": "tools/measure_video.py"
+      },
+      "generational": true
+    },
+    {
+      "from": "video/x-matroska",
+      "to": "video/mp4",
+      "from_kind": "VideoStream",
+      "to_kind": "VideoStream",
+      "engine": "ffmpeg-gpl",
+      "invocation": "ffmpeg -i IN -c:v libx265 -crf 28 OUT",
+      "operation": "Transcode",
+      "loss": {
+        "geometry": "preserved",
+        "signal_fidelity": "degraded",
+        "time": "preserved"
+      },
+      "verification": "verified",
+      "specimens": [
+        "corpus/video/reference.mkv"
+      ],
+      "measured": {
+        "engine_build": "ffmpeg 6.1.1",
+        "frames": "50 -> 50",
+        "metric": "SSIM (all planes) and PSNR vs the lossless reference",
+        "note": "x265's default quality (crf 28). ffmpeg's H.265 guide says this \"should\nvisually correspond to libx264 video at CRF 23, but result in about half the\nfile size\". On this specimen it is 70% of the size (48,540 bytes vs 69,109)\nand LOWER on both metrics (SSIM 0.9850 vs 0.9935, 38.14 vs 42.47 dB). The\ntwo defaults are not equivalent here; whether they look equivalent is a\nperceptual question neither metric answers (ADR-0014, docs/RESEARCH.md §20.2).\n",
+        "psnr_db": 38.14,
+        "ssim": 0.985,
+        "tool": "tools/measure_video.py"
+      },
+      "generational": true
+    },
     {
       "from": "audio/wav",
       "to": "audio/mpeg",
@@ -1979,9 +2074,9 @@
   ],
   "counts": {
     "formats": 20,
-    "engines": 9,
-    "edges_total": 34,
-    "edges_verified": 33,
+    "engines": 10,
+    "edges_total": 37,
+    "edges_verified": 36,
     "edges_claimed": 1,
     "edges_refuted": 0
   }
