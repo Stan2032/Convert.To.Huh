@@ -1,6 +1,6 @@
 id          = "libreoffice"
 name        = "LibreOffice (headless, via unoserver)"
-version_pin = ">=25.2,<26"
+version_pin = ">=24.2,<26"
 homepage    = "https://www.libreoffice.org/"
 
 [license]
@@ -26,6 +26,16 @@ default_timeout_s = 90
 
 [notes]
 text = """
+PIN WIDENED 2026-11-26 to include 24.2, from ">=25.2". The first LibreOffice
+edges were measured on 24.2.7.2 (Ubuntu), the only build anyone here has run;
+same reasoning as the ffmpeg pin (rule 11 rejects a build outside its pin).
+
+MEASURED, not just described (docs/RESEARCH.md §19): 60 real Govdocs1 .doc,
+.xls and .ppt files converted to PDF one per process, and none crashed. The
+crash behaviour below is about long batches through unoserver.
+`soffice --headless` writes NOTHING, silently, when another instance holds
+the same user profile; the executor reports that as an engine crash.
+
 LICENSE CORRECTED 2026-08-20, and this one changed a routing decision.
 
 The manifest claimed a bare `spdx = "MPL-2.0"`. The core tree ships THREE

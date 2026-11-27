@@ -1467,6 +1467,41 @@ specimen lesson for the third time.
    would have been a permanent vocabulary error.
 
 
+### 14.7 Third audio engine: ffmpeg is the outlier
+
+§14.6 established that ffmpeg truncates and SoX rounds, but two engines cannot
+say which one is unusual. **GStreamer 1.24.2** (`audioconvert`, LGPL) was added
+as the third, measured 2026-11-26 with `tools/measure_audio.py --snr --dc` on
+the same quiet specimen:
+
+| Invocation | SNR | DC shift (8-bit steps) |
+|---|---|---|
+| `ffmpeg -c:a pcm_u8` | 3.76 dB | **−0.4975** |
+| `sox -D … -b 8` | 11.11 dB | +0.0014 |
+| `gst … audioconvert dithering=none` | 11.11 dB | +0.0014 |
+| `sox … -b 8` (dithered) | 5.09–5.16 dB | ≈0 |
+| `gst … audioconvert` (TPDF dither, default) | 5.12 dB | +0.0018 |
+
+With dither off, GStreamer's samples are **byte-identical** to `sox -D`'s. Two
+independent engines round to nearest; ffmpeg truncates. Downmix agreed across
+all three: GStreamer's mono output is bit-identical to `ffmpeg -ac 1`.
+
+Two smaller findings:
+
+- **GStreamer's dither is deterministic and SoX's is not.** Three GStreamer
+  runs gave 5.12 dB each; SoX gave 5.09, 5.14, 5.16. A dithered SNR recorded
+  from SoX is one sample from a distribution and should be read that way.
+- **The DC-offset finding was itself unreproducible until now.** §14.6's
+  −0.4975 came from a one-off histogram script. `measure_audio.py --dc` now
+  reports it, with self-tests, so the claim that ffmpeg truncates can be
+  checked by anyone.
+
+**Design implication.** `policy = "truncate"` on the ffmpeg edge describes an
+engine-specific choice, not a common convention, which is the case ADR-0012
+and ADR-0013 exist for: the same `bit_depth = degraded` hides a half-step DC
+shift in one of three engines. A consumer choosing a 16-to-8-bit route on
+quiet material should prefer a `round` edge.
+
 ## 15. The pattern behind the policy qualifiers
 
 Three policy vocabularies now exist — `alpha`, `audio_channels`, `bit_depth` —
@@ -1723,6 +1758,573 @@ produced plausible output (§13.8, §15.3, here). The pattern each time: a numbe
 that could not be right, noticed because someone looked at it rather than
 because a test failed.
 
+
+## 18. Real files: the first real-world tier
+
+Every specimen until now was synthetic, built to exercise one property. That is
+how a loss is found, but it cannot say how often the loss bites on files
+people actually have. Govdocs1 (digitalcorpora.org: ~1 million files from US
+government web servers) supplied the first real-world tier, measured
+2026-11-26.
+
+**Access.** The corpus is on S3, which this environment reaches. Each thread is
+a ~300 MB zip; `tools/fetch_govdocs.py` reads the zip directory and selected
+members with HTTP Range requests, so the first 110 files cost ~40 MB and 45
+seconds.
+Digital Corpora says the files "may be (to the best of our knowledge) freely
+redistributed". That is not CC0, so only a manifest (member, size, SHA-256) is
+committed; the bytes are fetched and verified on demand. The OPF format corpus
+is on GitHub, which the proxy blocks except for raw files.
+
+**Sample.** The first members by name of `thread0.zip`: 40 PDF, 40 JPEG, 27
+GIF. PNG is rare in Govdocs1 (3 to 6 per thread), so all 39 PNGs from the ten
+threads were taken (added in §18.1; the first run had only thread0's 3).
+Identified by content (`huh detect`), all as named.
+`tools/run_govdocs.py` writes `corpus/govdocs1/results.json`.
+
+| Set | Run | Result |
+|---|---|---|
+| 40 PDF | `huh clean` | 40/40 succeeded; **40/40 had extractable text, 0/40 kept it**; page count preserved in all 40 (1,788 pages); output **median 23× the input size** (1.4× to 179×) |
+| 40 JPEG | `huh convert` → PNG | 40/40, SSIM 1.0, no contradictions; colour depth never exercised |
+| 27 GIF | `huh convert` → PNG | 27/27, SSIM 1.0, no contradictions; transparency present in 2 |
+| 39 PNG | `huh convert` → JPEG | 39/39, no contradictions; the 2 with transparency lost it as declared (SSIM 0.334 and −0.067, §18.1) |
+
+**Findings.**
+
+1. **The declared PDF cost is the typical case.** `huh clean` declares
+   `text_as_text = lost`. Every real PDF sampled had text, so every one paid
+   that cost. The synthetic specimen could only show that the loss exists.
+2. **Size is a cost the loss vector cannot express.** Rendering pages to
+   images made cleaned PDFs a median 23 times larger. No tracked property
+   covers it, because size is not a property of the content. A consumer
+   choosing a sanitisation route would want to know it.
+3. **Real files rarely exercise what the synthetic corpus targets.** No real
+   JPEG, GIF or PNG had more than 8 bits per channel, and only 4 of 106 had
+   transparency. The synthetic specimens are still the right tool for finding
+   a loss; the real tier says how often it matters.
+4. **No contradictions.** Across 146 real files, no measured property
+   contradicted a declared one. That is evidence the verified raster entries
+   hold beyond the specimens they were measured on, within the properties
+   these files exercise.
+
+**Design implications.** Real-world prevalence ("exercised in N of M real
+files") is worth publishing beside each loss, since it separates a loss that
+is theoretical for most users from one that hits everyone. And output size
+needs a home: either a measured cost field on edges or a documented reason it
+stays out of scope.
+
+
+### 18.1 Every verified image edge, on real files
+
+`huh convert` exercises only the planner's cheapest route, so most verified
+edges never met a real file. `Planner::plan_edge` builds a one-hop plan for a
+named edge, and `core/examples/real_edges.rs` runs every verified raster edge
+over every real specimen of its source format (identified by content), through
+the same `execute` path and declared-vs-measured checks as `huh convert`. The
+PNG sample grew to 39 by taking every PNG from all ten Govdocs1 threads.
+Output: `corpus/govdocs1/edges.json`.
+
+14 edges ran on 39 PNG, 40 JPEG or 27 GIF files each: **no failures and no
+contradictions.** No real file had more than 8 bits per channel, so
+`color_depth` was never exercised; 2 PNGs and 2 GIFs had transparency.
+
+The harness lists every result with SSIM below 0.5 for a person to read. Two
+edge families produced them:
+
+- **PNG to JPEG (three edges): explained.** The low scores are exactly the two
+  PNGs with transparency, which all three edges declare `alpha = lost`. The
+  worst-case-background SSIM (§13.9) scores the flattened result against the
+  other background, as designed.
+- **ImageMagick PNG to GIF: not explained.** 303329.png and 189036.png scored
+  0.0 and 0.0006, and no declared property accounts for it.
+
+**The cause** is the PNG `oFFs` chunk, a print-page offset that changes nothing
+about the pixels. `convert IN OUT.gif` writes it as the GIF frame position but
+leaves the logical screen at the image size, so the frame falls outside the
+screen. The same GIF decodes four ways:
+
+| Decoder | Result |
+|---|---|
+| image-rs | 117×64, all black |
+| libvips | 226×183, canvas enlarged |
+| ffmpeg | refuses: "Invalid top position: 119" |
+| ImageMagick | intact |
+
+libvips `gifsave` and image-rs both write the frame at (0, 0). A negative
+offset (671351.png, x = −720) is clamped to 0 and harmless. Reproduced on a
+synthetic specimen (`corpus/raster/png-with-offset.png`) and pinned by a
+characterisation test that CI runs with ImageMagick installed. Measured here on
+ImageMagick 6.9.12; the test also passes on CI's ImageMagick 7.1.2-18 (run of
+2026-11-26), so the defect is not confined to the older major version.
+
+**Design implications.**
+
+1. **Receipts did not catch this.** Every declared-vs-measured row agreed:
+   size unchanged, alpha as declared. The falsification step checks only the
+   properties it can observe, and placement is not one. SSIM caught it, and
+   only because a person read the low scores. A loss the vocabulary has no
+   word for is invisible to the checks built on the vocabulary, the same hole
+   §13.7 found for lossy compression.
+2. **Synthetic specimens could not have found it.** Nobody writes an `oFFs`
+   chunk into a test image without already suspecting it. That is the case
+   for the real-world tier in one example.
+3. **Not forced into `geometry`.** Placement is not resolution. If more
+   placement defects appear, a property for canvas placement belongs in the
+   vocabulary via an ADR; one engine's bug does not justify one yet.
+
+
+## 19. Office documents to PDF: what LibreOffice loses on real files
+
+60 real Govdocs1 documents (the first 20 by name of each of `.doc`, `.xls` and
+`.ppt` in `thread0.zip`) through `soffice --convert-to pdf`, LibreOffice
+24.2.7.2, measured 2026-11-26 with `tools/measure_office.py`. Output:
+`corpus/govdocs1/office.json`.
+
+**All 60 converted. None crashed**, despite `crash_expected = true` on the
+engine (§3.2); that describes large batches through unoserver, not one
+document per process.
+
+| Source | Distinct words in the PDF | Numbers in the PDF exactly | Requested font embedded |
+|---|---|---|---|
+| `.doc` (20) | median 0.997, min 0.968 | (not a loss; see 3 below) | 0 of 20 |
+| `.xls` (18 with text) | median 0.983, min 0.701 | median 0.976, min 0.251 | 0 of 20 |
+| `.ppt` (18 with text) | median 0.990, min 0.768 | 1.0 (6 with numbers) | 0 of 20 |
+
+Reference text comes from catdoc, xls2csv and catppt, not from LibreOffice,
+so the engine does not grade itself.
+
+**The instrument was wrong four times before these numbers held.** Each error
+produced a plausible figure:
+
+1. **Counting occurrences.** catppt prints slide text several times over, so a
+   faithful PDF scored 0.11 to 0.15 on word recall. Recall is now over distinct
+   words.
+2. **Numbers as words.** A spreadsheet stores `2179678` and the PDF prints
+   `2,179,678`; every missing token in the worst `.xls` was a number. Grouping
+   commas are now removed and numbers measured separately.
+3. **Hidden field codes.** catdoc prints table-of-contents bookmark ids such as
+   `_Toc124583466`, which nobody sees. They read as missing numbers in `.doc`,
+   so `.doc` number recall is reported but is not a loss.
+4. **Fonts LibreOffice invents.** Its flat-ODF font list includes its own
+   defaults, so a substitute counted as a surviving requested font. A font now
+   counts as requested only if its whole name occurs in the source bytes
+   (`Inter` matched "international" and "inter-modal" until the match was
+   bounded).
+
+**Findings.**
+
+1. **Text survives.** `.doc` and `.ppt` keep about 99% of distinct words. For
+   PDF output, `text_as_text = preserved` is the right declaration.
+2. **Spreadsheets lose stored precision.** What survives exactly is what was
+   displayed: `1.79197397571441` becomes its formatted value. Median 97.6% of
+   distinct numbers survive; the worst file keeps 25%. This is
+   `precision = degraded`, inherent to printing a spreadsheet rather than a
+   LibreOffice defect.
+3. **Spreadsheet cells clip.** The worst `.xls` word score (0.70, `490684.xls`)
+   is a long text cell, a glossary, cut at its neighbour's edge, so its words
+   never reach the PDF.
+4. **Fonts are always substituted here.** No document kept a requested font:
+   Arial and Times New Roman became Liberation Sans and Serif (metric
+   compatible), others fell back to DejaVu or Inter. **This depends on the
+   installed fonts, not only on the engine**: this environment has no Microsoft
+   core fonts. A `fonts` loss recorded for this edge has to name the font
+   environment, or it describes a machine rather than a conversion.
+5. **One unresolved case.** `300839.ppt` keeps 77% of distinct words. The
+   missing text (`dominates`, `slide after next`) is in the raw file but in
+   neither the slides, the speaker notes, the hidden slides nor LibreOffice's
+   own model of the presentation. It may be PowerPoint "fast save" residue,
+   which a PDF dropping would be correct, or an import gap. Telling them apart
+   needs PowerPoint.
+
+**Design implications.** These are the first office edges with evidence.
+Making them first-class needs (a) format entries for the three binary Office
+formats, (b) detection that reads the OLE2 directory, since all three share the
+signature `D0 CF 11 E0`, and (c) a way for a `fonts` value to state the font
+environment it was measured in.
+
+
+### 19.1 Telling .doc, .xls and .ppt apart, and the first office edges
+
+The three binary Office formats are now registry entries (PRONOM fmt/40,
+fmt/61 and fmt/126, verified with `tools/verify_pronom.py`; the 6.0/95
+versions fmt/39, fmt/59 and fmt/125 share their containers and are covered by
+the same family-level entries). All three begin with the OLE2 header
+`D0CF11E0A1B11AE1`, as does PRONOM's own signature for each, so that header
+says only "OLE2". Detection now reads the compound file's directory and
+matches on a stream name (`ole2_streams`: `WordDocument`; `Workbook` or
+`Book`; `PowerPoint Document`). The parser runs on untrusted bytes before
+anything else, so it is bounds-checked and its chain walks are capped; unit
+tests cover a looping directory chain and truncated input.
+
+**Real files caught a bug a synthetic specimen would not have.** The first
+version collected every name in the directory. `098807.doc` is a Word document
+with an Excel chart embedded in its `ObjectPool` storage, so it carried a
+`Workbook` stream too and detected as Excel, flagged as an extension mismatch.
+Only the root storage's direct children identify the file; the parser now
+walks that tree alone. After the fix all 60 real files detect correctly: 20
+Word, 20 PowerPoint, 18 Excel by content, and 2 Excel 4.0 worksheets (BIFF4,
+which predates the OLE2 container) by extension at confidence 0.3, which is
+the honest answer for a format the registry does not describe.
+
+**Three LibreOffice edges**, `soffice --headless --convert-to pdf --outdir
+OUTDIR IN`, each verified on a synthetic specimen with known content
+(`corpus/generate_office.py`, compared against a `.truth.txt` sidecar) and
+checked against the real files:
+
+| Edge | Declared | Synthetic | Real (median, min) |
+|---|---|---|---|
+| `.doc` → PDF | `text_as_text` preserved, `fonts` degraded | words 1.0 | words 0.997, 0.968 |
+| `.xls` → PDF | `text_as_text` degraded, `precision` degraded, `fonts` degraded | words 0.67 (clipped cell), stored values 0.0 | words 0.983, 0.70; values 0.976, 0.25 |
+| `.ppt` → PDF | `text_as_text` preserved, `fonts` degraded | words 1.0 | words 0.99, 0.77 |
+
+Two things the synthetic specimens could not measure, recorded so nobody tries:
+catppt reads no text from a LibreOffice-written `.ppt` (hence the ground-truth
+sidecars), and a LibreOffice-written file names LibreOffice's own fonts, so
+font substitution is measured on real files only.
+
+`structure` is not declared. LibreOffice 24.2 defaults to `UseTaggedPDF =
+true` and all 60 real outputs are tagged, which contradicts the assumption in
+`application-pdf.toml` that PDF output is untagged. A tag tree being present
+is not a measurement of its fidelity, so it is noted rather than claimed;
+tagged PDF probably wants its own format entry, as that entry's notes already
+suggest.
+
+**Executor.** `soffice` takes an output directory, not a file, so the
+executor gained an `OUTDIR` placeholder: an empty directory that must hold
+exactly one file afterwards. `soffice --headless` silently writes nothing
+when another instance holds its profile, and that now surfaces as an engine
+crash instead of a missing-file error. LibreOffice is GPL-only in the registry
+(ADR-0007), so under the default `lgpl` profile these routes are pruned;
+`huh convert` now says a route exists under `--profile gpl` instead of
+implying none does.
+
+
+### 18.2 Publishing how often a loss happens
+
+The dataset (schema 1.1.0) now carries a `real_world` block per edge: how many
+real files it ran on, how many converted, how many contradicted the declared
+loss vector, and, per declared loss, on how many files it actually occurred.
+17 edges have one. The blocks are generated from the committed results by
+`tools/real_world_blocks.py`, not written by hand, and validator rule 14 checks
+their arithmetic and that they count only declared losses.
+
+**The first version would have published false zeros.** It counted
+`alpha = 0` and `color_depth = 0` for every PNG to GIF edge. Those edges
+declare `alpha = degraded` (one-bit transparency) and `color_depth = lost`
+(palette reduction), and the raster harness observes transparency only as
+present or absent and depth only as bits per channel. It cannot see either
+loss, so its zero meant "not observable", which a consumer would read as
+"never happened". A count is now written only when the observation detects
+exactly the declared outcome; otherwise the property is left out.
+
+**Design implication.** "Not observed" and "observed not to happen" must stay
+distinguishable everywhere the dataset reports a count, as `claimed` and
+`verified` already are. Absent is the honest encoding of the first.
+
+### 18.3 Counting what a GIF palette costs, and libvips' 255-colour cap
+
+§18.2 left PNG to GIF without counts because the receipt cannot see palette
+reduction or one-bit transparency. `core/examples/real_edges.rs` now observes
+both directly, comparing input and output: distinct colours (fully transparent
+pixels counted as one, since their RGB is invisible and encoders may rewrite
+it) and whether partial transparency survived.
+
+**The instrument was wrong once first.** Counting RGB under fully transparent
+pixels made lossless WebP look like a palette reduction on one file. Lossless
+WebP may discard that invisible RGB; normalising it removed the false result.
+
+| Engine (PNG → GIF) | Palette reduced, of 39 real PNGs |
+|---|---|
+| image-rs | 11 |
+| ImageMagick | 12 |
+| libvips | 15 |
+
+11 real PNGs have more than 256 colours, so every engine must reduce those,
+and every engine does. image-rs reduces exactly those. ImageMagick's twelfth is
+`303329.png`, the off-screen frame of §18.1. **libvips' four extra are the four
+real PNGs with exactly 256 colours**, which fit a GIF palette with nothing
+lost: libvips requantised them to 203-238 colours.
+
+The mechanism is a cap. On synthetic images libvips keeps 200 and 255 colours
+exactly and reduces 256 (to 255 on a small flat image, 254 on the committed
+specimen `corpus/raster/palette-256.png`); ImageMagick keeps 256. libvips
+reserves at most 255 entries, plausibly one for transparency, and once over
+the cap it requantises the whole image, which on a photograph means many
+colours rather than one. A test pins both sides, and passes on libvips
+8.15.1 here and 8.18.0 in CI (2026-11-26), so the cap persists across those
+releases.
+
+Partial transparency was binarised on the one real PNG that had any, by all
+three engines, as GIF requires.
+
+**Design implication.** The same declared loss, `color_depth = lost` with a
+palette policy, hits 11, 12 or 15 files in 39 depending on the engine, for
+three unrelated reasons: the format's limit, an engine bug, an engine cap.
+Per-edge real-world counts are what make that visible; a format-level claim
+("GIF has 256 colours") would have hidden two of the three.
+
+
+### 18.4 How faithful is a PDF rebuilt from pixels?
+
+`huh clean` renders each page at 150 dpi, JPEG-encodes it at quality 90 and
+builds a fresh PDF around the images. It was verified only by what it
+removes. `core/examples/pdf_fidelity.rs` now measures what it keeps, on the 40
+real Govdocs1 PDFs (1,788 pages), as two numbers, because one number
+conflated two different things.
+
+| Measure | What it isolates | Result |
+|---|---|---|
+| **stored** | each embedded page image vs the original rendered at 150 dpi | median 0.997; **every page ≥ 0.990** |
+| **viewed** | both PDFs rendered at 72 dpi (screen) | median 0.76; file medians 0.55 to 0.97; worst page 0.48 |
+
+Page counts survived in all 40. Five files' pages grew by under half a point,
+because the rebuild rounds each page to whole pixels (595 pt at 150 dpi is
+1,239.6 px, kept as 1,240, which is 595.2 pt).
+
+**The rebuild is faithful; viewing it is not.** The stored image matches the
+original render almost exactly, so the clean itself loses very little. What a
+reader sees is worse because the page is now a picture: a viewer resamples it
+at every zoom, where a vector original was re-rendered crisply. At screen
+resolution that costs a median quarter of the structural similarity. It is a
+real cost of sanitising by rasterising, and it depends on the viewer, which is
+why it is reported apart from the rebuild.
+
+**The instrument was wrong twice before these numbers held.**
+
+1. **One number for two effects.** Re-rendering the cleaned PDF at 150 dpi
+   scored a page 0.87 whose stored image scores 0.995. The renderer resamples
+   an embedded image even at nominally 1:1 scale. That loss belongs to the
+   viewer, so it is now `viewed`, not rebuild fidelity.
+2. **Grey rendering faked a colour loss.** Rendering the originals with
+   `pdftoppm -gray` scored `025835.pdf`, which has CMYK images, at 0.755.
+   Poppler's CMYK-to-grey differs from CMYK-to-RGB-then-luma, the path the
+   clean's pages take. Rendered in colour on both sides it scores 0.991.
+
+**Design implications.** For any conversion that rasterises (PDF to image,
+`huh clean`), fidelity has a storage half and a viewing half, and the viewing
+half has no single value. A `signal_fidelity` figure for such an edge should
+say which it measured (ADR-0014 already requires naming the metric).
+
+### 18.5 Counting metadata loss, and a value the counting corrected
+
+Every image conversion declared `metadata = lost`, and nothing counted how
+often there was metadata to lose. `core/examples/real_edges.rs` now extracts
+the input's metadata payloads (JPEG APP1/APP13/COM, PNG text and eXIf chunks,
+GIF comment and XMP extensions) and searches the output's bytes for each. A
+byte search finds metadata carried in a different wrapper, such as JPEG EXIF
+moved into a PNG eXIf chunk, and ignores metadata an encoder adds of its own.
+
+Real files with metadata: 20 of 40 JPEGs, 6 of 39 PNGs, 3 of 27 GIFs. Every
+conversion removed all of it, on every one of those files, **except
+ImageMagick PNG to GIF**, where the comment survived in 4 of 6.
+
+**The instrument was wrong once first.** A compressed PNG comment (zTXt) was
+searched for in compressed form, but ImageMagick writes it into the GIF as
+plain text, so a survival counted as a loss (189036.png). Compressed text is
+now decompressed before searching; the count went from 3 to 4.
+
+**The correction.** ImageMagick carries a PNG's comment into the GIF's
+comment extension and drops other keys (`Software`, `Author`). On the
+committed specimen `png-with-passengers.png`, "internal-doc-id-88213-do-not-share"
+survives and `Author` does not. That is partial survival, so the edge now
+declares `metadata = degraded` (registry 2026.11.1), and a characterisation
+test pins it. Under the old value, `real_world.contradicted` would have
+counted the 4 files against it, which is how it surfaced.
+
+**Design implication.** `metadata` is the property a user stripping a file
+before sharing it cares about most, and the registry had it wrong for one
+engine because nobody had looked at real metadata. Counting a declared loss
+on real files is how a declared value gets falsified; it is not only
+prevalence.
+
+### 18.6 Output size, published as a cost
+
+§18 left a question open: `huh clean` made real PDFs a median 23x larger, and
+no tracked property could say so, because size is not a property of the
+content. The answer chosen is to publish it beside the real-file counts, as
+`real_world.size_ratio` (schema 1.2.0), not in the loss vector: it is a cost
+of the conversion, like time, not something the content lost.
+
+Measured on the Govdocs1 files (output bytes / input bytes, median):
+
+| Conversion | Median | Range |
+|---|---|---|
+| PNG → JPEG (libvips) | 2.11 | 0.10 to 11.5 |
+| PNG → JPEG (image-rs, q85) | 3.69 | 0.19 to 15.6 |
+| PNG → WebP lossless (libvips) | 0.77 | 0.44 to 0.92 |
+| PNG → TIFF / BMP | 25.5 | 1.4 to 210 |
+| PNG → GIF | 1.07 to 1.10 | 0.36 to 2.3 |
+| JPEG → PNG | 5.50 | 1.4 to 12.5 |
+| DOC → PDF | 1.34 | 0.39 to 2.4 |
+| XLS → PDF | 1.37 | 0.42 to 4.0 |
+| PPT → PDF | 0.68 | 0.13 to 7.1 |
+
+**The surprise: lossy JPEG made most real PNGs larger.** 23 of 39 grew. 28 of
+the 39 have 256 colours or fewer (charts, diagrams, screenshots), where PNG's
+lossless compression beats JPEG and JPEG adds ringing on top. A converter that
+picks JPEG "to save space" loses quality and, on this corpus, usually gains
+size. Only the real-file tier shows it: the synthetic specimens are small and
+gradient-heavy, the case JPEG suits.
+
+**Design implication.** A cost that runs against intuition needs publishing
+as much as a loss does. `size_ratio` lets a consumer see that a lossy route
+is not even the smaller one on content like theirs.
+
+## 20. Video: the first measurements, and why they are synthetic only
+
+**What was measured.** Three ffmpeg edges from a lossless reference
+(`corpus/video/reference.mkv`: FFV1, 320x240, 25 fps, 2 s, 50 frames, made by
+`corpus/generate_video.py` from ffmpeg's `testsrc2`: moving gradients, text
+and a sweeping clock), scored by `tools/measure_video.py` with ffmpeg's own
+`ssim` and `psnr` filters, both streams converted to the reference's pixel
+format first so a format change is not scored as loss:
+
+| Invocation | Target | SSIM (all) | PSNR | Frames |
+|---|---|---|---|---|
+| `-c:v libvpx-vp9 -lossless 1` | WebM | 1.000000 | inf | 50 → 50 |
+| `-c:v libvpx-vp9 -crf 40 -b:v 0` | WebM | 0.991643 | 41.04 dB | 50 → 50 |
+| `-c:v mpeg4 -q:v 8` | MP4 | 0.978231 | 37.72 dB | 50 → 50 |
+
+The lossless VP9 edge is the control, as FLAC is for audio (§17): the same
+harness that scores the lossy edges finds nothing lost there. Geometry, frame
+count and rate were unchanged in all three; the frame count is decoded
+(`ffprobe -count_frames`), not read from the container header, which can lie.
+
+**Detection needed a new mechanism.** Matroska and WebM share their first four
+bytes (the EBML magic `1A45DFA3`); the DocType string (`matroska` or `webm`)
+follows at an offset that depends on the header's variable-length integers.
+PRONOM's signatures for fmt/569 and fmt/573 express this as a `{0-32}` gap.
+Fixed-offset signatures could not, so a signature may now carry `within`
+(bytes past its offset to search; the validator caps it at 4096). The EBML
+magic alone is `weak`; the DocType is decisive.
+
+**Why there is no real-file tier.** Govdocs1 contains no Matroska, WebM or MP4
+files (its crawl predates them). A real-video corpus with clear licensing is
+the gap; until one exists, video edges carry synthetic measurements only, and
+the dataset says so by carrying no `real_world` block for them.
+
+**Licensing shaped the edge list.** The `ffmpeg` engine entry describes the
+LGPL build (ADR-0007), so only LGPL-compatible encoders are recorded: libvpx
+(BSD) and ffmpeg's native MPEG-4 Part 2. H.264 via libx264 is GPL and needs
+its own engine entry under the gpl profile; it is the obvious next edge.
+
+**Design implication.** ADR-0014 anticipated this: SSIM and PSNR order these
+three edges identically here, but their scales differ (VP9 crf 40 and MPEG-4
+q8 are 0.013 apart in SSIM and 3.3 dB apart in PSNR), so neither number can be
+published without naming its metric. Both are recorded on every edge.
+
+### 20.1 The measured ffmpeg was never the LGPL build
+
+The `ffmpeg` engine entry stated that Ubuntu's 6.1.1 "is the LGPL build this
+manifest describes". Checking which encoders were LGPL-safe for the video
+edges turned up the opposite: `ffmpeg -buildconf` shows `--enable-gpl` with
+libx264, libx265, libxvid, rubberband, vidstab and frei0r, and `ffmpeg -L`
+prints the GPL. Every ffmpeg measurement in the registry, audio and video, was
+taken on a GPL build.
+
+The data survives, by a narrower argument than the note made. ffmpeg's
+`configure` (n6.1.1) names what an LGPL build lacks: `EXTERNAL_LIBRARY_GPL_LIST`
+(avisynth, frei0r, libcdio, libdavs2, librubberband, libvidstab, libx264,
+libx265, libxavs, libxavs2, libxvid), 34 filters with `gpl` in their
+dependencies, and 5 more that need one of those libraries (frei0r, rubberband,
+vidstab). None of the seven recorded invocations uses any of them, so the
+same commands give the same output on an LGPL build of the same version.
+
+A second build was tried as an empirical control and rejected: PyAV's wheels
+bundle an ffmpeg whose libraries report "LGPL version 3 or later" while their
+configure line includes `--enable-libx264`, and they are ffmpeg 8, not 6.1.1.
+A control that differs in two ways at once settles neither.
+
+**Design implication.** The binary an edge is measured on and the build its
+engine entry describes are different facts, and the registry recorded only the
+second. Rule 15 now rejects any edge on an `lgpl`-only engine that invokes a
+GPL-only component, so the argument above is checked on every commit rather
+than made once in prose.
+
+### 20.2 H.264 and H.265: the "equivalent defaults" are not equivalent here
+
+With the GPL build recorded as its own engine (`ffmpeg-gpl`, ADR-0007), three
+more edges were measured against the same reference. Every invocation was run
+twice; both encoders produced byte-identical output each time.
+
+| Invocation | SSIM (all) | PSNR | Bytes |
+|---|---|---|---|
+| `-c:v libx264 -qp 0` | 1.000000 | inf | 258,442 |
+| `-c:v libx264 -crf 23` (x264 default) | 0.993465 | 42.47 dB | 69,109 |
+| `-c:v libx265 -crf 28` (x265 default) | 0.985002 | 38.14 dB | 48,540 |
+| reference, FFV1 | 1 | inf | 382,118 |
+
+ffmpeg's H.265 guide (trac.ffmpeg.org/wiki/Encode/H.265, fetched 2026-11-27)
+says x265's default "should visually correspond to libx264 video at CRF 23,
+but result in about half the file size". On this specimen it is 70% of the
+size and lower on both metrics: 0.0085 SSIM and 4.3 dB PSNR below x264's
+default. One 2-second synthetic clip at 320x240 is not a general refutation,
+and "visually" is a perceptual claim neither SSIM nor PSNR measures (x265's
+psychovisual tuning trades exactly these metrics for appearance). It is enough
+to stop the dataset treating the two defaults as interchangeable.
+
+**Design implication.** A conversion's default quality is a property of the
+encoder, not of the codec, and "equivalent" settings across encoders are a
+claim to measure, not assume. Recording each default as its own edge, with
+both metrics, lets a consumer see the gap instead of inheriting the folklore.
+
+**A planner bug the video edges exposed.** `huh plan` labelled the lossy VP9
+route "faithful — nothing tracked is lost" while its explanation, generated
+from the same loss vector, said "Reduces fine detail". The label looked only
+at `lost` properties, never `degraded`, so every route that merely degrades
+(WAV to MP3, lossy VP9, H.264) was called faithful. WAV to MP3 read
+"stripped — pixels intact". The raster routes had always lost something
+outright, which hid it. Labels now name degraded properties
+(`reduced — degrades signal_fidelity`), and a test holds label and
+explanation to the same vector.
+
+### 20.3 A second engine: GStreamer drops the last frame, and the harness blamed the picture
+
+GStreamer (`vp9enc`, libvpx) was added as a second VP9 engine so the lossless
+control is not one implementation agreeing with itself. It needed
+`gstreamer1.0-libav` for an FFV1 decoder. Two things went wrong, one of them
+in this repository.
+
+**The harness reported a dropped frame as picture loss.** The first GStreamer
+run scored SSIM 0.998 and 40.65 dB, which reads as "nearly lossless". Per-frame
+PSNR showed frames 1 to 49 at infinity and frame 50 at 23.66 dB. The output
+had only 49 frames, and ffmpeg's `ssim`/`psnr` filters by default repeat the
+shorter stream's last frame to the end, so reference frame 50 was compared
+with output frame 49. `tools/measure_video.py` now compares only frames both
+streams have (`shortest=1:repeatlast=0`), reports `frames_compared`, and has a
+self-test for exactly this case. All six earlier video measurements reproduce
+unchanged; each kept all 50 frames.
+
+**GStreamer intermittently loses the final frame.** Counting buffers at each
+stage, ten runs each:
+
+| Pipeline | Frames out |
+|---|---|
+| `matroskademux` alone | 50 in 10/10 |
+| `+ avdec_ffv1` (default threads) | 50 in 10/10 |
+| full chain to `vp9enc`, `avdec_ffv1 max-threads=1` | 50 in 10/10 |
+| full chain, default threads | **49 in 9/10**, 50 in 1/10 |
+| `decodebin` chain to WebM (the recorded edge) | **49 in 9/10**, 50 in 1/10 |
+
+The decoder finishes its last frame too late at end of stream, but only when a
+slow element sits downstream, which is why decoding alone never shows it. The
+encoder's debug log confirms `handle_frame` is called 49 times. This matches
+GNOME bug 774190 (2016, "avdec_ffv1: When using multiple threads decoder
+doesn't wait until all threads finish"), closed RESOLVED INCOMPLETE and
+reproduced here on gst-libav 1.24.1. Every frame GStreamer does write is
+bit-exact, and with the decoder single-threaded the result agrees with
+ffmpeg's VP9 lossless edge: two engines, one answer, once the race is removed.
+
+**Not every invocation has a twin.** GStreamer's `vp9enc` offers VBR, CBR and
+constrained quality, but not libvpx's pure constant-quality mode, which is
+what ffmpeg's `-crf 40 -b:v 0` selects. The lossy VP9 edge therefore has no
+GStreamer counterpart to compare against.
+
+**Design implication.** A loss that occurs on some runs and not others is still
+a loss; the edge declares `time = degraded` and records the rate (9 of 10),
+because a planner cannot choose which run it gets. And a fidelity metric
+computed over misaligned streams measures the misalignment: the harness must
+establish which frames correspond before scoring any of them.
 
 ## Sources
 

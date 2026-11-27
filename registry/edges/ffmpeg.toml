@@ -268,7 +268,7 @@ verified_at = "2026-08-23"
 verified_by = "capability-cartographer"
 
 [edge.verification.measured]
-tool         = "tools/measure_audio.py --snr"
+tool         = "tools/measure_audio.py --snr --dc"
 engine_build = "ffmpeg 6.1.1"
 snr_db       = 3.76
 dc_offset_counts = -0.4975
@@ -284,4 +284,150 @@ is entirely a property of the specimen.
 The `policy = "truncate"` qualifier here is the whole reason ADR-0012 exists:
 this edge and the SoX one both report bit_depth = degraded, both correctly, and
 one of them shifts your audio by half a count.
+
+THE OUTLIER, CONFIRMED 2026-11-26. A third engine settled which behaviour is the
+odd one out: GStreamer 1.24.2 with dither off writes samples byte-identical to
+`sox -D` (registry/edges/gstreamer.toml). Two independent engines round; ffmpeg
+truncates. The DC offset is now reproducible from the harness: `--dc` reports
+-0.4975 steps of 8-bit, matching the figure first found with a one-off
+histogram script.
+"""
+
+
+# ---------------------------------------------------------------------------
+# VIDEO (docs/RESEARCH.md §20). Measured against corpus/video/reference.mkv,
+# lossless FFV1, with tools/measure_video.py. LGPL-safe encoders only, since
+# this engine entry describes the LGPL build: VP9 (libvpx, BSD) and MPEG-4
+# Part 2 (native). H.264 via libx264 is GPL and belongs to a separate engine
+# entry (ADR-0007).
+
+[[edge]]
+engine     = "ffmpeg"
+invocation = "ffmpeg -i IN -c:v libvpx-vp9 -lossless 1 OUT"
+op         = "Transcode"
+from       = "video/x-matroska"
+to         = "video/webm"
+from_kind  = "VideoStream"
+to_kind    = "VideoStream"
+
+[edge.loss]
+signal_fidelity = "preserved"
+geometry        = "preserved"
+time            = "preserved"
+generational    = false
+
+[edge.cost]
+time_model   = "linear_duration"
+memory_model = "streaming"
+base_ms      = 900
+
+[edge.constraints]
+max_input_bytes = 2147483648
+requires        = []
+
+[edge.verification]
+status      = "verified"
+specimens   = ["corpus/video/reference.mkv"]
+verified_at = "2026-11-27"
+verified_by = "capability-cartographer"
+
+[edge.verification.measured]
+tool         = "tools/measure_video.py"
+engine_build = "ffmpeg 6.1.1"
+metric       = "SSIM (all planes) and PSNR vs the lossless reference"
+ssim         = 1.0
+psnr_db      = "inf"
+frames       = "50 -> 50"
+note = """
+The control for the video edges, as FLAC is for audio: VP9's lossless mode
+decodes BIT-EXACT to the FFV1 reference (SSIM 1.0, infinite PSNR) through the
+same harness that scores the lossy edges below. A harness that invented loss
+would invent it here too.
+"""
+
+
+[[edge]]
+engine     = "ffmpeg"
+invocation = "ffmpeg -i IN -c:v libvpx-vp9 -crf 40 -b:v 0 OUT"
+op         = "Transcode"
+from       = "video/x-matroska"
+to         = "video/webm"
+from_kind  = "VideoStream"
+to_kind    = "VideoStream"
+
+[edge.loss]
+signal_fidelity = "degraded"
+geometry        = "preserved"
+time            = "preserved"
+generational    = true
+
+[edge.cost]
+time_model   = "linear_duration"
+memory_model = "streaming"
+base_ms      = 700
+
+[edge.constraints]
+max_input_bytes = 2147483648
+requires        = []
+
+[edge.verification]
+status      = "verified"
+specimens   = ["corpus/video/reference.mkv"]
+verified_at = "2026-11-27"
+verified_by = "capability-cartographer"
+
+[edge.verification.measured]
+tool         = "tools/measure_video.py"
+engine_build = "ffmpeg 6.1.1"
+metric       = "SSIM (all planes) and PSNR vs the lossless reference"
+ssim         = 0.9916
+psnr_db      = 41.04
+frames       = "50 -> 50"
+note = """
+Constant-quality VP9 (`-crf 40 -b:v 0`). Every frame kept, size and rate
+unchanged; the loss is in the signal alone. ADR-0014 requires naming the
+metric because video metrics disagree: both SSIM and PSNR are recorded.
+"""
+
+
+[[edge]]
+engine     = "ffmpeg"
+invocation = "ffmpeg -i IN -c:v mpeg4 -q:v 8 OUT"
+op         = "Transcode"
+from       = "video/x-matroska"
+to         = "video/mp4"
+from_kind  = "VideoStream"
+to_kind    = "VideoStream"
+
+[edge.loss]
+signal_fidelity = "degraded"
+geometry        = "preserved"
+time            = "preserved"
+generational    = true
+
+[edge.cost]
+time_model   = "linear_duration"
+memory_model = "streaming"
+base_ms      = 150
+
+[edge.constraints]
+max_input_bytes = 2147483648
+requires        = []
+
+[edge.verification]
+status      = "verified"
+specimens   = ["corpus/video/reference.mkv"]
+verified_at = "2026-11-27"
+verified_by = "capability-cartographer"
+
+[edge.verification.measured]
+tool         = "tools/measure_video.py"
+engine_build = "ffmpeg 6.1.1"
+metric       = "SSIM (all planes) and PSNR vs the lossless reference"
+ssim         = 0.9782
+psnr_db      = 37.72
+frames       = "50 -> 50"
+note = """
+MPEG-4 Part 2 (the native `mpeg4` encoder, LGPL) at fixed quantiser 8.
+Lower fidelity than VP9 above on both metrics, as a 1999 codec should be.
 """

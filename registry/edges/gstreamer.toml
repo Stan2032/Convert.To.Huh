@@ -1,0 +1,278 @@
+# Capabilities of GStreamer. Owner: capability-cartographer.
+#
+# Added as a THIRD audio engine to settle the ffmpeg-versus-SoX bit-depth
+# disagreement (docs/RESEARCH.md §14.6, §14.7). It sides with SoX on rounding
+# and with both on downmix.
+#
+# Every edge records its invocation (ADR-0013). All pipelines name their
+# elements explicitly; nothing is autoplugged.
+
+[[edge]]
+engine     = "gstreamer"
+invocation = "gst-launch-1.0 filesrc location=IN ! wavparse ! audioconvert ! audio/x-raw,format=U8 ! wavenc ! filesink location=OUT"
+op         = "Transform"
+from       = "audio/wav"
+to         = "audio/wav"
+from_kind  = "AudioPCM"
+to_kind    = "AudioPCM"
+
+[edge.loss]
+bit_depth       = { value = "degraded", from = 16, to = 8, policy = "round" }
+signal_fidelity = "degraded"
+audio_channels  = "preserved"
+sample_rate     = "preserved"
+time            = "preserved"
+metadata        = "lost"
+generational    = true
+
+[edge.cost]
+time_model   = "linear_duration"
+memory_model = "streaming"
+base_ms      = 25
+
+[edge.constraints]
+max_input_bytes = 2147483648
+requires        = []
+
+[edge.verification]
+status      = "verified"
+specimens   = ["corpus/audio/quiet-mono.wav"]
+verified_at = "2026-11-26"
+verified_by = "capability-cartographer"
+
+[edge.verification.measured]
+tool             = "tools/measure_audio.py --snr --dc"
+engine_build     = "GStreamer 1.24.2"
+snr_db           = 5.12
+dc_offset_counts = 0.0018
+note = """
+Default `audioconvert` behaviour: TPDF dither, then ROUND to nearest. The output
+stays centred on 128 (+0.0018 steps), where ffmpeg's sits half a step low.
+
+5.12 dB sits beside SoX's dithered 5.09 to 5.16 dB. Unlike SoX the dither is
+deterministic: three runs gave 5.12 dB each time, so this figure reproduces
+exactly, where SoX's dithered figure moves in the second decimal place.
+"""
+
+
+[[edge]]
+engine     = "gstreamer"
+invocation = "gst-launch-1.0 filesrc location=IN ! wavparse ! audioconvert dithering=none ! audio/x-raw,format=U8 ! wavenc ! filesink location=OUT"
+op         = "Transform"
+from       = "audio/wav"
+to         = "audio/wav"
+from_kind  = "AudioPCM"
+to_kind    = "AudioPCM"
+
+[edge.loss]
+bit_depth       = { value = "degraded", from = 16, to = 8, policy = "round" }
+signal_fidelity = "degraded"
+audio_channels  = "preserved"
+sample_rate     = "preserved"
+time            = "preserved"
+metadata        = "lost"
+generational    = true
+
+[edge.cost]
+time_model   = "linear_duration"
+memory_model = "streaming"
+base_ms      = 25
+
+[edge.constraints]
+max_input_bytes = 2147483648
+requires        = []
+
+[edge.verification]
+status      = "verified"
+specimens   = ["corpus/audio/quiet-mono.wav"]
+verified_at = "2026-11-26"
+verified_by = "capability-cartographer"
+
+[edge.verification.measured]
+tool             = "tools/measure_audio.py --snr --dc"
+engine_build     = "GStreamer 1.24.2"
+snr_db           = 11.11
+dc_offset_counts = 0.0014
+note = """
+THE TIE-BREAKER. With dither off, GStreamer's 8-bit samples are BYTE-IDENTICAL
+to `sox -D`'s on the same specimen: same 11.11 dB, same +0.0014-step offset,
+same histogram (129: 16,420 · 127: 16,360 · 128: 11,320).
+
+So two independent engines round to nearest and one truncates. `truncate` is
+ffmpeg's behaviour, not a convention, which is the same shape as the alpha
+finding (§13.4): two engines agreeing and one differing, where only a third
+engine could say which one was the outlier.
+"""
+
+
+[[edge]]
+engine     = "gstreamer"
+invocation = "gst-launch-1.0 filesrc location=IN ! wavparse ! audioconvert ! audio/x-raw,channels=1 ! wavenc ! filesink location=OUT"
+op         = "Transform"
+from       = "audio/wav"
+to         = "audio/wav"
+from_kind  = "AudioPCM"
+to_kind    = "AudioPCM"
+
+[edge.loss]
+audio_channels  = { value = "lost", policy = "downmix_average" }
+signal_fidelity = "degraded"
+sample_rate     = "preserved"
+bit_depth       = "preserved"
+time            = "preserved"
+metadata        = "lost"
+generational    = false
+
+[edge.cost]
+time_model   = "linear_duration"
+memory_model = "streaming"
+base_ms      = 25
+
+[edge.constraints]
+max_input_bytes = 2147483648
+requires        = []
+
+[edge.verification]
+status      = "verified"
+specimens   = ["corpus/audio/stereo-distinct.wav"]
+verified_at = "2026-11-26"
+verified_by = "capability-cartographer"
+
+[edge.verification.measured]
+tool                = "tools/measure_audio.py --bands 440"
+engine_build        = "GStreamer 1.24.2"
+channels            = "2 -> 1"
+left_440hz_retained = 0.25
+snr_vs_ffmpeg       = "infinite (bit-identical)"
+note = """
+THIRD ENGINE, SAME ANSWER. The left channel's 440 Hz tone comes back at 0.2500
+of its power, which is what averaging predicts, and the samples are
+bit-identical to `ffmpeg -ac 1` (SoX already matched ffmpeg): run
+`tools/measure_audio.py FFMPEG_MONO.wav GST_MONO.wav --snr` and it reports an
+infinite SNR. Three independent
+engines average, so `downmix_average` is a convention rather than a habit.
+
+That answers the caution recorded on the ffmpeg downmix edge, that two engines
+agreeing is how the alpha investigation started before a third one differed.
+Here the third one agreed.
+"""
+
+
+[[edge]]
+engine     = "gstreamer"
+invocation = "gst-launch-1.0 filesrc location=IN ! wavparse ! audioconvert ! flacenc ! filesink location=OUT"
+op         = "Transcode"
+from       = "audio/wav"
+to         = "audio/flac"
+from_kind  = "AudioPCM"
+to_kind    = "AudioPCM"
+
+[edge.loss]
+signal_fidelity = "preserved"
+audio_channels  = "preserved"
+sample_rate     = "preserved"
+bit_depth       = "preserved"
+time            = "preserved"
+metadata        = "lost"
+generational    = false
+
+[edge.cost]
+time_model   = "linear_duration"
+memory_model = "streaming"
+base_ms      = 35
+
+[edge.constraints]
+max_input_bytes = 2147483648
+requires        = []
+
+[edge.verification]
+status      = "verified"
+specimens   = [
+  "corpus/audio/highfreq-mono.wav",
+  "corpus/audio/broadband-mono.wav",
+  "corpus/audio/transient-mono.wav",
+  "corpus/audio/stereo-distinct.wav",
+]
+verified_at = "2026-11-26"
+verified_by = "capability-cartographer"
+
+[edge.verification.measured]
+tool                 = "tools/measure_audio.py --broadband --snr"
+engine_build         = "GStreamer 1.24.2"
+all_octaves_retained = 1.0
+snr_db               = "infinite (bit-identical)"
+note = """
+Lossless, as FLAC must be. Recorded because it is the control for this engine:
+the harness reads 1.0000 in every octave band through GStreamer's pipeline as
+well as ffmpeg's, so the GStreamer measurements above are about the
+conversions, not about the harness meeting a new decode path.
+"""
+
+
+# ---------------------------------------------------------------------------
+# VIDEO (docs/RESEARCH.md §20.3). A second engine for the VP9 control, so the
+# ffmpeg result is not one implementation agreeing with itself.
+#
+# EXCEPTION to "nothing is autoplugged": this pipeline uses `decodebin`.
+# Detection identifies the container, not the codec inside it, so a pipeline
+# naming a decoder (`avdec_ffv1`) would fail on any Matroska file holding
+# anything else. `decodebin` is the pipeline someone converting an arbitrary
+# MKV actually runs, and on this specimen it plugs `avdec_ffv1` with default
+# (frame-)threading, which is where the loss below comes from.
+
+[[edge]]
+engine     = "gstreamer"
+invocation = "gst-launch-1.0 filesrc location=IN ! decodebin ! videoconvert ! vp9enc min-quantizer=0 max-quantizer=0 ! webmmux ! filesink location=OUT"
+op         = "Transcode"
+from       = "video/x-matroska"
+to         = "video/webm"
+from_kind  = "VideoStream"
+to_kind    = "VideoStream"
+
+[edge.loss]
+signal_fidelity = "preserved"
+geometry        = "preserved"
+time            = "degraded"
+generational    = false
+
+[edge.cost]
+time_model   = "linear_duration"
+memory_model = "streaming"
+base_ms      = 1200
+
+[edge.constraints]
+max_input_bytes = 2147483648
+requires        = []
+
+[edge.verification]
+status      = "verified"
+specimens   = ["corpus/video/reference.mkv"]
+verified_at = "2026-11-27"
+verified_by = "capability-cartographer"
+
+[edge.verification.measured]
+tool         = "tools/measure_video.py"
+engine_build = "GStreamer 1.24.2"
+metric       = "SSIM (all planes) and PSNR over frames present in both streams; decoded frame count"
+ssim         = 1.0
+psnr_db      = "inf"
+frames       = "50 -> 49 in 9 of 10 runs; 50 -> 50 in 1"
+note = """
+INTERMITTENTLY DROPS THE LAST FRAME. Ten runs: nine wrote 49 frames (1.96 s
+of a 2.00 s clip), one wrote all 50. Every frame that IS written decodes
+bit-exact to the FFV1 reference (SSIM 1.0, infinite PSNR), so the loss is in
+`time` alone. libvpx's VP9 encoder is lossless at quantiser 0; vp9enc has no
+`lossless` property, and pinning min- and max-quantizer to 0 reaches it.
+
+Cause, isolated stage by stage (10 runs each): demux alone, and FFV1 decode
+alone, always pass 50 frames; the full chain loses the last one only with the
+decoder multithreaded, and never with `avdec_ffv1 max-threads=1` (5 of 5 runs
+gave 50 bit-exact frames, agreeing with ffmpeg's VP9 lossless edge). The
+decoder finishes its last frame after EOS has already been handled when a slow
+element sits downstream. Reported upstream in 2016 as GNOME bug 774190
+("avdec_ffv1: When using multiple threads decoder doesn't wait until all
+threads finish"), closed RESOLVED INCOMPLETE; present in gst-libav 1.24.1.
+
+`time = "degraded"`, not `preserved`, because a planner must assume the run
+it gets is one of the nine.
+"""

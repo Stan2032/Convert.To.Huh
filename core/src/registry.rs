@@ -11,6 +11,12 @@ pub struct Signature {
     pub offset: u64,
     pub magic: String,
     pub weight: String,
+    /// Search window: the magic may start anywhere from `offset` to
+    /// `offset + within`. PRONOM writes this `{0-32}`. Needed where a marker
+    /// sits after variable-length fields, as Matroska's and WebM's DocType
+    /// does inside the EBML header. Zero (the default) means exactly `offset`.
+    #[serde(default)]
+    pub within: u64,
     /// Signatures sharing a group are ALTERNATIVES (any one matching is
     /// enough); distinct groups are all required. Ungrouped signatures each
     /// form their own group, i.e. they are required.
@@ -29,6 +35,11 @@ pub struct Detection {
     pub priority_over: Vec<String>,
     #[serde(default)]
     pub container_of: Vec<String>,
+    /// Stream names inside an OLE2 compound file, any one of which identifies
+    /// this format. `.doc`, `.xls` and `.ppt` share the OLE2 signature, so the
+    /// signature alone cannot tell them apart; the directory can.
+    #[serde(default)]
+    pub ole2_streams: Vec<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -120,6 +131,44 @@ pub struct EdgeVerification {
     /// is the one thing this dataset exists not to do.
     #[serde(default)]
     pub measured: BTreeMap<String, toml::Value>,
+    #[serde(default)]
+    pub real_world: Option<RealWorld>,
+}
+
+/// How an edge behaved on real files, not just on the specimens that verified
+/// it (docs/specs/registry-schema.md, `real_world`). Synthetic specimens show
+/// a loss exists; this says how often it actually happens.
+#[derive(Debug, Clone, Deserialize, serde::Serialize, PartialEq)]
+pub struct RealWorld {
+    /// Which real-file corpus, e.g. `govdocs1`.
+    pub corpus: String,
+    /// Real files of the edge's source format it was run on.
+    pub files: u32,
+    /// How many converted without error.
+    pub ran: u32,
+    /// Files where a measurement contradicted the declared loss vector.
+    /// Absent when no automated declared-vs-measured check ran on these files,
+    /// which is not the same claim as zero.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub contradicted: Option<u32>,
+    /// Per declared (non-preserved) property: files on which that loss
+    /// actually occurred. Only properties with a yes/no observation appear.
+    #[serde(default)]
+    pub affected: BTreeMap<String, u32>,
+    /// Where the per-file results live, so a count can be checked.
+    pub results: String,
+    /// Output bytes over input bytes across those files. A cost, not a loss:
+    /// no tracked property can say a conversion made a file 23x larger.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub size_ratio: Option<SizeRatio>,
+}
+
+/// Distribution of output size over input size, per real file.
+#[derive(Debug, Clone, Deserialize, serde::Serialize, PartialEq)]
+pub struct SizeRatio {
+    pub median: f64,
+    pub min: f64,
+    pub max: f64,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -176,6 +225,8 @@ pub struct Edge {
     pub specimens: Vec<String>,
     /// The measurement behind `status`, kept verbatim. See `EdgeVerification`.
     pub measured: BTreeMap<String, toml::Value>,
+    /// Behaviour on real files, where measured. See `RealWorld`.
+    pub real_world: Option<RealWorld>,
 }
 
 #[derive(Debug, Default, Deserialize)]
@@ -324,6 +375,7 @@ impl Registry {
                     confidence: r.confidence,
                     specimens: r.verification.specimens,
                     measured: r.verification.measured,
+                    real_world: r.verification.real_world,
                 });
             }
         }

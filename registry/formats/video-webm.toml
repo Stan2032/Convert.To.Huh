@@ -1,0 +1,37 @@
+id         = "video/webm"
+name       = "WebM"
+kinds      = ["VideoStream", "AudioPCM"]
+extensions = ["webm"]
+mime_types = ["video/webm"]
+puid       = "fmt/573"
+puid_verified = true
+puid_name  = "WebM"
+spec_url   = "https://www.webmproject.org/docs/container/"
+
+preserves = ["geometry", "time", "signal_fidelity", "audio_channels", "sample_rate"]
+
+[[signatures]]
+offset = 0
+magic  = "1A45DFA3"
+weight = "weak"
+
+[[signatures]]
+offset = 4
+magic  = "4282847765626D"   # DocType element, length 4, "webm"
+weight = "decisive"
+within = 32
+
+[detection]
+priority_over = []
+container_of  = []
+
+[notes]
+text = """
+Added 2026-11-26 (docs/RESEARCH.md §20). A restricted Matroska profile: VP8,
+VP9 or AV1 video and Vorbis or Opus audio. Shares the EBML header with
+Matroska and is told apart by DocType "webm"; see video-matroska.toml.
+
+PRONOM VERIFIED 2026-11-26: fmt/573 "WebM". `signal_fidelity` is carryable
+because VP9 has a lossless mode (`-lossless 1`), measured bit-exact here.
+`metadata` is omitted: the WebM profile carries far less than Matroska.
+"""

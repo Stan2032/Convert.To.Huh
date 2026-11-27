@@ -15,3 +15,8 @@ image = { version = "0.25", default-features = false, features = ["png", "jpeg",
 [[bin]]
 name = "huh"
 path = "src/bin/huh.rs"
+
+[dev-dependencies]
+# Already in the tree via `image`; used by examples/real_edges.rs to read
+# compressed PNG text (zTXt, iTXt) before searching an output for it.
+flate2 = "1.1"

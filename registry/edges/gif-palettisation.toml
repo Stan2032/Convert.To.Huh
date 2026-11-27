@@ -70,7 +70,26 @@ The SSIM here (0.9065) is LOWER than image-rs (0.9105) despite dithering being
 generally preferred by human viewers. Fidelity scores cannot detect dithering —
 all three engines land within 0.03 — so the policy is the only field that
 distinguishes them. See §15.3.
+
+255-COLOUR CAP, found 2026-11-26 on Govdocs1 (docs/RESEARCH.md §18.3).
+libvips keeps at most 255 palette colours where GIF allows 256, so an image
+with EXACTLY 256 colours, which fits a GIF palette with nothing lost, is
+quantised anyway. On four real PNGs with exactly 256 colours the result had
+203-238; image-rs and ImageMagick kept all 256. That is why the real_world
+count below (15 of 39) exceeds the 11 real PNGs with more than 256 colours,
+where every engine must reduce. Reproduce with corpus/raster/palette-256.png
+(libvips gives 254); the test
+`a_full_256_colour_palette_survives_image_rs_but_not_libvips_gifsave` pins it.
 """
+
+[edge.verification.real_world]
+corpus       = "govdocs1"
+files        = 39
+ran          = 39
+contradicted = 0
+affected     = { alpha = 1, color_depth = 15, metadata = 6 }
+results      = "corpus/govdocs1/edges.json"
+size_ratio   = { median = 1.066, min = 0.416, max = 2.32 }
 
 
 [[edge]]
@@ -88,7 +107,7 @@ signal_fidelity = "degraded"
 alpha           = "degraded"
 geometry        = "preserved"
 color_profile   = "lost"
-metadata        = "lost"
+metadata        = "degraded"
 generational    = true
 
 [edge.cost]
@@ -102,12 +121,12 @@ requires        = []
 
 [edge.verification]
 status      = "verified"
-specimens   = ["corpus/raster/rgb-photo.png"]
+specimens   = ["corpus/raster/rgb-photo.png", "corpus/raster/png-with-passengers.png"]
 verified_at = "2026-08-23"
 verified_by = "capability-cartographer"
 
 [edge.verification.measured]
-tool             = "core/examples/gif_dither.rs"
+tool             = "core/examples/gif_dither.rs; core/examples/real_edges.rs for metadata"
 engine_build     = "ImageMagick 6.9.12"
 bytes            = 14774
 ssim             = 0.8799
@@ -117,4 +136,41 @@ note = """
 Nearest-palette, siding with image-rs against libvips two-to-one — the same
 split as alpha flattening. Uses 252 colours where the others use 255; the
 three-colour difference is unexplained and not worth chasing until it matters.
+
+METADATA CORRECTED 2026-11-26, from `lost` to `degraded` (docs/RESEARCH.md
+§18.5). ImageMagick carries a PNG's COMMENT text into the GIF's comment
+extension and drops the rest. On the committed specimen
+png-with-passengers.png, the comment "internal-doc-id-88213-do-not-share"
+survives while `Author` does not; on 6 real Govdocs1 PNGs with metadata, the
+comment survived in 4. libvips and image-rs carry neither. For anyone using
+this conversion to strip a file before sharing it, that is the difference
+that matters. Pinned by `imagemagick_carries_png_comments_into_gif`.
+
+REAL-WORLD DEFECT, found 2026-11-26 on Govdocs1 (docs/RESEARCH.md §18.1). A PNG
+carrying an `oFFs` page offset comes out as a GIF whose frame sits AT that
+offset while the logical screen stays the image's own size, so the frame lies
+outside the visible area. 2 of 39 real PNGs (303329, 189036); a negative offset
+is clamped to 0 and is harmless. Decoders then disagree about the same file:
+
+  image-rs     117x64, all black
+  libvips      226x183, canvas enlarged to hold the frame
+  ffmpeg       refuses: "Invalid top position: 119"
+  ImageMagick  reads it back intact
+
+libvips `gifsave` and image-rs write the frame at (0, 0). Reproduce with
+`corpus/raster/png-with-offset.png`; the test
+`imagemagick_moves_an_offset_png_outside_the_gif_screen` pins the behaviour.
+
+No tracked property records this. `geometry` is resolution, which is
+unchanged; the pixels survive; the loss is where they are placed. Noted here
+rather than forced into a property that means something else.
 """
+
+[edge.verification.real_world]
+corpus       = "govdocs1"
+files        = 39
+ran          = 39
+contradicted = 0
+affected     = { alpha = 1, color_depth = 12, metadata = 3 }
+results      = "corpus/govdocs1/edges.json"
+size_ratio   = { median = 1.1, min = 0.379, max = 2.321 }

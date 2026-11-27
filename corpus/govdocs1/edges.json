@@ -1,0 +1,642 @@
+[
+  {
+    "contradictions": [],
+    "engine": "libvips",
+    "failed": {},
+    "from": "image/png",
+    "invocation": "vips gifsave IN OUT",
+    "measured": {
+      "alpha": {
+        "not-present-in-input": 37,
+        "preserved": 2
+      },
+      "color_depth": {
+        "not-exercised": 39
+      },
+      "geometry": {
+        "preserved": 39
+      }
+    },
+    "observed": {
+      "metadata_lost": 6,
+      "metadata_present": 6,
+      "metadata_some_missing": 6,
+      "metadata_survived": 0,
+      "metadata_survived_in": [],
+      "palette_reduced": 15,
+      "partial_alpha_binarised": 1
+    },
+    "ran": 39,
+    "size_ratio": {
+      "max": 2.32,
+      "median": 1.066,
+      "min": 0.416
+    },
+    "ssim_below_0_5": [],
+    "ssim_median": 1.0,
+    "ssim_min": 0.9665,
+    "ssim_min_specimen": "920477.png",
+    "to": "image/gif"
+  },
+  {
+    "contradictions": [],
+    "engine": "imagemagick",
+    "failed": {},
+    "from": "image/png",
+    "invocation": "convert IN OUT.gif",
+    "measured": {
+      "alpha": {
+        "not-present-in-input": 37,
+        "preserved": 2
+      },
+      "color_depth": {
+        "not-exercised": 39
+      },
+      "geometry": {
+        "preserved": 39
+      }
+    },
+    "observed": {
+      "metadata_lost": 2,
+      "metadata_present": 6,
+      "metadata_some_missing": 3,
+      "metadata_survived": 4,
+      "metadata_survived_in": [
+        "189036.png",
+        "303329.png",
+        "671351.png",
+        "696048.png"
+      ],
+      "palette_reduced": 12,
+      "partial_alpha_binarised": 1
+    },
+    "ran": 39,
+    "size_ratio": {
+      "max": 2.321,
+      "median": 1.1,
+      "min": 0.379
+    },
+    "ssim_below_0_5": [
+      {
+        "specimen": "303329.png",
+        "ssim": 0.0
+      },
+      {
+        "specimen": "189036.png",
+        "ssim": 0.0006
+      }
+    ],
+    "ssim_median": 1.0,
+    "ssim_min": 0.0,
+    "ssim_min_specimen": "303329.png",
+    "to": "image/gif"
+  },
+  {
+    "contradictions": [],
+    "engine": "image-rs",
+    "failed": {},
+    "from": "image/png",
+    "invocation": null,
+    "measured": {
+      "alpha": {
+        "lost": 2,
+        "not-present-in-input": 37
+      },
+      "color_depth": {
+        "not-exercised": 39
+      },
+      "geometry": {
+        "preserved": 39
+      }
+    },
+    "observed": {
+      "metadata_lost": 6,
+      "metadata_present": 6,
+      "metadata_some_missing": 6,
+      "metadata_survived": 0,
+      "metadata_survived_in": [],
+      "palette_reduced": 3,
+      "partial_alpha_binarised": 1
+    },
+    "ran": 39,
+    "size_ratio": {
+      "max": 15.593,
+      "median": 3.692,
+      "min": 0.188
+    },
+    "ssim_below_0_5": [
+      {
+        "specimen": "681410.png",
+        "ssim": -0.0586
+      },
+      {
+        "specimen": "726912.png",
+        "ssim": 0.396
+      }
+    ],
+    "ssim_median": 0.9833,
+    "ssim_min": -0.0586,
+    "ssim_min_specimen": "681410.png",
+    "to": "image/jpeg"
+  },
+  {
+    "contradictions": [],
+    "engine": "image-rs",
+    "failed": {},
+    "from": "image/jpeg",
+    "invocation": null,
+    "measured": {
+      "color_depth": {
+        "not-exercised": 40
+      },
+      "geometry": {
+        "preserved": 40
+      }
+    },
+    "observed": {
+      "metadata_lost": 20,
+      "metadata_present": 20,
+      "metadata_some_missing": 20,
+      "metadata_survived": 0,
+      "metadata_survived_in": [],
+      "palette_reduced": 0,
+      "partial_alpha_binarised": 0
+    },
+    "ran": 40,
+    "size_ratio": {
+      "max": 12.48,
+      "median": 5.498,
+      "min": 1.412
+    },
+    "ssim_below_0_5": [],
+    "ssim_median": 1.0,
+    "ssim_min": 1.0,
+    "ssim_min_specimen": "020269.jpg",
+    "to": "image/png"
+  },
+  {
+    "contradictions": [],
+    "engine": "image-rs",
+    "failed": {},
+    "from": "image/png",
+    "invocation": null,
+    "measured": {
+      "alpha": {
+        "not-present-in-input": 37,
+        "preserved": 2
+      },
+      "color_depth": {
+        "not-exercised": 39
+      },
+      "geometry": {
+        "preserved": 39
+      }
+    },
+    "observed": {
+      "metadata_lost": 6,
+      "metadata_present": 6,
+      "metadata_some_missing": 6,
+      "metadata_survived": 0,
+      "metadata_survived_in": [],
+      "palette_reduced": 0,
+      "partial_alpha_binarised": 0
+    },
+    "ran": 39,
+    "size_ratio": {
+      "max": 209.771,
+      "median": 25.482,
+      "min": 1.36
+    },
+    "ssim_below_0_5": [],
+    "ssim_median": 1.0,
+    "ssim_min": 1.0,
+    "ssim_min_specimen": "045353.png",
+    "to": "image/tiff"
+  },
+  {
+    "contradictions": [],
+    "engine": "image-rs",
+    "failed": {},
+    "from": "image/png",
+    "invocation": null,
+    "measured": {
+      "alpha": {
+        "not-present-in-input": 37,
+        "preserved": 2
+      },
+      "color_depth": {
+        "not-exercised": 39
+      },
+      "geometry": {
+        "preserved": 39
+      }
+    },
+    "observed": {
+      "metadata_lost": 6,
+      "metadata_present": 6,
+      "metadata_some_missing": 6,
+      "metadata_survived": 0,
+      "metadata_survived_in": [],
+      "palette_reduced": 0,
+      "partial_alpha_binarised": 0
+    },
+    "ran": 39,
+    "size_ratio": {
+      "max": 2.891,
+      "median": 1.205,
+      "min": 0.777
+    },
+    "ssim_below_0_5": [],
+    "ssim_median": 1.0,
+    "ssim_min": 1.0,
+    "ssim_min_specimen": "045353.png",
+    "to": "image/webp"
+  },
+  {
+    "contradictions": [],
+    "engine": "image-rs",
+    "failed": {},
+    "from": "image/png",
+    "invocation": null,
+    "measured": {
+      "alpha": {
+        "not-present-in-input": 37,
+        "preserved": 2
+      },
+      "color_depth": {
+        "not-exercised": 39
+      },
+      "geometry": {
+        "preserved": 39
+      }
+    },
+    "observed": {
+      "metadata_lost": 6,
+      "metadata_present": 6,
+      "metadata_some_missing": 6,
+      "metadata_survived": 0,
+      "metadata_survived_in": [],
+      "palette_reduced": 11,
+      "partial_alpha_binarised": 1
+    },
+    "ran": 39,
+    "size_ratio": {
+      "max": 2.315,
+      "median": 1.065,
+      "min": 0.358
+    },
+    "ssim_below_0_5": [],
+    "ssim_median": 1.0,
+    "ssim_min": 0.9582,
+    "ssim_min_specimen": "726912.png",
+    "to": "image/gif"
+  },
+  {
+    "contradictions": [],
+    "engine": "image-rs",
+    "failed": {},
+    "from": "image/png",
+    "invocation": null,
+    "measured": {
+      "alpha": {
+        "not-present-in-input": 37,
+        "preserved": 2
+      },
+      "color_depth": {
+        "not-exercised": 39
+      },
+      "geometry": {
+        "preserved": 39
+      }
+    },
+    "observed": {
+      "metadata_lost": 6,
+      "metadata_present": 6,
+      "metadata_some_missing": 6,
+      "metadata_survived": 0,
+      "metadata_survived_in": [],
+      "palette_reduced": 0,
+      "partial_alpha_binarised": 0
+    },
+    "ran": 39,
+    "size_ratio": {
+      "max": 209.746,
+      "median": 25.536,
+      "min": 1.362
+    },
+    "ssim_below_0_5": [],
+    "ssim_median": 1.0,
+    "ssim_min": 1.0,
+    "ssim_min_specimen": "045353.png",
+    "to": "image/bmp"
+  },
+  {
+    "contradictions": [],
+    "engine": "image-rs",
+    "failed": {},
+    "from": "image/gif",
+    "invocation": null,
+    "measured": {
+      "alpha": {
+        "not-present-in-input": 25,
+        "preserved": 2
+      },
+      "color_depth": {
+        "not-exercised": 27
+      },
+      "geometry": {
+        "preserved": 27
+      }
+    },
+    "observed": {
+      "metadata_lost": 3,
+      "metadata_present": 3,
+      "metadata_some_missing": 3,
+      "metadata_survived": 0,
+      "metadata_survived_in": [],
+      "palette_reduced": 0,
+      "partial_alpha_binarised": 0
+    },
+    "ran": 27,
+    "size_ratio": {
+      "max": 7.843,
+      "median": 3.327,
+      "min": 0.703
+    },
+    "ssim_below_0_5": [],
+    "ssim_median": 1.0,
+    "ssim_min": 1.0,
+    "ssim_min_specimen": "129996.gif",
+    "to": "image/png"
+  },
+  {
+    "contradictions": [],
+    "engine": "image-rs",
+    "failed": {},
+    "from": "image/tiff",
+    "invocation": null,
+    "measured": {},
+    "observed": {
+      "metadata_lost": 0,
+      "metadata_present": 0,
+      "metadata_some_missing": 0,
+      "metadata_survived": 0,
+      "metadata_survived_in": [],
+      "palette_reduced": 0,
+      "partial_alpha_binarised": 0
+    },
+    "ran": 0,
+    "to": "image/png"
+  },
+  {
+    "contradictions": [],
+    "engine": "image-rs",
+    "failed": {},
+    "from": "image/webp",
+    "invocation": null,
+    "measured": {},
+    "observed": {
+      "metadata_lost": 0,
+      "metadata_present": 0,
+      "metadata_some_missing": 0,
+      "metadata_survived": 0,
+      "metadata_survived_in": [],
+      "palette_reduced": 0,
+      "partial_alpha_binarised": 0
+    },
+    "ran": 0,
+    "to": "image/png"
+  },
+  {
+    "contradictions": [],
+    "engine": "image-rs",
+    "failed": {},
+    "from": "image/bmp",
+    "invocation": null,
+    "measured": {},
+    "observed": {
+      "metadata_lost": 0,
+      "metadata_present": 0,
+      "metadata_some_missing": 0,
+      "metadata_survived": 0,
+      "metadata_survived_in": [],
+      "palette_reduced": 0,
+      "partial_alpha_binarised": 0
+    },
+    "ran": 0,
+    "to": "image/png"
+  },
+  {
+    "contradictions": [],
+    "engine": "libvips",
+    "failed": {},
+    "from": "image/png",
+    "invocation": "vips jpegsave IN OUT",
+    "measured": {
+      "alpha": {
+        "lost": 2,
+        "not-present-in-input": 37
+      },
+      "color_depth": {
+        "not-exercised": 39
+      },
+      "geometry": {
+        "preserved": 39
+      }
+    },
+    "observed": {
+      "metadata_lost": 6,
+      "metadata_present": 6,
+      "metadata_some_missing": 6,
+      "metadata_survived": 0,
+      "metadata_survived_in": [],
+      "palette_reduced": 3,
+      "partial_alpha_binarised": 1
+    },
+    "ran": 39,
+    "size_ratio": {
+      "max": 11.475,
+      "median": 2.114,
+      "min": 0.102
+    },
+    "ssim_below_0_5": [
+      {
+        "specimen": "681410.png",
+        "ssim": -0.067
+      },
+      {
+        "specimen": "726912.png",
+        "ssim": 0.334
+      }
+    ],
+    "ssim_median": 0.9686,
+    "ssim_min": -0.067,
+    "ssim_min_specimen": "681410.png",
+    "to": "image/jpeg"
+  },
+  {
+    "contradictions": [],
+    "engine": "libvips",
+    "failed": {},
+    "from": "image/png",
+    "invocation": "vips webpsave IN OUT",
+    "measured": {
+      "alpha": {
+        "not-present-in-input": 37,
+        "preserved": 2
+      },
+      "color_depth": {
+        "not-exercised": 39
+      },
+      "geometry": {
+        "preserved": 39
+      }
+    },
+    "observed": {
+      "metadata_lost": 6,
+      "metadata_present": 6,
+      "metadata_some_missing": 6,
+      "metadata_survived": 0,
+      "metadata_survived_in": [],
+      "palette_reduced": 4,
+      "partial_alpha_binarised": 0
+    },
+    "ran": 39,
+    "size_ratio": {
+      "max": 4.12,
+      "median": 1.207,
+      "min": 0.077
+    },
+    "ssim_below_0_5": [],
+    "ssim_median": 0.9897,
+    "ssim_min": 0.8774,
+    "ssim_min_specimen": "702198.png",
+    "to": "image/webp"
+  },
+  {
+    "contradictions": [],
+    "engine": "libvips",
+    "failed": {},
+    "from": "image/png",
+    "invocation": "vips tiffsave IN OUT",
+    "measured": {
+      "alpha": {
+        "not-present-in-input": 37,
+        "preserved": 2
+      },
+      "color_depth": {
+        "not-exercised": 39
+      },
+      "geometry": {
+        "preserved": 39
+      }
+    },
+    "observed": {
+      "metadata_lost": 6,
+      "metadata_present": 6,
+      "metadata_some_missing": 6,
+      "metadata_survived": 0,
+      "metadata_survived_in": [],
+      "palette_reduced": 0,
+      "partial_alpha_binarised": 0
+    },
+    "ran": 39,
+    "size_ratio": {
+      "max": 209.778,
+      "median": 25.488,
+      "min": 1.36
+    },
+    "ssim_below_0_5": [],
+    "ssim_median": 1.0,
+    "ssim_min": 1.0,
+    "ssim_min_specimen": "045353.png",
+    "to": "image/tiff"
+  },
+  {
+    "contradictions": [],
+    "engine": "libvips",
+    "failed": {},
+    "from": "image/png",
+    "invocation": "vips webpsave IN OUT --lossless",
+    "measured": {
+      "alpha": {
+        "not-present-in-input": 37,
+        "preserved": 2
+      },
+      "color_depth": {
+        "not-exercised": 39
+      },
+      "geometry": {
+        "preserved": 39
+      }
+    },
+    "observed": {
+      "metadata_lost": 6,
+      "metadata_present": 6,
+      "metadata_some_missing": 6,
+      "metadata_survived": 0,
+      "metadata_survived_in": [],
+      "palette_reduced": 0,
+      "partial_alpha_binarised": 0
+    },
+    "ran": 39,
+    "size_ratio": {
+      "max": 0.918,
+      "median": 0.769,
+      "min": 0.438
+    },
+    "ssim_below_0_5": [],
+    "ssim_median": 1.0,
+    "ssim_min": 1.0,
+    "ssim_min_specimen": "045353.png",
+    "to": "image/webp"
+  },
+  {
+    "contradictions": [],
+    "engine": "libvips",
+    "failed": {},
+    "from": "image/png",
+    "invocation": "vips jpegsave IN OUT --background 255",
+    "measured": {
+      "alpha": {
+        "lost": 2,
+        "not-present-in-input": 37
+      },
+      "color_depth": {
+        "not-exercised": 39
+      },
+      "geometry": {
+        "preserved": 39
+      }
+    },
+    "observed": {
+      "metadata_lost": 6,
+      "metadata_present": 6,
+      "metadata_some_missing": 6,
+      "metadata_survived": 0,
+      "metadata_survived_in": [],
+      "palette_reduced": 3,
+      "partial_alpha_binarised": 1
+    },
+    "ran": 39,
+    "size_ratio": {
+      "max": 11.475,
+      "median": 2.114,
+      "min": 0.102
+    },
+    "ssim_below_0_5": [
+      {
+        "specimen": "681410.png",
+        "ssim": -0.0579
+      },
+      {
+        "specimen": "726912.png",
+        "ssim": 0.3389
+      }
+    ],
+    "ssim_median": 0.9686,
+    "ssim_min": -0.0579,
+    "ssim_min_specimen": "681410.png",
+    "to": "image/jpeg"
+  }
+]

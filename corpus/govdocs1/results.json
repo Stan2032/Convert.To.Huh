@@ -1,0 +1,2556 @@
+{
+  "source": "Govdocs1, members listed in MANIFEST.tsv",
+  "summary": {
+    "application/octet-stream": {
+      "files": 60,
+      "succeeded": 0,
+      "failed": {
+        "040/040090.ppt": "no route exercised for application/octet-stream",
+        "042/042295.ppt": "no route exercised for application/octet-stream",
+        "049/049331.doc": "no route exercised for application/octet-stream",
+        "049/049978.doc": "no route exercised for application/octet-stream",
+        "050/050294.xls": "no route exercised for application/octet-stream",
+        "070/070770.ppt": "no route exercised for application/octet-stream",
+        "090/090703.doc": "no route exercised for application/octet-stream",
+        "098/098807.doc": "no route exercised for application/octet-stream",
+        "103/103224.ppt": "no route exercised for application/octet-stream",
+        "117/117275.doc": "no route exercised for application/octet-stream",
+        "120/120669.ppt": "no route exercised for application/octet-stream",
+        "124/124256.xls": "no route exercised for application/octet-stream",
+        "127/127725.xls": "no route exercised for application/octet-stream",
+        "140/140201.xls": "no route exercised for application/octet-stream",
+        "142/142669.doc": "no route exercised for application/octet-stream",
+        "146/146109.xls": "no route exercised for application/octet-stream",
+        "149/149115.ppt": "no route exercised for application/octet-stream",
+        "149/149391.xls": "no route exercised for application/octet-stream",
+        "153/153202.xls": "no route exercised for application/octet-stream",
+        "153/153378.doc": "no route exercised for application/octet-stream",
+        "153/153670.ppt": "no route exercised for application/octet-stream",
+        "157/157581.doc": "no route exercised for application/octet-stream",
+        "164/164731.ppt": "no route exercised for application/octet-stream",
+        "167/167086.doc": "no route exercised for application/octet-stream",
+        "177/177770.ppt": "no route exercised for application/octet-stream",
+        "188/188908.xls": "no route exercised for application/octet-stream",
+        "190/190298.ppt": "no route exercised for application/octet-stream",
+        "200/200110.ppt": "no route exercised for application/octet-stream",
+        "206/206498.doc": "no route exercised for application/octet-stream",
+        "210/210687.doc": "no route exercised for application/octet-stream",
+        "221/221800.ppt": "no route exercised for application/octet-stream",
+        "224/224168.xls": "no route exercised for application/octet-stream",
+        "236/236837.xls": "no route exercised for application/octet-stream",
+        "247/247546.xls": "no route exercised for application/octet-stream",
+        "252/252017.doc": "no route exercised for application/octet-stream",
+        "252/252572.doc": "no route exercised for application/octet-stream",
+        "275/275138.doc": "no route exercised for application/octet-stream",
+        "285/285215.doc": "no route exercised for application/octet-stream",
+        "286/286720.xls": "no route exercised for application/octet-stream",
+        "287/287004.ppt": "no route exercised for application/octet-stream",
+        "294/294354.ppt": "no route exercised for application/octet-stream",
+        "300/300839.ppt": "no route exercised for application/octet-stream",
+        "301/301340.doc": "no route exercised for application/octet-stream",
+        "308/308180.doc": "no route exercised for application/octet-stream",
+        "320/320509.doc": "no route exercised for application/octet-stream",
+        "323/323884.ppt": "no route exercised for application/octet-stream",
+        "327/327584.ppt": "no route exercised for application/octet-stream",
+        "328/328128.doc": "no route exercised for application/octet-stream",
+        "328/328783.xls": "no route exercised for application/octet-stream",
+        "332/332930.doc": "no route exercised for application/octet-stream",
+        "369/369699.ppt": "no route exercised for application/octet-stream",
+        "389/389011.ppt": "no route exercised for application/octet-stream",
+        "411/411381.ppt": "no route exercised for application/octet-stream",
+        "465/465032.xls": "no route exercised for application/octet-stream",
+        "477/477301.xls": "no route exercised for application/octet-stream",
+        "481/481128.xls": "no route exercised for application/octet-stream",
+        "490/490684.xls": "no route exercised for application/octet-stream",
+        "490/490853.xls": "no route exercised for application/octet-stream",
+        "491/491485.xls": "no route exercised for application/octet-stream",
+        "503/503430.xls": "no route exercised for application/octet-stream"
+      },
+      "contradicted_registry": {},
+      "measured": {}
+    },
+    "application/pdf": {
+      "files": 40,
+      "succeeded": 40,
+      "failed": {},
+      "had_extractable_text": 40,
+      "text_survived_clean": 0,
+      "page_count_changed": [],
+      "median_bytes_ratio": 23.271
+    },
+    "image/gif": {
+      "files": 27,
+      "succeeded": 27,
+      "failed": {},
+      "contradicted_registry": {},
+      "ssim_min": 1.0,
+      "ssim_median": 1.0,
+      "measured": {
+        "alpha": {
+          "not-present-in-input": 25,
+          "preserved": 2
+        },
+        "geometry": {
+          "preserved": 27
+        },
+        "color_depth": {
+          "not-exercised": 27
+        }
+      }
+    },
+    "image/jpeg": {
+      "files": 40,
+      "succeeded": 40,
+      "failed": {},
+      "contradicted_registry": {},
+      "ssim_min": 1.0,
+      "ssim_median": 1.0,
+      "measured": {
+        "geometry": {
+          "preserved": 40
+        },
+        "color_depth": {
+          "not-exercised": 40
+        }
+      }
+    },
+    "image/png": {
+      "files": 39,
+      "succeeded": 39,
+      "failed": {},
+      "contradicted_registry": {},
+      "ssim_min": -0.067,
+      "ssim_median": 0.9686,
+      "measured": {
+        "alpha": {
+          "lost": 2,
+          "not-present-in-input": 37
+        },
+        "geometry": {
+          "preserved": 39
+        },
+        "color_depth": {
+          "not-exercised": 39
+        }
+      }
+    }
+  },
+  "files": [
+    {
+      "member": "000/000578.pdf",
+      "format": "application/pdf",
+      "exit": 0,
+      "text_chars_before": 126613,
+      "pages_before": 75,
+      "text_chars_after": 0,
+      "pages_after": 75,
+      "bytes_ratio": 70.621
+    },
+    {
+      "member": "000/000816.pdf",
+      "format": "application/pdf",
+      "exit": 0,
+      "text_chars_before": 10957,
+      "pages_before": 3,
+      "text_chars_after": 0,
+      "pages_after": 3,
+      "bytes_ratio": 23.381
+    },
+    {
+      "member": "001/001387.pdf",
+      "format": "application/pdf",
+      "exit": 0,
+      "text_chars_before": 146698,
+      "pages_before": 57,
+      "text_chars_after": 0,
+      "pages_after": 57,
+      "bytes_ratio": 66.725
+    },
+    {
+      "member": "001/001484.pdf",
+      "format": "application/pdf",
+      "exit": 0,
+      "text_chars_before": 5834,
+      "pages_before": 15,
+      "text_chars_after": 0,
+      "pages_after": 15,
+      "bytes_ratio": 126.626
+    },
+    {
+      "member": "004/004157.pdf",
+      "format": "application/pdf",
+      "exit": 0,
+      "text_chars_before": 38713,
+      "pages_before": 20,
+      "text_chars_after": 0,
+      "pages_after": 20,
+      "bytes_ratio": 31.151
+    },
+    {
+      "member": "004/004387.pdf",
+      "format": "application/pdf",
+      "exit": 0,
+      "text_chars_before": 15864,
+      "pages_before": 4,
+      "text_chars_after": 0,
+      "pages_after": 4,
+      "bytes_ratio": 15.602
+    },
+    {
+      "member": "007/007895.pdf",
+      "format": "application/pdf",
+      "exit": 0,
+      "text_chars_before": 12317,
+      "pages_before": 9,
+      "text_chars_after": 0,
+      "pages_after": 9,
+      "bytes_ratio": 15.355
+    },
+    {
+      "member": "011/011443.pdf",
+      "format": "application/pdf",
+      "exit": 0,
+      "text_chars_before": 88389,
+      "pages_before": 25,
+      "text_chars_after": 0,
+      "pages_after": 25,
+      "bytes_ratio": 146.187
+    },
+    {
+      "member": "013/013366.pdf",
+      "format": "application/pdf",
+      "exit": 0,
+      "text_chars_before": 3359,
+      "pages_before": 2,
+      "text_chars_after": 0,
+      "pages_after": 2,
+      "bytes_ratio": 2.812
+    },
+    {
+      "member": "014/014575.pdf",
+      "format": "application/pdf",
+      "exit": 0,
+      "text_chars_before": 33843,
+      "pages_before": 15,
+      "text_chars_after": 0,
+      "pages_after": 15,
+      "bytes_ratio": 23.161
+    },
+    {
+      "member": "014/014819.pdf",
+      "format": "application/pdf",
+      "exit": 0,
+      "text_chars_before": 24864,
+      "pages_before": 20,
+      "text_chars_after": 0,
+      "pages_after": 20,
+      "bytes_ratio": 79.375
+    },
+    {
+      "member": "020/020269.jpg",
+      "format": "image/jpeg",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/jpeg -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "025/025835.pdf",
+      "format": "application/pdf",
+      "exit": 0,
+      "text_chars_before": 8697,
+      "pages_before": 4,
+      "text_chars_after": 0,
+      "pages_after": 4,
+      "bytes_ratio": 4.256
+    },
+    {
+      "member": "026/026839.pdf",
+      "format": "application/pdf",
+      "exit": 0,
+      "text_chars_before": 46802,
+      "pages_before": 27,
+      "text_chars_after": 0,
+      "pages_after": 27,
+      "bytes_ratio": 82.533
+    },
+    {
+      "member": "028/028402.pdf",
+      "format": "application/pdf",
+      "exit": 0,
+      "text_chars_before": 39668,
+      "pages_before": 16,
+      "text_chars_after": 0,
+      "pages_after": 16,
+      "bytes_ratio": 13.376
+    },
+    {
+      "member": "040/040090.ppt",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "042/042295.ppt",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "042/042916.jpg",
+      "format": "image/jpeg",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/jpeg -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "046/046761.pdf",
+      "format": "application/pdf",
+      "exit": 0,
+      "text_chars_before": 32128,
+      "pages_before": 9,
+      "text_chars_after": 0,
+      "pages_after": 9,
+      "bytes_ratio": 5.468
+    },
+    {
+      "member": "047/047672.pdf",
+      "format": "application/pdf",
+      "exit": 0,
+      "text_chars_before": 24818,
+      "pages_before": 15,
+      "text_chars_after": 0,
+      "pages_after": 15,
+      "bytes_ratio": 9.039
+    },
+    {
+      "member": "049/049331.doc",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "049/049978.doc",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "050/050294.xls",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "050/050739.pdf",
+      "format": "application/pdf",
+      "exit": 0,
+      "text_chars_before": 163803,
+      "pages_before": 95,
+      "text_chars_after": 0,
+      "pages_after": 95,
+      "bytes_ratio": 58.697
+    },
+    {
+      "member": "052/052528.pdf",
+      "format": "application/pdf",
+      "exit": 0,
+      "text_chars_before": 14907,
+      "pages_before": 11,
+      "text_chars_after": 0,
+      "pages_after": 11,
+      "bytes_ratio": 25.346
+    },
+    {
+      "member": "052/052725.pdf",
+      "format": "application/pdf",
+      "exit": 0,
+      "text_chars_before": 14476,
+      "pages_before": 10,
+      "text_chars_after": 0,
+      "pages_after": 10,
+      "bytes_ratio": 8.599
+    },
+    {
+      "member": "053/053253.pdf",
+      "format": "application/pdf",
+      "exit": 0,
+      "text_chars_before": 34919,
+      "pages_before": 23,
+      "text_chars_after": 0,
+      "pages_after": 23,
+      "bytes_ratio": 121.532
+    },
+    {
+      "member": "054/054018.pdf",
+      "format": "application/pdf",
+      "exit": 0,
+      "text_chars_before": 81576,
+      "pages_before": 60,
+      "text_chars_after": 0,
+      "pages_after": 60,
+      "bytes_ratio": 17.714
+    },
+    {
+      "member": "061/061561.jpg",
+      "format": "image/jpeg",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/jpeg -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "064/064448.jpg",
+      "format": "image/jpeg",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/jpeg -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "064/064452.pdf",
+      "format": "application/pdf",
+      "exit": 0,
+      "text_chars_before": 169558,
+      "pages_before": 101,
+      "text_chars_after": 0,
+      "pages_after": 101,
+      "bytes_ratio": 14.398
+    },
+    {
+      "member": "064/064568.pdf",
+      "format": "application/pdf",
+      "exit": 0,
+      "text_chars_before": 30666,
+      "pages_before": 11,
+      "text_chars_after": 0,
+      "pages_after": 11,
+      "bytes_ratio": 7.571
+    },
+    {
+      "member": "067/067773.pdf",
+      "format": "application/pdf",
+      "exit": 0,
+      "text_chars_before": 3473,
+      "pages_before": 1,
+      "text_chars_after": 0,
+      "pages_after": 1,
+      "bytes_ratio": 16.682
+    },
+    {
+      "member": "070/070770.ppt",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "071/071930.pdf",
+      "format": "application/pdf",
+      "exit": 0,
+      "text_chars_before": 22302,
+      "pages_before": 4,
+      "text_chars_after": 0,
+      "pages_after": 4,
+      "bytes_ratio": 54.272
+    },
+    {
+      "member": "073/073227.pdf",
+      "format": "application/pdf",
+      "exit": 0,
+      "text_chars_before": 22282,
+      "pages_before": 8,
+      "text_chars_after": 0,
+      "pages_after": 8,
+      "bytes_ratio": 17.837
+    },
+    {
+      "member": "075/075366.jpg",
+      "format": "image/jpeg",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/jpeg -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "079/079385.pdf",
+      "format": "application/pdf",
+      "exit": 0,
+      "text_chars_before": 44847,
+      "pages_before": 14,
+      "text_chars_after": 0,
+      "pages_after": 14,
+      "bytes_ratio": 3.583
+    },
+    {
+      "member": "082/082333.jpg",
+      "format": "image/jpeg",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/jpeg -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "083/083776.pdf",
+      "format": "application/pdf",
+      "exit": 0,
+      "text_chars_before": 7400,
+      "pages_before": 3,
+      "text_chars_after": 0,
+      "pages_after": 3,
+      "bytes_ratio": 45.52
+    },
+    {
+      "member": "085/085462.pdf",
+      "format": "application/pdf",
+      "exit": 0,
+      "text_chars_before": 296584,
+      "pages_before": 371,
+      "text_chars_after": 0,
+      "pages_after": 371,
+      "bytes_ratio": 178.514
+    },
+    {
+      "member": "090/090703.doc",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "092/092145.pdf",
+      "format": "application/pdf",
+      "exit": 0,
+      "text_chars_before": 44220,
+      "pages_before": 22,
+      "text_chars_after": 0,
+      "pages_after": 22,
+      "bytes_ratio": 87.12
+    },
+    {
+      "member": "095/095835.pdf",
+      "format": "application/pdf",
+      "exit": 0,
+      "text_chars_before": 442912,
+      "pages_before": 167,
+      "text_chars_after": 0,
+      "pages_after": 167,
+      "bytes_ratio": 66.926
+    },
+    {
+      "member": "097/097040.pdf",
+      "format": "application/pdf",
+      "exit": 0,
+      "text_chars_before": 886,
+      "pages_before": 2,
+      "text_chars_after": 0,
+      "pages_after": 2,
+      "bytes_ratio": 7.81
+    },
+    {
+      "member": "098/098807.doc",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "103/103224.ppt",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "103/103568.pdf",
+      "format": "application/pdf",
+      "exit": 0,
+      "text_chars_before": 2295,
+      "pages_before": 1,
+      "text_chars_after": 0,
+      "pages_after": 1,
+      "bytes_ratio": 1.428
+    },
+    {
+      "member": "105/105186.pdf",
+      "format": "application/pdf",
+      "exit": 0,
+      "text_chars_before": 100061,
+      "pages_before": 56,
+      "text_chars_after": 0,
+      "pages_after": 56,
+      "bytes_ratio": 84.615
+    },
+    {
+      "member": "106/106794.pdf",
+      "format": "application/pdf",
+      "exit": 0,
+      "text_chars_before": 1047697,
+      "pages_before": 378,
+      "text_chars_after": 0,
+      "pages_after": 378,
+      "bytes_ratio": 42.379
+    },
+    {
+      "member": "111/111338.pdf",
+      "format": "application/pdf",
+      "exit": 0,
+      "text_chars_before": 56341,
+      "pages_before": 34,
+      "text_chars_after": 0,
+      "pages_after": 34,
+      "bytes_ratio": 36.555
+    },
+    {
+      "member": "112/112848.pdf",
+      "format": "application/pdf",
+      "exit": 0,
+      "text_chars_before": 5624,
+      "pages_before": 3,
+      "text_chars_after": 0,
+      "pages_after": 3,
+      "bytes_ratio": 5.743
+    },
+    {
+      "member": "115/115389.jpg",
+      "format": "image/jpeg",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/jpeg -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "117/117275.doc",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "118/118130.pdf",
+      "format": "application/pdf",
+      "exit": 0,
+      "text_chars_before": 81364,
+      "pages_before": 57,
+      "text_chars_after": 0,
+      "pages_after": 57,
+      "bytes_ratio": 4.043
+    },
+    {
+      "member": "120/120669.ppt",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "122/122199.pdf",
+      "format": "application/pdf",
+      "exit": 0,
+      "text_chars_before": 45023,
+      "pages_before": 31,
+      "text_chars_after": 0,
+      "pages_after": 31,
+      "bytes_ratio": 85.392
+    },
+    {
+      "member": "123/123779.pdf",
+      "format": "application/pdf",
+      "exit": 0,
+      "text_chars_before": 15490,
+      "pages_before": 9,
+      "text_chars_after": 0,
+      "pages_after": 9,
+      "bytes_ratio": 21.802
+    },
+    {
+      "member": "124/124256.xls",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "126/126056.jpg",
+      "format": "image/jpeg",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/jpeg -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "127/127725.xls",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "127/127867.jpg",
+      "format": "image/jpeg",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/jpeg -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "129/129996.gif",
+      "format": "image/gif",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/gif -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "140/140201.xls",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "142/142669.doc",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "143/143961.jpg",
+      "format": "image/jpeg",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/jpeg -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "146/146109.xls",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "148/148876.jpg",
+      "format": "image/jpeg",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/jpeg -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "149/149115.ppt",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "149/149391.xls",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "153/153202.xls",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "153/153378.doc",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "153/153670.ppt",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "157/157581.doc",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "164/164731.ppt",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "167/167086.doc",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "167/167569.gif",
+      "format": "image/gif",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/gif -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "170/170540.gif",
+      "format": "image/gif",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/gif -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "177/177770.ppt",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "188/188908.xls",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "190/190298.ppt",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "193/193300.jpg",
+      "format": "image/jpeg",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/jpeg -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "198/198964.jpg",
+      "format": "image/jpeg",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/jpeg -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "200/200110.ppt",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "205/205348.jpg",
+      "format": "image/jpeg",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/jpeg -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "206/206498.doc",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "209/209450.jpg",
+      "format": "image/jpeg",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/jpeg -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "210/210687.doc",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "216/216937.jpg",
+      "format": "image/jpeg",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/jpeg -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "221/221800.ppt",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "221/221964.gif",
+      "format": "image/gif",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/gif -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "224/224168.xls",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "233/233174.jpg",
+      "format": "image/jpeg",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/jpeg -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "236/236837.xls",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "247/247546.xls",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "252/252017.doc",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "252/252572.doc",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "255/255923.gif",
+      "format": "image/gif",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/gif -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "257/257597.jpg",
+      "format": "image/jpeg",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/jpeg -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "259/259672.jpg",
+      "format": "image/jpeg",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/jpeg -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "268/268856.jpg",
+      "format": "image/jpeg",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/jpeg -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "275/275138.doc",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "281/281194.jpg",
+      "format": "image/jpeg",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/jpeg -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "285/285215.doc",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "286/286720.xls",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "287/287004.ppt",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "291/291276.jpg",
+      "format": "image/jpeg",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/jpeg -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "292/292311.jpg",
+      "format": "image/jpeg",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/jpeg -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "294/294354.ppt",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "300/300839.ppt",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "301/301340.doc",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "306/306941.jpg",
+      "format": "image/jpeg",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/jpeg -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "308/308180.doc",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "320/320509.doc",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "323/323884.ppt",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "327/327584.ppt",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "328/328128.doc",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "328/328783.xls",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "332/332930.doc",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "333/333762.jpg",
+      "format": "image/jpeg",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/jpeg -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "345/345424.jpg",
+      "format": "image/jpeg",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/jpeg -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "369/369699.ppt",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "371/371171.jpg",
+      "format": "image/jpeg",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/jpeg -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "389/389011.ppt",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "389/389146.jpg",
+      "format": "image/jpeg",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/jpeg -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "389/389147.gif",
+      "format": "image/gif",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/gif -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "alpha": "preserved",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "401/401319.jpg",
+      "format": "image/jpeg",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/jpeg -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "411/411381.ppt",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "414/414328.jpg",
+      "format": "image/jpeg",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/jpeg -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "423/423364.jpg",
+      "format": "image/jpeg",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/jpeg -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "465/465032.xls",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "477/477301.xls",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "481/481128.xls",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "490/490684.xls",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "490/490853.xls",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "491/491485.xls",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "503/503430.xls",
+      "format": "application/octet-stream",
+      "exit": null,
+      "error": "no route exercised for application/octet-stream"
+    },
+    {
+      "member": "504/504929.gif",
+      "format": "image/gif",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/gif -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "521/521822.gif",
+      "format": "image/gif",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/gif -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "537/537994.jpg",
+      "format": "image/jpeg",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/jpeg -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "544/544060.gif",
+      "format": "image/gif",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/gif -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "alpha": "preserved",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "546/546120.gif",
+      "format": "image/gif",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/gif -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "549/549375.gif",
+      "format": "image/gif",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/gif -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "550/550321.jpg",
+      "format": "image/jpeg",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/jpeg -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "597/597114.gif",
+      "format": "image/gif",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/gif -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "664/664985.jpg",
+      "format": "image/jpeg",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/jpeg -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "665/665685.jpg",
+      "format": "image/jpeg",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/jpeg -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "667/667931.jpg",
+      "format": "image/jpeg",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/jpeg -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "668/668544.jpg",
+      "format": "image/jpeg",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/jpeg -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "670/670895.jpg",
+      "format": "image/jpeg",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/jpeg -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "671/671803.jpg",
+      "format": "image/jpeg",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/jpeg -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "672/672102.jpg",
+      "format": "image/jpeg",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/jpeg -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "726/726912.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.33397402400951043,
+      "measurements": {
+        "alpha": "lost",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "755/755100.gif",
+      "format": "image/gif",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/gif -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "779/779675.gif",
+      "format": "image/gif",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/gif -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "788/788435.gif",
+      "format": "image/gif",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/gif -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "796/796793.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9713882451081253,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "807/807874.gif",
+      "format": "image/gif",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/gif -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "818/818567.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9523041141571255,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "847/847184.gif",
+      "format": "image/gif",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/gif -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "858/858584.gif",
+      "format": "image/gif",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/gif -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "888/888324.gif",
+      "format": "image/gif",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/gif -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "893/893146.gif",
+      "format": "image/gif",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/gif -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "893/893847.gif",
+      "format": "image/gif",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/gif -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "937/937571.gif",
+      "format": "image/gif",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/gif -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "938/938633.gif",
+      "format": "image/gif",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/gif -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "938/938640.gif",
+      "format": "image/gif",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/gif -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "962/962797.gif",
+      "format": "image/gif",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/gif -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "976/976696.gif",
+      "format": "image/gif",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/gif -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "985/985500.gif",
+      "format": "image/gif",
+      "exit": 0,
+      "target": "png",
+      "route": [
+        "image-rs [Transcode] image/gif -> image/png"
+      ],
+      "ssim": 1.0,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "045/045353.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.987033833625977,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "141/141403.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9685898453412605,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "733/733542.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9172175279427699,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "734/734518.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9687814710341346,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "309/309402.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9681737690392445,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "338/338101.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9826104193748649,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "696/696048.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9895501677764036,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "768/768492.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9428273366849754,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "128/128941.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9774202053443256,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "292/292073.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9679041767021759,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "702/702198.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.8804317488346824,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "711/711714.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.898336938745881,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "111/111263.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9913680419747158,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "928/928298.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9159277330036214,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "952/952647.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9801063874265409,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "303/303329.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.984239420560849,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "371/371180.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9764664662952103,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "385/385178.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9685788563108845,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "671/671351.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9888316656917552,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "798/798893.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9584870211807637,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "929/929866.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9773069246710548,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "102/102372.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9606260990179883,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "456/456162.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9838243348442325,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "920/920477.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9688916473495621,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "114/114040.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9554546324206933,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "325/325026.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9690464083888299,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "737/737154.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9228886270103048,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "189/189036.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9793943526775036,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "746/746512.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.94592877991026,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "762/762833.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9004475953487852,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "768/768226.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9072549253906,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "892/892995.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9876140610676049,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "338/338815.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9692657560480055,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "358/358113.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9683355526546973,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "681/681410.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": -0.06697472694222706,
+      "measurements": {
+        "alpha": "lost",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    },
+    {
+      "member": "748/748180.png",
+      "format": "image/png",
+      "exit": 0,
+      "target": "jpg",
+      "route": [
+        "libvips [Transcode] image/png -> image/jpeg"
+      ],
+      "ssim": 0.9765290717304888,
+      "measurements": {
+        "alpha": "not-present-in-input",
+        "geometry": "preserved",
+        "color_depth": "not-exercised"
+      },
+      "contradictions": []
+    }
+  ]
+}

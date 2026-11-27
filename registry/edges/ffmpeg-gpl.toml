@@ -1,0 +1,137 @@
+# ---------------------------------------------------------------------------
+# VIDEO, GPL BUILD (docs/RESEARCH.md §20.2). Engine `ffmpeg-gpl`: same binary,
+# separate entry (ADR-0007), so these routes exist only under the gpl profile.
+
+[[edge]]
+engine     = "ffmpeg-gpl"
+invocation = "ffmpeg -i IN -c:v libx264 -qp 0 OUT"
+op         = "Transcode"
+from       = "video/x-matroska"
+to         = "video/mp4"
+from_kind  = "VideoStream"
+to_kind    = "VideoStream"
+
+[edge.loss]
+signal_fidelity = "preserved"
+geometry        = "preserved"
+time            = "preserved"
+generational    = false
+
+[edge.cost]
+time_model   = "linear_duration"
+memory_model = "streaming"
+base_ms      = 200
+
+[edge.constraints]
+max_input_bytes = 2147483648
+requires        = []
+
+[edge.verification]
+status      = "verified"
+specimens   = ["corpus/video/reference.mkv"]
+verified_at = "2026-11-27"
+verified_by = "capability-cartographer"
+
+[edge.verification.measured]
+tool         = "tools/measure_video.py"
+engine_build = "ffmpeg 6.1.1"
+metric       = "SSIM (all planes) and PSNR vs the lossless reference"
+ssim         = 1.0
+psnr_db      = "inf"
+frames       = "50 -> 50"
+note = """
+Lossless H.264 (`-qp 0`): bit-exact to the FFV1 reference, at 258,442 bytes
+against FFV1's 382,118. The control for the GPL edges, as VP9 lossless is for
+the LGPL ones. `-qp 0`, not `-crf 0`: only a fixed quantiser of zero is
+lossless by construction.
+"""
+
+
+[[edge]]
+engine     = "ffmpeg-gpl"
+invocation = "ffmpeg -i IN -c:v libx264 -crf 23 OUT"
+op         = "Transcode"
+from       = "video/x-matroska"
+to         = "video/mp4"
+from_kind  = "VideoStream"
+to_kind    = "VideoStream"
+
+[edge.loss]
+signal_fidelity = "degraded"
+geometry        = "preserved"
+time            = "preserved"
+generational    = true
+
+[edge.cost]
+time_model   = "linear_duration"
+memory_model = "streaming"
+base_ms      = 200
+
+[edge.constraints]
+max_input_bytes = 2147483648
+requires        = []
+
+[edge.verification]
+status      = "verified"
+specimens   = ["corpus/video/reference.mkv"]
+verified_at = "2026-11-27"
+verified_by = "capability-cartographer"
+
+[edge.verification.measured]
+tool         = "tools/measure_video.py"
+engine_build = "ffmpeg 6.1.1"
+metric       = "SSIM (all planes) and PSNR vs the lossless reference"
+ssim         = 0.9935
+psnr_db      = 42.47
+frames       = "50 -> 50"
+note = """
+x264's default quality (crf 23 is what `-c:v libx264` alone gives), so this
+is the H.264 conversion most people actually run. 69,109 bytes.
+"""
+
+
+[[edge]]
+engine     = "ffmpeg-gpl"
+invocation = "ffmpeg -i IN -c:v libx265 -crf 28 OUT"
+op         = "Transcode"
+from       = "video/x-matroska"
+to         = "video/mp4"
+from_kind  = "VideoStream"
+to_kind    = "VideoStream"
+
+[edge.loss]
+signal_fidelity = "degraded"
+geometry        = "preserved"
+time            = "preserved"
+generational    = true
+
+[edge.cost]
+time_model   = "linear_duration"
+memory_model = "streaming"
+base_ms      = 300
+
+[edge.constraints]
+max_input_bytes = 2147483648
+requires        = []
+
+[edge.verification]
+status      = "verified"
+specimens   = ["corpus/video/reference.mkv"]
+verified_at = "2026-11-27"
+verified_by = "capability-cartographer"
+
+[edge.verification.measured]
+tool         = "tools/measure_video.py"
+engine_build = "ffmpeg 6.1.1"
+metric       = "SSIM (all planes) and PSNR vs the lossless reference"
+ssim         = 0.9850
+psnr_db      = 38.14
+frames       = "50 -> 50"
+note = """
+x265's default quality (crf 28). ffmpeg's H.265 guide says this "should
+visually correspond to libx264 video at CRF 23, but result in about half the
+file size". On this specimen it is 70% of the size (48,540 bytes vs 69,109)
+and LOWER on both metrics (SSIM 0.9850 vs 0.9935, 38.14 vs 42.47 dB). The
+two defaults are not equivalent here; whether they look equivalent is a
+perceptual question neither metric answers (ADR-0014, docs/RESEARCH.md §20.2).
+"""

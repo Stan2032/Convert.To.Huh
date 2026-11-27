@@ -4,22 +4,34 @@ on:
   push:
     branches: ["**"]
   pull_request:
+  # Weekly, against whatever engine versions the runner's Ubuntu ships. The
+  # characterisation tests pin recorded engine behaviour (ImageMagick's
+  # off-screen GIF frame, libvips' 255-colour cap, LibreOffice's output), so
+  # a failure here with no code change means an engine changed behaviour and
+  # the registry entry describing it needs revisiting.
+  schedule:
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
 
 # These jobs only read the repository. Default token scope is wider than that,
 # and a workflow that never needs write access should not be handed it.
 permissions:
   contents: read
 
+# Third-party actions are pinned to commit hashes, not tags: a tag can be moved
+# to different code, a hash cannot. Dependabot updates the hashes and keeps the
+# version comments in step.
+
 jobs:
   registry:
     name: Validate registry, agents and docs
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           # Keep the token out of .git/config, where any later step could read it.
           persist-credentials: false
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7.1.0
         with:
           python-version: "3.11"   # tomllib is stdlib from 3.11
 
@@ -42,14 +54,17 @@ jobs:
     name: Build and test huh-core
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           # Keep the token out of .git/config, where any later step could read it.
           persist-credentials: false
-      - uses: dtolnay/rust-toolchain@stable
+      # Pinned by hash, so the toolchain must be named: this action reads it
+      # from the ref name, which a hash does not carry.
+      - uses: dtolnay/rust-toolchain@39008827e6b4319a349e9a42dfc90579dd25f1ca  # stable
         with:
+          toolchain: stable
           components: clippy, rustfmt
-      - uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@2201cc584a476d1b508be977bbe4b7d1c7a52e9c  # v2.9.3
         with:
           workspaces: core
 
@@ -61,14 +76,24 @@ jobs:
       - name: Install the engines the registry measures
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends libvips-tools poppler-utils
+          sudo apt-get install -y --no-install-recommends libvips-tools poppler-utils \
+            ffmpeg gstreamer1.0-tools gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-libav \
+            imagemagick libreoffice-writer-nogui
           vips --version
           pdftoppm -v
+          ffmpeg -version | head -1
+          gst-launch-1.0 --version | head -1
+          convert -version | head -1
+          soffice --version
 
       - name: Regenerate the corpus
         # Specimens are generated, not committed, so this also proves the
         # generator still produces what the tests expect.
         run: python3 corpus/generate.py
+
+      - name: Video harness self-test
+        # Identical streams must score SSIM 1 / PSNR inf, a blurred copy less.
+        run: python3 tools/measure_video.py --self-test
 
       - name: Clippy
         run: cargo clippy --manifest-path core/Cargo.toml --all-targets -- -D warnings

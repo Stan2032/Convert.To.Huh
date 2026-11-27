@@ -1,0 +1,54 @@
+id          = "gstreamer"
+name        = "GStreamer"
+version_pin = ">=1.24,<2"
+homepage    = "https://gstreamer.freedesktop.org/"
+
+[license]
+spdx            = "LGPL-2.1-or-later"
+build_profiles  = ["lgpl", "gpl"]
+patent_exposure = "codec-dependent"
+verified        = true
+checked         = "2026-11-26"
+source          = "Debian copyright files for libgstreamer1.0-0, gstreamer1.0-plugins-base and gstreamer1.0-plugins-good 1.24.2; `gst-inspect-1.0` reports License: LGPL for audioconvert, wavenc and flacenc"
+
+[security]
+hostility   = "high"
+isolation   = "gvisor"
+network     = false
+delegates   = false
+
+[resources]
+memory_model      = "streaming"
+concurrency       = "process-per-job"
+crash_expected    = false
+default_timeout_s = 120
+
+[notes]
+text = """
+Added 2026-11-26 as the THIRD independent audio engine, to settle the bit-depth
+disagreement between ffmpeg (truncates) and SoX (rounds), docs/RESEARCH.md §14.6.
+It sides with SoX: with dither off, its 8-bit output is byte-identical to
+`sox -D`. ffmpeg is the outlier.
+
+SCOPE OF THIS ENTRY: core, gst-plugins-base and gst-plugins-good only, all LGPL.
+gst-plugins-ugly (lame, x264) and -bad carry GPL components and codec patent
+obligations, so a pipeline using them is a different licensing position. That
+is why patent_exposure is `codec-dependent` rather than `none`: the entry is
+LGPL, but which codecs a given install can reach depends on which plugin sets
+are installed.
+
+MEASURED BUILD: GStreamer 1.24.2 (Ubuntu packages). Invocations are
+`gst-launch-1.0` pipelines; `audioconvert` does all sample-format and channel
+work.
+
+`audioconvert` dithers with TPDF by default whenever the output depth is 20 bits
+or less (`dithering-threshold = 20`), so a 16-to-8-bit conversion is dithered
+unless `dithering=none` is set. Unlike SoX, its dither is deterministic: the
+same input gives the same output on every run (5.12 dB three times, where SoX
+gave 5.09 to 5.16).
+
+SECURITY: `hostility: high`. GStreamer autoplugs demuxers and decoders by
+content type, and those plugins have a CVE history comparable to FFmpeg's. The
+measured pipelines name every element explicitly (no `decodebin`), so nothing
+is autoplugged.
+"""

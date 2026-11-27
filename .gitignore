@@ -25,6 +25,8 @@ corpus/**/*.mp4
 corpus/**/*.mkv
 corpus/**/*.avi
 !corpus/**/*.min.*
+# The video reference (382 KB, FFV1): edges in registry/edges/ffmpeg.toml cite it.
+!corpus/video/reference.mkv
 
 # Conversion scratch
 /scratch/
@@ -36,3 +38,7 @@ corpus/**/*.avi
 .idea/
 .vscode/
 *.swp
+
+# Govdocs1 real-world tier: fetched by tools/fetch_govdocs.py, not committed
+# (not CC0; see the script). The manifest is committed.
+corpus/govdocs1/files/

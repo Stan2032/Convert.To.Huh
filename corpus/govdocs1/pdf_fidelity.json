@@ -1,0 +1,726 @@
+{
+  "clean_dpi": 150,
+  "compare_dpi": 72,
+  "files": [
+    {
+      "file": "000578.pdf",
+      "page_images_embedded": 75,
+      "page_size_mismatch": 0,
+      "pages_cleaned": 75,
+      "pages_original": 75,
+      "pages_resized_by_rounding": 0,
+      "stored": {
+        "median": 0.9978,
+        "min": 0.9976,
+        "pages": 75
+      },
+      "viewed": {
+        "median": 0.786,
+        "min": 0.7558,
+        "pages": 75
+      }
+    },
+    {
+      "file": "000816.pdf",
+      "page_images_embedded": 3,
+      "page_size_mismatch": 0,
+      "pages_cleaned": 3,
+      "pages_original": 3,
+      "pages_resized_by_rounding": 0,
+      "stored": {
+        "median": 0.9978,
+        "min": 0.9975,
+        "pages": 3
+      },
+      "viewed": {
+        "median": 0.752,
+        "min": 0.7254,
+        "pages": 3
+      }
+    },
+    {
+      "file": "001387.pdf",
+      "page_images_embedded": 57,
+      "page_size_mismatch": 0,
+      "pages_cleaned": 57,
+      "pages_original": 57,
+      "pages_resized_by_rounding": 0,
+      "stored": {
+        "median": 0.9967,
+        "min": 0.9962,
+        "pages": 57
+      },
+      "viewed": {
+        "median": 0.662,
+        "min": 0.6095,
+        "pages": 57
+      }
+    },
+    {
+      "file": "001484.pdf",
+      "page_images_embedded": 15,
+      "page_size_mismatch": 0,
+      "pages_cleaned": 15,
+      "pages_original": 15,
+      "pages_resized_by_rounding": 0,
+      "stored": {
+        "median": 0.9978,
+        "min": 0.997,
+        "pages": 15
+      },
+      "viewed": {
+        "median": 0.8598,
+        "min": 0.7918,
+        "pages": 15
+      }
+    },
+    {
+      "file": "004157.pdf",
+      "page_images_embedded": 20,
+      "page_size_mismatch": 0,
+      "pages_cleaned": 20,
+      "pages_original": 20,
+      "pages_resized_by_rounding": 0,
+      "stored": {
+        "median": 0.9981,
+        "min": 0.9975,
+        "pages": 20
+      },
+      "viewed": {
+        "median": 0.7795,
+        "min": 0.7206,
+        "pages": 20
+      }
+    },
+    {
+      "file": "004387.pdf",
+      "page_images_embedded": 4,
+      "page_size_mismatch": 0,
+      "pages_cleaned": 4,
+      "pages_original": 4,
+      "pages_resized_by_rounding": 4,
+      "stored": {
+        "median": 0.9951,
+        "min": 0.9947,
+        "pages": 4
+      },
+      "viewed": {
+        "median": 0.6475,
+        "min": 0.566,
+        "pages": 4
+      }
+    },
+    {
+      "file": "007895.pdf",
+      "page_images_embedded": 9,
+      "page_size_mismatch": 0,
+      "pages_cleaned": 9,
+      "pages_original": 9,
+      "pages_resized_by_rounding": 0,
+      "stored": {
+        "median": 0.9986,
+        "min": 0.9945,
+        "pages": 9
+      },
+      "viewed": {
+        "median": 0.8624,
+        "min": 0.6144,
+        "pages": 9
+      }
+    },
+    {
+      "file": "011443.pdf",
+      "page_images_embedded": 25,
+      "page_size_mismatch": 0,
+      "pages_cleaned": 25,
+      "pages_original": 25,
+      "pages_resized_by_rounding": 0,
+      "stored": {
+        "median": 0.9974,
+        "min": 0.9973,
+        "pages": 25
+      },
+      "viewed": {
+        "median": 0.7253,
+        "min": 0.6919,
+        "pages": 25
+      }
+    },
+    {
+      "file": "013366.pdf",
+      "page_images_embedded": 2,
+      "page_size_mismatch": 0,
+      "pages_cleaned": 2,
+      "pages_original": 2,
+      "pages_resized_by_rounding": 0,
+      "stored": {
+        "median": 0.9916,
+        "min": 0.9902,
+        "pages": 2
+      },
+      "viewed": {
+        "median": 0.7328,
+        "min": 0.7288,
+        "pages": 2
+      }
+    },
+    {
+      "file": "014575.pdf",
+      "page_images_embedded": 15,
+      "page_size_mismatch": 0,
+      "pages_cleaned": 15,
+      "pages_original": 15,
+      "pages_resized_by_rounding": 0,
+      "stored": {
+        "median": 0.9973,
+        "min": 0.9955,
+        "pages": 15
+      },
+      "viewed": {
+        "median": 0.7276,
+        "min": 0.6036,
+        "pages": 15
+      }
+    },
+    {
+      "file": "014819.pdf",
+      "page_images_embedded": 20,
+      "page_size_mismatch": 0,
+      "pages_cleaned": 20,
+      "pages_original": 20,
+      "pages_resized_by_rounding": 0,
+      "stored": {
+        "median": 0.9976,
+        "min": 0.9971,
+        "pages": 20
+      },
+      "viewed": {
+        "median": 0.7616,
+        "min": 0.697,
+        "pages": 20
+      }
+    },
+    {
+      "file": "025835.pdf",
+      "page_images_embedded": 4,
+      "page_size_mismatch": 0,
+      "pages_cleaned": 4,
+      "pages_original": 4,
+      "pages_resized_by_rounding": 0,
+      "stored": {
+        "median": 0.9967,
+        "min": 0.9911,
+        "pages": 4
+      },
+      "viewed": {
+        "median": 0.8105,
+        "min": 0.6377,
+        "pages": 4
+      }
+    },
+    {
+      "file": "026839.pdf",
+      "page_images_embedded": 27,
+      "page_size_mismatch": 0,
+      "pages_cleaned": 27,
+      "pages_original": 27,
+      "pages_resized_by_rounding": 0,
+      "stored": {
+        "median": 0.9978,
+        "min": 0.9961,
+        "pages": 27
+      },
+      "viewed": {
+        "median": 0.7633,
+        "min": 0.6253,
+        "pages": 27
+      }
+    },
+    {
+      "file": "028402.pdf",
+      "page_images_embedded": 16,
+      "page_size_mismatch": 0,
+      "pages_cleaned": 16,
+      "pages_original": 16,
+      "pages_resized_by_rounding": 0,
+      "stored": {
+        "median": 0.9961,
+        "min": 0.992,
+        "pages": 16
+      },
+      "viewed": {
+        "median": 0.7388,
+        "min": 0.6938,
+        "pages": 16
+      }
+    },
+    {
+      "file": "046761.pdf",
+      "page_images_embedded": 9,
+      "page_size_mismatch": 0,
+      "pages_cleaned": 9,
+      "pages_original": 9,
+      "pages_resized_by_rounding": 0,
+      "stored": {
+        "median": 0.9955,
+        "min": 0.9949,
+        "pages": 9
+      },
+      "viewed": {
+        "median": 0.6025,
+        "min": 0.4805,
+        "pages": 9
+      }
+    },
+    {
+      "file": "047672.pdf",
+      "page_images_embedded": 15,
+      "page_size_mismatch": 0,
+      "pages_cleaned": 15,
+      "pages_original": 15,
+      "pages_resized_by_rounding": 0,
+      "stored": {
+        "median": 0.9977,
+        "min": 0.9962,
+        "pages": 15
+      },
+      "viewed": {
+        "median": 0.7615,
+        "min": 0.6316,
+        "pages": 15
+      }
+    },
+    {
+      "file": "050739.pdf",
+      "page_images_embedded": 95,
+      "page_size_mismatch": 0,
+      "pages_cleaned": 95,
+      "pages_original": 95,
+      "pages_resized_by_rounding": 0,
+      "stored": {
+        "median": 0.9983,
+        "min": 0.9957,
+        "pages": 95
+      },
+      "viewed": {
+        "median": 0.7801,
+        "min": 0.6014,
+        "pages": 95
+      }
+    },
+    {
+      "file": "052528.pdf",
+      "page_images_embedded": 11,
+      "page_size_mismatch": 0,
+      "pages_cleaned": 11,
+      "pages_original": 11,
+      "pages_resized_by_rounding": 0,
+      "stored": {
+        "median": 0.997,
+        "min": 0.9963,
+        "pages": 11
+      },
+      "viewed": {
+        "median": 0.7564,
+        "min": 0.6882,
+        "pages": 11
+      }
+    },
+    {
+      "file": "052725.pdf",
+      "page_images_embedded": 10,
+      "page_size_mismatch": 0,
+      "pages_cleaned": 10,
+      "pages_original": 10,
+      "pages_resized_by_rounding": 10,
+      "stored": {
+        "median": 0.9975,
+        "min": 0.9965,
+        "pages": 10
+      },
+      "viewed": {
+        "median": 0.7966,
+        "min": 0.7155,
+        "pages": 10
+      }
+    },
+    {
+      "file": "053253.pdf",
+      "page_images_embedded": 23,
+      "page_size_mismatch": 0,
+      "pages_cleaned": 23,
+      "pages_original": 23,
+      "pages_resized_by_rounding": 0,
+      "stored": {
+        "median": 0.998,
+        "min": 0.9978,
+        "pages": 23
+      },
+      "viewed": {
+        "median": 0.7864,
+        "min": 0.7607,
+        "pages": 23
+      }
+    },
+    {
+      "file": "054018.pdf",
+      "page_images_embedded": 60,
+      "page_size_mismatch": 0,
+      "pages_cleaned": 60,
+      "pages_original": 60,
+      "pages_resized_by_rounding": 0,
+      "stored": {
+        "median": 0.9978,
+        "min": 0.9962,
+        "pages": 60
+      },
+      "viewed": {
+        "median": 0.7777,
+        "min": 0.646,
+        "pages": 60
+      }
+    },
+    {
+      "file": "064452.pdf",
+      "page_images_embedded": 101,
+      "page_size_mismatch": 0,
+      "pages_cleaned": 101,
+      "pages_original": 101,
+      "pages_resized_by_rounding": 0,
+      "stored": {
+        "median": 0.9972,
+        "min": 0.9956,
+        "pages": 101
+      },
+      "viewed": {
+        "median": 0.7619,
+        "min": 0.6289,
+        "pages": 101
+      }
+    },
+    {
+      "file": "064568.pdf",
+      "page_images_embedded": 11,
+      "page_size_mismatch": 0,
+      "pages_cleaned": 11,
+      "pages_original": 11,
+      "pages_resized_by_rounding": 0,
+      "stored": {
+        "median": 0.9967,
+        "min": 0.996,
+        "pages": 11
+      },
+      "viewed": {
+        "median": 0.6746,
+        "min": 0.6207,
+        "pages": 11
+      }
+    },
+    {
+      "file": "067773.pdf",
+      "page_images_embedded": 1,
+      "page_size_mismatch": 0,
+      "pages_cleaned": 1,
+      "pages_original": 1,
+      "pages_resized_by_rounding": 0,
+      "stored": {
+        "median": 0.9975,
+        "min": 0.9975,
+        "pages": 1
+      },
+      "viewed": {
+        "median": 0.7356,
+        "min": 0.7356,
+        "pages": 1
+      }
+    },
+    {
+      "file": "071930.pdf",
+      "page_images_embedded": 4,
+      "page_size_mismatch": 0,
+      "pages_cleaned": 4,
+      "pages_original": 4,
+      "pages_resized_by_rounding": 0,
+      "stored": {
+        "median": 0.9961,
+        "min": 0.9958,
+        "pages": 4
+      },
+      "viewed": {
+        "median": 0.5465,
+        "min": 0.5322,
+        "pages": 4
+      }
+    },
+    {
+      "file": "073227.pdf",
+      "page_images_embedded": 8,
+      "page_size_mismatch": 0,
+      "pages_cleaned": 8,
+      "pages_original": 8,
+      "pages_resized_by_rounding": 0,
+      "stored": {
+        "median": 0.9963,
+        "min": 0.9958,
+        "pages": 8
+      },
+      "viewed": {
+        "median": 0.6882,
+        "min": 0.6307,
+        "pages": 8
+      }
+    },
+    {
+      "file": "079385.pdf",
+      "page_images_embedded": 14,
+      "page_size_mismatch": 0,
+      "pages_cleaned": 14,
+      "pages_original": 14,
+      "pages_resized_by_rounding": 0,
+      "stored": {
+        "median": 0.9965,
+        "min": 0.9952,
+        "pages": 14
+      },
+      "viewed": {
+        "median": 0.6249,
+        "min": 0.5697,
+        "pages": 14
+      }
+    },
+    {
+      "file": "083776.pdf",
+      "page_images_embedded": 3,
+      "page_size_mismatch": 0,
+      "pages_cleaned": 3,
+      "pages_original": 3,
+      "pages_resized_by_rounding": 0,
+      "stored": {
+        "median": 0.997,
+        "min": 0.9969,
+        "pages": 3
+      },
+      "viewed": {
+        "median": 0.7027,
+        "min": 0.6764,
+        "pages": 3
+      }
+    },
+    {
+      "file": "085462.pdf",
+      "page_images_embedded": 371,
+      "page_size_mismatch": 0,
+      "pages_cleaned": 371,
+      "pages_original": 371,
+      "pages_resized_by_rounding": 0,
+      "stored": {
+        "median": 0.9986,
+        "min": 0.9983,
+        "pages": 371
+      },
+      "viewed": {
+        "median": 0.8522,
+        "min": 0.8212,
+        "pages": 371
+      }
+    },
+    {
+      "file": "092145.pdf",
+      "page_images_embedded": 22,
+      "page_size_mismatch": 0,
+      "pages_cleaned": 22,
+      "pages_original": 22,
+      "pages_resized_by_rounding": 0,
+      "stored": {
+        "median": 0.9978,
+        "min": 0.9948,
+        "pages": 22
+      },
+      "viewed": {
+        "median": 0.7024,
+        "min": 0.594,
+        "pages": 22
+      }
+    },
+    {
+      "file": "095835.pdf",
+      "page_images_embedded": 167,
+      "page_size_mismatch": 0,
+      "pages_cleaned": 167,
+      "pages_original": 167,
+      "pages_resized_by_rounding": 167,
+      "stored": {
+        "median": 0.9982,
+        "min": 0.9977,
+        "pages": 167
+      },
+      "viewed": {
+        "median": 0.7932,
+        "min": 0.7279,
+        "pages": 167
+      }
+    },
+    {
+      "file": "097040.pdf",
+      "page_images_embedded": 2,
+      "page_size_mismatch": 0,
+      "pages_cleaned": 2,
+      "pages_original": 2,
+      "pages_resized_by_rounding": 0,
+      "stored": {
+        "median": 0.9997,
+        "min": 0.9989,
+        "pages": 2
+      },
+      "viewed": {
+        "median": 0.9693,
+        "min": 0.8997,
+        "pages": 2
+      }
+    },
+    {
+      "file": "103568.pdf",
+      "page_images_embedded": 1,
+      "page_size_mismatch": 0,
+      "pages_cleaned": 1,
+      "pages_original": 1,
+      "pages_resized_by_rounding": 0,
+      "stored": {
+        "median": 0.9956,
+        "min": 0.9956,
+        "pages": 1
+      },
+      "viewed": {
+        "median": 0.6741,
+        "min": 0.6741,
+        "pages": 1
+      }
+    },
+    {
+      "file": "105186.pdf",
+      "page_images_embedded": 56,
+      "page_size_mismatch": 0,
+      "pages_cleaned": 56,
+      "pages_original": 56,
+      "pages_resized_by_rounding": 0,
+      "stored": {
+        "median": 0.9966,
+        "min": 0.9963,
+        "pages": 56
+      },
+      "viewed": {
+        "median": 0.7038,
+        "min": 0.6838,
+        "pages": 56
+      }
+    },
+    {
+      "file": "106794.pdf",
+      "page_images_embedded": 378,
+      "page_size_mismatch": 0,
+      "pages_cleaned": 378,
+      "pages_original": 378,
+      "pages_resized_by_rounding": 0,
+      "stored": {
+        "median": 0.9967,
+        "min": 0.9952,
+        "pages": 378
+      },
+      "viewed": {
+        "median": 0.6777,
+        "min": 0.5374,
+        "pages": 378
+      }
+    },
+    {
+      "file": "111338.pdf",
+      "page_images_embedded": 34,
+      "page_size_mismatch": 0,
+      "pages_cleaned": 34,
+      "pages_original": 34,
+      "pages_resized_by_rounding": 0,
+      "stored": {
+        "median": 0.9978,
+        "min": 0.9971,
+        "pages": 34
+      },
+      "viewed": {
+        "median": 0.761,
+        "min": 0.665,
+        "pages": 34
+      }
+    },
+    {
+      "file": "112848.pdf",
+      "page_images_embedded": 3,
+      "page_size_mismatch": 0,
+      "pages_cleaned": 3,
+      "pages_original": 3,
+      "pages_resized_by_rounding": 0,
+      "stored": {
+        "median": 0.9973,
+        "min": 0.9961,
+        "pages": 3
+      },
+      "viewed": {
+        "median": 0.7843,
+        "min": 0.6593,
+        "pages": 3
+      }
+    },
+    {
+      "file": "118130.pdf",
+      "page_images_embedded": 57,
+      "page_size_mismatch": 0,
+      "pages_cleaned": 57,
+      "pages_original": 57,
+      "pages_resized_by_rounding": 57,
+      "stored": {
+        "median": 0.9974,
+        "min": 0.9956,
+        "pages": 57
+      },
+      "viewed": {
+        "median": 0.8179,
+        "min": 0.6941,
+        "pages": 57
+      }
+    },
+    {
+      "file": "122199.pdf",
+      "page_images_embedded": 31,
+      "page_size_mismatch": 0,
+      "pages_cleaned": 31,
+      "pages_original": 31,
+      "pages_resized_by_rounding": 31,
+      "stored": {
+        "median": 0.9978,
+        "min": 0.9974,
+        "pages": 31
+      },
+      "viewed": {
+        "median": 0.7618,
+        "min": 0.7287,
+        "pages": 31
+      }
+    },
+    {
+      "file": "123779.pdf",
+      "page_images_embedded": 9,
+      "page_size_mismatch": 0,
+      "pages_cleaned": 9,
+      "pages_original": 9,
+      "pages_resized_by_rounding": 0,
+      "stored": {
+        "median": 0.9981,
+        "min": 0.996,
+        "pages": 9
+      },
+      "viewed": {
+        "median": 0.8074,
+        "min": 0.6048,
+        "pages": 9
+      }
+    }
+  ]
+}

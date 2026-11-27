@@ -1,0 +1,39 @@
+id         = "application/vnd.ms-powerpoint"
+name       = "Microsoft PowerPoint Binary Presentation"
+kinds      = ["PageLayout", "Text", "Raster"]
+extensions = ["ppt"]
+mime_types = ["application/vnd.ms-powerpoint"]
+puid       = "fmt/126"
+puid_verified = true
+puid_name  = "Microsoft Powerpoint Presentation 97-2003"
+spec_url   = "https://learn.microsoft.com/en-us/openspecs/office_file_formats/ms-ppt/"
+
+preserves = ["text_as_text", "geometry", "fonts", "metadata"]
+
+[[signatures]]
+offset = 0
+magic  = "D0CF11E0A1B11AE1"
+weight = "decisive"
+
+[detection]
+priority_over = []
+container_of  = []
+ole2_streams  = ["PowerPoint Document"]
+
+[notes]
+text = """
+Added 2026-11-26 because Govdocs1 is full of these and the detector called
+every one `application/octet-stream` (docs/RESEARCH.md §19).
+
+DETECTION. `.doc`, `.xls` and `.ppt` all begin with the OLE2 compound-file
+header `D0CF11E0A1B11AE1`, so that signature alone says only "OLE2". The
+format is identified by a stream in the compound file's directory
+(`ole2_streams`); without one the format does not match at all. That is why
+the signature can be `decisive`: it never fires on its own.
+
+PRONOM VERIFIED 2026-11-26 with tools/verify_pronom.py: fmt/126 is
+"Microsoft Powerpoint Presentation 97-2003". This entry is family-level, so it also covers fmt/125 (PowerPoint 95),
+which shares the container and the stream name. PRONOM's own signature for
+both is the bare compound-document header, which cannot separate the Office
+formats either.
+"""

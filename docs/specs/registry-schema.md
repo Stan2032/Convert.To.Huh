@@ -35,12 +35,17 @@ preserves = ["geometry", "color_depth", "color_profile", "alpha", "metadata"]
 offset = 0
 magic  = "89504E470D0A1A0A"       # uppercase hex, whole bytes
 weight = "decisive"               # decisive | strong | weak
+within = 0                        # optional search window: magic may start anywhere
+                                  # in [offset, offset + within]; PRONOM's {0-32}
 # position = "BOF"                # BOF (default) | EOF  — not yet implemented
 
 [detection]
 priority_over = []                # PRONOM-style priority: this beats these ids
                                   # e.g. docx sets priority_over = ["application/zip"]
 container_of  = []                # e.g. docx: ["application/zip"]
+ole2_streams  = []                # OLE2 formats only: stream names in the compound
+                                  # file's directory, any one of which identifies
+                                  # this format, e.g. ["WordDocument"]
 
 [notes]
 text = "Free-form. Gotchas, ambiguities, why a field is what it is."
@@ -49,6 +54,10 @@ text = "Free-form. Gotchas, ambiguities, why a field is what it is."
 Rules:
 
 - `id` is stable forever. Renaming requires an alias entry, never an edit.
+- A format whose signature is the OLE2 header `D0CF11E0A1B11AE1` must declare
+  `ole2_streams`, and only such a format may. `.doc`, `.xls` and `.ppt` share
+  that header; the detector matches one only when its stream is present in the
+  compound file's directory. Enforced by `validate_registry.py`.
 - A format with no signatures and no `container_of` is **undetectable** and must
   say so in `notes` — permitted, but it can only ever be a target, never a
   detected source.
@@ -348,6 +357,68 @@ and it passed. What rule 13 catches is the blunter form — a citation naming
 nothing runnable at all, which is what the remaining four audio edges did. See
 `RESEARCH.md §17.1`.
 
+## An LGPL engine cannot invoke a GPL component (rule 15)
+
+An edge whose engine claims only the `lgpl` build profile must not name, in
+its `invocation`, an encoder, decoder or filter that exists only in a GPL
+build. CI rejects it (**rule 15**). For ffmpeg the list is ffmpeg's own,
+taken from `configure` at n6.1.1: the external libraries in
+`EXTERNAL_LIBRARY_GPL_LIST` (`libx264`, `libx265`, `libxvid`, ...) and every
+filter whose dependencies include `gpl` or one of those libraries (`hqdn3d`,
+`eq`, `pp`, `vidstab*`, ...): 8 codec names and 39 filters.
+Codecs are read from `-c`/`-codec` flags and filters from `-vf`, `-af`,
+`-lavfi` and `-filter_complex` graphs, so a value that merely spells a filter
+name elsewhere does not trip it.
+
+Why it is needed: the binary an edge is measured on need not be the build its
+engine entry describes. Ubuntu's ffmpeg is configured `--enable-gpl`; the
+registry's `ffmpeg` entry describes the LGPL build. That is sound only while
+every recorded invocation stays inside the LGPL subset, and nothing checked it
+(`RESEARCH.md §20.1`). A GPL-only route on an `lgpl` engine is exactly what
+ground rule 6 forbids: a route the planner would offer that does not exist in
+the build being shipped.
+
+## Behaviour on real files (rule 14)
+
+A verified edge may carry the counts from running it over real files, beside
+the measurement on its specimens:
+
+```toml
+[edge.verification.real_world]
+corpus       = "govdocs1"       # which real-file corpus
+files        = 39               # real files of the source format it was run on
+ran          = 39               # converted without error
+contradicted = 0                # files where a measurement contradicted the loss vector
+affected     = { alpha = 2 }    # per declared loss: files on which it actually occurred
+results      = "corpus/govdocs1/edges.json"   # per-file results, committed
+size_ratio   = { median = 2.114, min = 0.102, max = 11.475 }   # output bytes / input bytes
+```
+
+Synthetic specimens show a loss exists; these say how often it happens. "Loses
+transparency" means something different when 2 of 39 real PNGs had any.
+
+CI rejects (**rule 14**): the block on an edge that is not `verified`;
+`ran > files`; `contradicted > ran`; an `affected` count above `ran`; an
+`affected` key the edge does not declare, or declares `preserved`; a
+`results` path that is not in the repository; and a `size_ratio` whose values
+are not positive or not ordered `min <= median <= max`.
+
+`size_ratio` is a cost, not a loss, so it lives here rather than in the loss
+vector: no property of the content says a conversion made the file larger.
+It answers the question R§18 raised when `huh clean` grew real PDFs 23x.
+
+Two rules the validator cannot check, so they live in the generator
+(`tools/real_world_blocks.py`), which writes these blocks from the results
+files rather than by hand:
+
+- **`contradicted` is optional.** Absent means no automated declared-vs-measured
+  check ran on these files, which is a different claim from zero.
+- **A property is counted only where the observation can see the declared
+  outcome.** PNG to GIF declares `alpha = degraded` (one-bit transparency); the
+  raster harness observes transparency only as present or absent, so it cannot
+  see that loss and the edge carries no `alpha` count. Writing zero there
+  would say the loss never happened. That nearly shipped.
+
 ## Coverage claims are data, not prose (rule 10)
 
 The README states the registry's size in its own words:
@@ -371,3 +442,9 @@ one in a TOML file: it is the number people repeat.
 The registry is versioned as a whole (`registry/VERSION`). Receipts pin the
 version they were planned against, because a registry update that changes a
 route silently changes a user's output (R§10.3).
+
+`registry/VERSION` is calendar-versioned, `YYYY.MM.N`: bump it when the
+registry's data changes in a way a consumer could observe (an edge, a loss
+value, a count), and record why in `dataset/CHANGELOG.md`. It is separate from
+the dataset's `schema_version`, which is semantic and changes only when the
+published JSON's shape does.

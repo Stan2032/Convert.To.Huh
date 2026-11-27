@@ -1,6 +1,6 @@
 {
-  "schema_version": "1.0.0",
-  "registry_version": "2026.08.0-alpha",
+  "schema_version": "1.2.0",
+  "registry_version": "2026.11.5",
   "license": "CC0-1.0",
   "source": "https://github.com/Stan2032/Convert.To.Huh",
   "properties": [
@@ -87,6 +87,28 @@
   ],
   "formats": [
     {
+      "id": "application/msword",
+      "name": "Microsoft Word Binary Document",
+      "kinds": [
+        "DocTree",
+        "Text"
+      ],
+      "extensions": [
+        "doc"
+      ],
+      "mime_types": [
+        "application/msword"
+      ],
+      "preserves": [
+        "text_as_text",
+        "structure",
+        "fonts",
+        "metadata"
+      ],
+      "puid": "fmt/40",
+      "puid_verified": true
+    },
+    {
       "id": "application/pdf",
       "name": "Portable Document Format",
       "kinds": [
@@ -111,6 +133,52 @@
         "precision"
       ],
       "puid": "fmt/276",
+      "puid_verified": true
+    },
+    {
+      "id": "application/vnd.ms-excel",
+      "name": "Microsoft Excel Binary Workbook",
+      "kinds": [
+        "Table",
+        "Text"
+      ],
+      "extensions": [
+        "xls"
+      ],
+      "mime_types": [
+        "application/vnd.ms-excel"
+      ],
+      "preserves": [
+        "text_as_text",
+        "precision",
+        "structure",
+        "fonts",
+        "metadata"
+      ],
+      "puid": "fmt/61",
+      "puid_verified": true
+    },
+    {
+      "id": "application/vnd.ms-powerpoint",
+      "name": "Microsoft PowerPoint Binary Presentation",
+      "kinds": [
+        "PageLayout",
+        "Text",
+        "Raster"
+      ],
+      "extensions": [
+        "ppt"
+      ],
+      "mime_types": [
+        "application/vnd.ms-powerpoint"
+      ],
+      "preserves": [
+        "text_as_text",
+        "geometry",
+        "fonts",
+        "metadata"
+      ],
+      "puid": "fmt/126",
       "puid_verified": true
     },
     {
@@ -395,6 +463,79 @@
       "puid_verified": true
     },
     {
+      "id": "video/mp4",
+      "name": "MPEG-4 Part 14 (MP4)",
+      "kinds": [
+        "VideoStream",
+        "AudioPCM"
+      ],
+      "extensions": [
+        "mp4",
+        "m4v"
+      ],
+      "mime_types": [
+        "video/mp4"
+      ],
+      "preserves": [
+        "geometry",
+        "time",
+        "signal_fidelity",
+        "audio_channels",
+        "sample_rate",
+        "metadata"
+      ],
+      "puid": "fmt/199",
+      "puid_verified": true
+    },
+    {
+      "id": "video/webm",
+      "name": "WebM",
+      "kinds": [
+        "VideoStream",
+        "AudioPCM"
+      ],
+      "extensions": [
+        "webm"
+      ],
+      "mime_types": [
+        "video/webm"
+      ],
+      "preserves": [
+        "geometry",
+        "time",
+        "signal_fidelity",
+        "audio_channels",
+        "sample_rate"
+      ],
+      "puid": "fmt/573",
+      "puid_verified": true
+    },
+    {
+      "id": "video/x-matroska",
+      "name": "Matroska",
+      "kinds": [
+        "VideoStream",
+        "AudioPCM"
+      ],
+      "extensions": [
+        "mkv"
+      ],
+      "mime_types": [
+        "video/x-matroska"
+      ],
+      "preserves": [
+        "geometry",
+        "time",
+        "signal_fidelity",
+        "audio_channels",
+        "sample_rate",
+        "bit_depth",
+        "metadata"
+      ],
+      "puid": "fmt/569",
+      "puid_verified": true
+    },
+    {
       "id": "video/x-msvideo",
       "name": "Audio Video Interleave",
       "kinds": [
@@ -433,12 +574,35 @@
       "license_verified": true
     },
     {
+      "id": "ffmpeg-gpl",
+      "name": "FFmpeg (GPL build)",
+      "version_pin": ">=6.1,<10",
+      "license": "GPL-2.0-or-later",
+      "build_profiles": [
+        "gpl"
+      ],
+      "patent_exposure": "h264-h265-mpegla",
+      "license_verified": true
+    },
+    {
       "id": "ghostscript",
       "name": "Ghostscript",
       "version_pin": ">=10.04,<11",
       "license": "AGPL-3.0-or-later",
       "build_profiles": [],
       "patent_exposure": "none",
+      "license_verified": true
+    },
+    {
+      "id": "gstreamer",
+      "name": "GStreamer",
+      "version_pin": ">=1.24,<2",
+      "license": "LGPL-2.1-or-later",
+      "build_profiles": [
+        "lgpl",
+        "gpl"
+      ],
+      "patent_exposure": "codec-dependent",
       "license_verified": true
     },
     {
@@ -467,7 +631,7 @@
     {
       "id": "libreoffice",
       "name": "LibreOffice (headless, via unoserver)",
-      "version_pin": ">=25.2,<26",
+      "version_pin": ">=24.2,<26",
       "license": "MPL-2.0",
       "build_profiles": [
         "gpl"
@@ -516,6 +680,90 @@
     }
   ],
   "edges": [
+    {
+      "from": "video/x-matroska",
+      "to": "video/mp4",
+      "from_kind": "VideoStream",
+      "to_kind": "VideoStream",
+      "engine": "ffmpeg-gpl",
+      "invocation": "ffmpeg -i IN -c:v libx264 -qp 0 OUT",
+      "operation": "Transcode",
+      "loss": {
+        "geometry": "preserved",
+        "signal_fidelity": "preserved",
+        "time": "preserved"
+      },
+      "verification": "verified",
+      "specimens": [
+        "corpus/video/reference.mkv"
+      ],
+      "measured": {
+        "engine_build": "ffmpeg 6.1.1",
+        "frames": "50 -> 50",
+        "metric": "SSIM (all planes) and PSNR vs the lossless reference",
+        "note": "Lossless H.264 (`-qp 0`): bit-exact to the FFV1 reference, at 258,442 bytes\nagainst FFV1's 382,118. The control for the GPL edges, as VP9 lossless is for\nthe LGPL ones. `-qp 0`, not `-crf 0`: only a fixed quantiser of zero is\nlossless by construction.\n",
+        "psnr_db": "inf",
+        "ssim": 1.0,
+        "tool": "tools/measure_video.py"
+      },
+      "generational": false
+    },
+    {
+      "from": "video/x-matroska",
+      "to": "video/mp4",
+      "from_kind": "VideoStream",
+      "to_kind": "VideoStream",
+      "engine": "ffmpeg-gpl",
+      "invocation": "ffmpeg -i IN -c:v libx264 -crf 23 OUT",
+      "operation": "Transcode",
+      "loss": {
+        "geometry": "preserved",
+        "signal_fidelity": "degraded",
+        "time": "preserved"
+      },
+      "verification": "verified",
+      "specimens": [
+        "corpus/video/reference.mkv"
+      ],
+      "measured": {
+        "engine_build": "ffmpeg 6.1.1",
+        "frames": "50 -> 50",
+        "metric": "SSIM (all planes) and PSNR vs the lossless reference",
+        "note": "x264's default quality (crf 23 is what `-c:v libx264` alone gives), so this\nis the H.264 conversion most people actually run. 69,109 bytes.\n",
+        "psnr_db": 42.47,
+        "ssim": 0.9935,
+        "tool": "tools/measure_video.py"
+      },
+      "generational": true
+    },
+    {
+      "from": "video/x-matroska",
+      "to": "video/mp4",
+      "from_kind": "VideoStream",
+      "to_kind": "VideoStream",
+      "engine": "ffmpeg-gpl",
+      "invocation": "ffmpeg -i IN -c:v libx265 -crf 28 OUT",
+      "operation": "Transcode",
+      "loss": {
+        "geometry": "preserved",
+        "signal_fidelity": "degraded",
+        "time": "preserved"
+      },
+      "verification": "verified",
+      "specimens": [
+        "corpus/video/reference.mkv"
+      ],
+      "measured": {
+        "engine_build": "ffmpeg 6.1.1",
+        "frames": "50 -> 50",
+        "metric": "SSIM (all planes) and PSNR vs the lossless reference",
+        "note": "x265's default quality (crf 28). ffmpeg's H.265 guide says this \"should\nvisually correspond to libx264 video at CRF 23, but result in about half the\nfile size\". On this specimen it is 70% of the size (48,540 bytes vs 69,109)\nand LOWER on both metrics (SSIM 0.9850 vs 0.9935, 38.14 vs 42.47 dB). The\ntwo defaults are not equivalent here; whether they look equivalent is a\nperceptual question neither metric answers (ADR-0014, docs/RESEARCH.md §20.2).\n",
+        "psnr_db": 38.14,
+        "ssim": 0.985,
+        "tool": "tools/measure_video.py"
+      },
+      "generational": true
+    },
     {
       "from": "audio/wav",
       "to": "audio/mpeg",
@@ -641,9 +889,93 @@
       "measured": {
         "dc_offset_counts": -0.4975,
         "engine_build": "ffmpeg 6.1.1",
-        "note": "TRUNCATES where SoX rounds, introducing exactly half an LSB of DC offset — mean\noutput 127.5025 where offset-binary u8 centres on 128 (docs/RESEARCH.md §14.6).\n\nOn this specimen the signal peaks at 1.28 counts, so half a count is 39% of peak\nand dominates the 3.8 dB SNR. On loud content the same offset is inaudible and\nthe two engines would look identical. The divergence is real and its visibility\nis entirely a property of the specimen.\n\nThe `policy = \"truncate\"` qualifier here is the whole reason ADR-0012 exists:\nthis edge and the SoX one both report bit_depth = degraded, both correctly, and\none of them shifts your audio by half a count.\n",
+        "note": "TRUNCATES where SoX rounds, introducing exactly half an LSB of DC offset — mean\noutput 127.5025 where offset-binary u8 centres on 128 (docs/RESEARCH.md §14.6).\n\nOn this specimen the signal peaks at 1.28 counts, so half a count is 39% of peak\nand dominates the 3.8 dB SNR. On loud content the same offset is inaudible and\nthe two engines would look identical. The divergence is real and its visibility\nis entirely a property of the specimen.\n\nThe `policy = \"truncate\"` qualifier here is the whole reason ADR-0012 exists:\nthis edge and the SoX one both report bit_depth = degraded, both correctly, and\none of them shifts your audio by half a count.\n\nTHE OUTLIER, CONFIRMED 2026-11-26. A third engine settled which behaviour is the\nodd one out: GStreamer 1.24.2 with dither off writes samples byte-identical to\n`sox -D` (registry/edges/gstreamer.toml). Two independent engines round; ffmpeg\ntruncates. The DC offset is now reproducible from the harness: `--dc` reports\n-0.4975 steps of 8-bit, matching the figure first found with a one-off\nhistogram script.\n",
         "snr_db": 3.76,
-        "tool": "tools/measure_audio.py --snr"
+        "tool": "tools/measure_audio.py --snr --dc"
+      },
+      "generational": true
+    },
+    {
+      "from": "video/x-matroska",
+      "to": "video/webm",
+      "from_kind": "VideoStream",
+      "to_kind": "VideoStream",
+      "engine": "ffmpeg",
+      "invocation": "ffmpeg -i IN -c:v libvpx-vp9 -lossless 1 OUT",
+      "operation": "Transcode",
+      "loss": {
+        "geometry": "preserved",
+        "signal_fidelity": "preserved",
+        "time": "preserved"
+      },
+      "verification": "verified",
+      "specimens": [
+        "corpus/video/reference.mkv"
+      ],
+      "measured": {
+        "engine_build": "ffmpeg 6.1.1",
+        "frames": "50 -> 50",
+        "metric": "SSIM (all planes) and PSNR vs the lossless reference",
+        "note": "The control for the video edges, as FLAC is for audio: VP9's lossless mode\ndecodes BIT-EXACT to the FFV1 reference (SSIM 1.0, infinite PSNR) through the\nsame harness that scores the lossy edges below. A harness that invented loss\nwould invent it here too.\n",
+        "psnr_db": "inf",
+        "ssim": 1.0,
+        "tool": "tools/measure_video.py"
+      },
+      "generational": false
+    },
+    {
+      "from": "video/x-matroska",
+      "to": "video/webm",
+      "from_kind": "VideoStream",
+      "to_kind": "VideoStream",
+      "engine": "ffmpeg",
+      "invocation": "ffmpeg -i IN -c:v libvpx-vp9 -crf 40 -b:v 0 OUT",
+      "operation": "Transcode",
+      "loss": {
+        "geometry": "preserved",
+        "signal_fidelity": "degraded",
+        "time": "preserved"
+      },
+      "verification": "verified",
+      "specimens": [
+        "corpus/video/reference.mkv"
+      ],
+      "measured": {
+        "engine_build": "ffmpeg 6.1.1",
+        "frames": "50 -> 50",
+        "metric": "SSIM (all planes) and PSNR vs the lossless reference",
+        "note": "Constant-quality VP9 (`-crf 40 -b:v 0`). Every frame kept, size and rate\nunchanged; the loss is in the signal alone. ADR-0014 requires naming the\nmetric because video metrics disagree: both SSIM and PSNR are recorded.\n",
+        "psnr_db": 41.04,
+        "ssim": 0.9916,
+        "tool": "tools/measure_video.py"
+      },
+      "generational": true
+    },
+    {
+      "from": "video/x-matroska",
+      "to": "video/mp4",
+      "from_kind": "VideoStream",
+      "to_kind": "VideoStream",
+      "engine": "ffmpeg",
+      "invocation": "ffmpeg -i IN -c:v mpeg4 -q:v 8 OUT",
+      "operation": "Transcode",
+      "loss": {
+        "geometry": "preserved",
+        "signal_fidelity": "degraded",
+        "time": "preserved"
+      },
+      "verification": "verified",
+      "specimens": [
+        "corpus/video/reference.mkv"
+      ],
+      "measured": {
+        "engine_build": "ffmpeg 6.1.1",
+        "frames": "50 -> 50",
+        "metric": "SSIM (all planes) and PSNR vs the lossless reference",
+        "note": "MPEG-4 Part 2 (the native `mpeg4` encoder, LGPL) at fixed quantiser 8.\nLower fidelity than VP9 above on both metrics, as a 1999 codec should be.\n",
+        "psnr_db": 37.72,
+        "ssim": 0.9782,
+        "tool": "tools/measure_video.py"
       },
       "generational": true
     },
@@ -673,10 +1005,27 @@
       "measured": {
         "bytes": 22882,
         "engine_build": "vips-8.15.1",
-        "note": "ERROR DIFFUSION, and the outlier again — three times the retained texture of the\nother two engines and 67% more bytes. libvips was also the odd one out on alpha\nflattening (ADR-0012), which is worth noting and not yet worth generalising from.\n\nThe SSIM here (0.9065) is LOWER than image-rs (0.9105) despite dithering being\ngenerally preferred by human viewers. Fidelity scores cannot detect dithering —\nall three engines land within 0.03 — so the policy is the only field that\ndistinguishes them. See §15.3.\n",
+        "note": "ERROR DIFFUSION, and the outlier again — three times the retained texture of the\nother two engines and 67% more bytes. libvips was also the odd one out on alpha\nflattening (ADR-0012), which is worth noting and not yet worth generalising from.\n\nThe SSIM here (0.9065) is LOWER than image-rs (0.9105) despite dithering being\ngenerally preferred by human viewers. Fidelity scores cannot detect dithering —\nall three engines land within 0.03 — so the policy is the only field that\ndistinguishes them. See §15.3.\n\n255-COLOUR CAP, found 2026-11-26 on Govdocs1 (docs/RESEARCH.md §18.3).\nlibvips keeps at most 255 palette colours where GIF allows 256, so an image\nwith EXACTLY 256 colours, which fits a GIF palette with nothing lost, is\nquantised anyway. On four real PNGs with exactly 256 colours the result had\n203-238; image-rs and ImageMagick kept all 256. That is why the real_world\ncount below (15 of 39) exceeds the 11 real PNGs with more than 256 colours,\nwhere every engine must reduce. Reproduce with corpus/raster/palette-256.png\n(libvips gives 254); the test\n`a_full_256_colour_palette_survives_image_rs_but_not_libvips_gifsave` pins it.\n",
         "ssim": 0.9065,
         "texture_retained": 0.58,
         "tool": "core/examples/gif_dither.rs"
+      },
+      "real_world": {
+        "corpus": "govdocs1",
+        "files": 39,
+        "ran": 39,
+        "contradicted": 0,
+        "affected": {
+          "alpha": 1,
+          "color_depth": 15,
+          "metadata": 6
+        },
+        "results": "corpus/govdocs1/edges.json",
+        "size_ratio": {
+          "median": 1.066,
+          "min": 0.416,
+          "max": 2.32
+        }
       },
       "generational": true
     },
@@ -693,7 +1042,7 @@
         "color_depth": "lost",
         "color_profile": "lost",
         "geometry": "preserved",
-        "metadata": "lost",
+        "metadata": "degraded",
         "signal_fidelity": "degraded"
       },
       "loss_policy": {
@@ -701,18 +1050,193 @@
       },
       "verification": "verified",
       "specimens": [
-        "corpus/raster/rgb-photo.png"
+        "corpus/raster/rgb-photo.png",
+        "corpus/raster/png-with-passengers.png"
       ],
       "measured": {
         "bytes": 14774,
         "engine_build": "ImageMagick 6.9.12",
-        "note": "Nearest-palette, siding with image-rs against libvips two-to-one — the same\nsplit as alpha flattening. Uses 252 colours where the others use 255; the\nthree-colour difference is unexplained and not worth chasing until it matters.\n",
+        "note": "Nearest-palette, siding with image-rs against libvips two-to-one — the same\nsplit as alpha flattening. Uses 252 colours where the others use 255; the\nthree-colour difference is unexplained and not worth chasing until it matters.\n\nMETADATA CORRECTED 2026-11-26, from `lost` to `degraded` (docs/RESEARCH.md\n§18.5). ImageMagick carries a PNG's COMMENT text into the GIF's comment\nextension and drops the rest. On the committed specimen\npng-with-passengers.png, the comment \"internal-doc-id-88213-do-not-share\"\nsurvives while `Author` does not; on 6 real Govdocs1 PNGs with metadata, the\ncomment survived in 4. libvips and image-rs carry neither. For anyone using\nthis conversion to strip a file before sharing it, that is the difference\nthat matters. Pinned by `imagemagick_carries_png_comments_into_gif`.\n\nREAL-WORLD DEFECT, found 2026-11-26 on Govdocs1 (docs/RESEARCH.md §18.1). A PNG\ncarrying an `oFFs` page offset comes out as a GIF whose frame sits AT that\noffset while the logical screen stays the image's own size, so the frame lies\noutside the visible area. 2 of 39 real PNGs (303329, 189036); a negative offset\nis clamped to 0 and is harmless. Decoders then disagree about the same file:\n\n  image-rs     117x64, all black\n  libvips      226x183, canvas enlarged to hold the frame\n  ffmpeg       refuses: \"Invalid top position: 119\"\n  ImageMagick  reads it back intact\n\nlibvips `gifsave` and image-rs write the frame at (0, 0). Reproduce with\n`corpus/raster/png-with-offset.png`; the test\n`imagemagick_moves_an_offset_png_outside_the_gif_screen` pins the behaviour.\n\nNo tracked property records this. `geometry` is resolution, which is\nunchanged; the pixels survive; the loss is where they are placed. Noted here\nrather than forced into a property that means something else.\n",
         "palette_size": 252,
         "ssim": 0.8799,
         "texture_retained": 0.2,
-        "tool": "core/examples/gif_dither.rs"
+        "tool": "core/examples/gif_dither.rs; core/examples/real_edges.rs for metadata"
+      },
+      "real_world": {
+        "corpus": "govdocs1",
+        "files": 39,
+        "ran": 39,
+        "contradicted": 0,
+        "affected": {
+          "alpha": 1,
+          "color_depth": 12,
+          "metadata": 3
+        },
+        "results": "corpus/govdocs1/edges.json",
+        "size_ratio": {
+          "median": 1.1,
+          "min": 0.379,
+          "max": 2.321
+        }
       },
       "generational": true
+    },
+    {
+      "from": "audio/wav",
+      "to": "audio/wav",
+      "from_kind": "AudioPCM",
+      "to_kind": "AudioPCM",
+      "engine": "gstreamer",
+      "invocation": "gst-launch-1.0 filesrc location=IN ! wavparse ! audioconvert ! audio/x-raw,format=U8 ! wavenc ! filesink location=OUT",
+      "operation": "Transform",
+      "loss": {
+        "audio_channels": "preserved",
+        "bit_depth": "degraded",
+        "metadata": "lost",
+        "sample_rate": "preserved",
+        "signal_fidelity": "degraded",
+        "time": "preserved"
+      },
+      "loss_policy": {
+        "bit_depth": "round"
+      },
+      "verification": "verified",
+      "specimens": [
+        "corpus/audio/quiet-mono.wav"
+      ],
+      "measured": {
+        "dc_offset_counts": 0.0018,
+        "engine_build": "GStreamer 1.24.2",
+        "note": "Default `audioconvert` behaviour: TPDF dither, then ROUND to nearest. The output\nstays centred on 128 (+0.0018 steps), where ffmpeg's sits half a step low.\n\n5.12 dB sits beside SoX's dithered 5.09 to 5.16 dB. Unlike SoX the dither is\ndeterministic: three runs gave 5.12 dB each time, so this figure reproduces\nexactly, where SoX's dithered figure moves in the second decimal place.\n",
+        "snr_db": 5.12,
+        "tool": "tools/measure_audio.py --snr --dc"
+      },
+      "generational": true
+    },
+    {
+      "from": "audio/wav",
+      "to": "audio/wav",
+      "from_kind": "AudioPCM",
+      "to_kind": "AudioPCM",
+      "engine": "gstreamer",
+      "invocation": "gst-launch-1.0 filesrc location=IN ! wavparse ! audioconvert dithering=none ! audio/x-raw,format=U8 ! wavenc ! filesink location=OUT",
+      "operation": "Transform",
+      "loss": {
+        "audio_channels": "preserved",
+        "bit_depth": "degraded",
+        "metadata": "lost",
+        "sample_rate": "preserved",
+        "signal_fidelity": "degraded",
+        "time": "preserved"
+      },
+      "loss_policy": {
+        "bit_depth": "round"
+      },
+      "verification": "verified",
+      "specimens": [
+        "corpus/audio/quiet-mono.wav"
+      ],
+      "measured": {
+        "dc_offset_counts": 0.0014,
+        "engine_build": "GStreamer 1.24.2",
+        "note": "THE TIE-BREAKER. With dither off, GStreamer's 8-bit samples are BYTE-IDENTICAL\nto `sox -D`'s on the same specimen: same 11.11 dB, same +0.0014-step offset,\nsame histogram (129: 16,420 · 127: 16,360 · 128: 11,320).\n\nSo two independent engines round to nearest and one truncates. `truncate` is\nffmpeg's behaviour, not a convention, which is the same shape as the alpha\nfinding (§13.4): two engines agreeing and one differing, where only a third\nengine could say which one was the outlier.\n",
+        "snr_db": 11.11,
+        "tool": "tools/measure_audio.py --snr --dc"
+      },
+      "generational": true
+    },
+    {
+      "from": "audio/wav",
+      "to": "audio/wav",
+      "from_kind": "AudioPCM",
+      "to_kind": "AudioPCM",
+      "engine": "gstreamer",
+      "invocation": "gst-launch-1.0 filesrc location=IN ! wavparse ! audioconvert ! audio/x-raw,channels=1 ! wavenc ! filesink location=OUT",
+      "operation": "Transform",
+      "loss": {
+        "audio_channels": "lost",
+        "bit_depth": "preserved",
+        "metadata": "lost",
+        "sample_rate": "preserved",
+        "signal_fidelity": "degraded",
+        "time": "preserved"
+      },
+      "loss_policy": {
+        "audio_channels": "downmix_average"
+      },
+      "verification": "verified",
+      "specimens": [
+        "corpus/audio/stereo-distinct.wav"
+      ],
+      "measured": {
+        "channels": "2 -> 1",
+        "engine_build": "GStreamer 1.24.2",
+        "left_440hz_retained": 0.25,
+        "note": "THIRD ENGINE, SAME ANSWER. The left channel's 440 Hz tone comes back at 0.2500\nof its power, which is what averaging predicts, and the samples are\nbit-identical to `ffmpeg -ac 1` (SoX already matched ffmpeg): run\n`tools/measure_audio.py FFMPEG_MONO.wav GST_MONO.wav --snr` and it reports an\ninfinite SNR. Three independent\nengines average, so `downmix_average` is a convention rather than a habit.\n\nThat answers the caution recorded on the ffmpeg downmix edge, that two engines\nagreeing is how the alpha investigation started before a third one differed.\nHere the third one agreed.\n",
+        "snr_vs_ffmpeg": "infinite (bit-identical)",
+        "tool": "tools/measure_audio.py --bands 440"
+      },
+      "generational": false
+    },
+    {
+      "from": "audio/wav",
+      "to": "audio/flac",
+      "from_kind": "AudioPCM",
+      "to_kind": "AudioPCM",
+      "engine": "gstreamer",
+      "invocation": "gst-launch-1.0 filesrc location=IN ! wavparse ! audioconvert ! flacenc ! filesink location=OUT",
+      "operation": "Transcode",
+      "loss": {
+        "audio_channels": "preserved",
+        "bit_depth": "preserved",
+        "metadata": "lost",
+        "sample_rate": "preserved",
+        "signal_fidelity": "preserved",
+        "time": "preserved"
+      },
+      "verification": "verified",
+      "specimens": [
+        "corpus/audio/highfreq-mono.wav",
+        "corpus/audio/broadband-mono.wav",
+        "corpus/audio/transient-mono.wav",
+        "corpus/audio/stereo-distinct.wav"
+      ],
+      "measured": {
+        "all_octaves_retained": 1.0,
+        "engine_build": "GStreamer 1.24.2",
+        "note": "Lossless, as FLAC must be. Recorded because it is the control for this engine:\nthe harness reads 1.0000 in every octave band through GStreamer's pipeline as\nwell as ffmpeg's, so the GStreamer measurements above are about the\nconversions, not about the harness meeting a new decode path.\n",
+        "snr_db": "infinite (bit-identical)",
+        "tool": "tools/measure_audio.py --broadband --snr"
+      },
+      "generational": false
+    },
+    {
+      "from": "video/x-matroska",
+      "to": "video/webm",
+      "from_kind": "VideoStream",
+      "to_kind": "VideoStream",
+      "engine": "gstreamer",
+      "invocation": "gst-launch-1.0 filesrc location=IN ! decodebin ! videoconvert ! vp9enc min-quantizer=0 max-quantizer=0 ! webmmux ! filesink location=OUT",
+      "operation": "Transcode",
+      "loss": {
+        "geometry": "preserved",
+        "signal_fidelity": "preserved",
+        "time": "degraded"
+      },
+      "verification": "verified",
+      "specimens": [
+        "corpus/video/reference.mkv"
+      ],
+      "measured": {
+        "engine_build": "GStreamer 1.24.2",
+        "frames": "50 -> 49 in 9 of 10 runs; 50 -> 50 in 1",
+        "metric": "SSIM (all planes) and PSNR over frames present in both streams; decoded frame count",
+        "note": "INTERMITTENTLY DROPS THE LAST FRAME. Ten runs: nine wrote 49 frames (1.96 s\nof a 2.00 s clip), one wrote all 50. Every frame that IS written decodes\nbit-exact to the FFV1 reference (SSIM 1.0, infinite PSNR), so the loss is in\n`time` alone. libvpx's VP9 encoder is lossless at quantiser 0; vp9enc has no\n`lossless` property, and pinning min- and max-quantizer to 0 reaches it.\n\nCause, isolated stage by stage (10 runs each): demux alone, and FFV1 decode\nalone, always pass 50 frames; the full chain loses the last one only with the\ndecoder multithreaded, and never with `avdec_ffv1 max-threads=1` (5 of 5 runs\ngave 50 bit-exact frames, agreeing with ffmpeg's VP9 lossless edge). The\ndecoder finishes its last frame after EOS has already been handled when a slow\nelement sits downstream. Reported upstream in 2016 as GNOME bug 774190\n(\"avdec_ffv1: When using multiple threads decoder doesn't wait until all\nthreads finish\"), closed RESOLVED INCOMPLETE; present in gst-libav 1.24.1.\n\n`time = \"degraded\"`, not `preserved`, because a planner must assume the run\nit gets is one of the nine.\n",
+        "psnr_db": "inf",
+        "ssim": 1.0,
+        "tool": "tools/measure_video.py"
+      },
+      "generational": false
     },
     {
       "from": "image/png",
@@ -749,6 +1273,23 @@
         "ssim_min": 0.995,
         "tool": "tools/verify_edges.sh 85"
       },
+      "real_world": {
+        "corpus": "govdocs1",
+        "files": 39,
+        "ran": 39,
+        "contradicted": 0,
+        "affected": {
+          "alpha": 2,
+          "color_depth": 0,
+          "metadata": 6
+        },
+        "results": "corpus/govdocs1/edges.json",
+        "size_ratio": {
+          "median": 3.692,
+          "min": 0.188,
+          "max": 15.593
+        }
+      },
       "generational": true
     },
     {
@@ -773,6 +1314,21 @@
         "specimens": 1,
         "ssim_mean": 1.0,
         "tool": "round-trip via tools/verify_edges.sh"
+      },
+      "real_world": {
+        "corpus": "govdocs1",
+        "files": 40,
+        "ran": 40,
+        "contradicted": 0,
+        "affected": {
+          "metadata": 20
+        },
+        "results": "corpus/govdocs1/edges.json",
+        "size_ratio": {
+          "median": 5.498,
+          "min": 1.412,
+          "max": 12.48
+        }
       },
       "generational": false
     },
@@ -804,6 +1360,21 @@
         "ssim_min": 1.0,
         "tool": "cargo run --example probe_edges"
       },
+      "real_world": {
+        "corpus": "govdocs1",
+        "files": 39,
+        "ran": 39,
+        "contradicted": 0,
+        "affected": {
+          "metadata": 6
+        },
+        "results": "corpus/govdocs1/edges.json",
+        "size_ratio": {
+          "median": 25.482,
+          "min": 1.36,
+          "max": 209.771
+        }
+      },
       "generational": false
     },
     {
@@ -833,6 +1404,22 @@
         "ssim_mean": 1.0,
         "ssim_min": 1.0,
         "tool": "cargo run --example probe_edges"
+      },
+      "real_world": {
+        "corpus": "govdocs1",
+        "files": 39,
+        "ran": 39,
+        "contradicted": 0,
+        "affected": {
+          "color_depth": 0,
+          "metadata": 6
+        },
+        "results": "corpus/govdocs1/edges.json",
+        "size_ratio": {
+          "median": 1.205,
+          "min": 0.777,
+          "max": 2.891
+        }
       },
       "generational": false
     },
@@ -868,6 +1455,23 @@
         "texture_retained": 0.17,
         "tool": "cargo run --example probe_edges; core/examples/gif_dither.rs"
       },
+      "real_world": {
+        "corpus": "govdocs1",
+        "files": 39,
+        "ran": 39,
+        "contradicted": 0,
+        "affected": {
+          "alpha": 1,
+          "color_depth": 11,
+          "metadata": 6
+        },
+        "results": "corpus/govdocs1/edges.json",
+        "size_ratio": {
+          "median": 1.065,
+          "min": 0.358,
+          "max": 2.315
+        }
+      },
       "generational": false
     },
     {
@@ -898,6 +1502,22 @@
         "ssim_min": 1.0,
         "tool": "cargo run --example probe_edges"
       },
+      "real_world": {
+        "corpus": "govdocs1",
+        "files": 39,
+        "ran": 39,
+        "contradicted": 0,
+        "affected": {
+          "color_depth": 0,
+          "metadata": 6
+        },
+        "results": "corpus/govdocs1/edges.json",
+        "size_ratio": {
+          "median": 25.536,
+          "min": 1.362,
+          "max": 209.746
+        }
+      },
       "generational": false
     },
     {
@@ -922,6 +1542,21 @@
         "specimens": 1,
         "ssim_mean": 1.0,
         "tool": "cargo run --example probe_edges (reverse direction)"
+      },
+      "real_world": {
+        "corpus": "govdocs1",
+        "files": 27,
+        "ran": 27,
+        "contradicted": 0,
+        "affected": {
+          "metadata": 3
+        },
+        "results": "corpus/govdocs1/edges.json",
+        "size_ratio": {
+          "median": 3.327,
+          "min": 0.703,
+          "max": 7.843
+        }
       },
       "generational": false
     },
@@ -1004,6 +1639,135 @@
       "generational": false
     },
     {
+      "from": "application/msword",
+      "to": "application/pdf",
+      "from_kind": "DocTree",
+      "to_kind": "PageLayout",
+      "engine": "libreoffice",
+      "invocation": "soffice --headless --convert-to pdf --outdir OUTDIR IN",
+      "operation": "Project",
+      "loss": {
+        "fonts": "degraded",
+        "text_as_text": "preserved"
+      },
+      "verification": "verified",
+      "specimens": [
+        "corpus/office/report.doc"
+      ],
+      "measured": {
+        "engine_build": "LibreOffice 24.2.7.2",
+        "note": "Text survives: every word of the synthetic specimen, and a median 99.7% of\ndistinct words across 20 real Govdocs1 documents (catdoc as reference).\n\nNo real document kept a font it asked for: Arial and Times New Roman became\nLiberation Sans and Serif (metric compatible), others DejaVu or Inter. See the\nFONTS note at the top of this file before reading that as an engine property.\n\ncatdoc prints hidden table-of-contents bookmark ids (_Toc...), so `.doc`\nnumber recall is not a precision measurement and is not recorded here.\n",
+        "real_files": 20,
+        "real_requested_font_kept": 0,
+        "real_word_recall_median": 0.9967,
+        "real_word_recall_min": 0.9682,
+        "tool": "tools/measure_office.py",
+        "word_recall": 1.0
+      },
+      "real_world": {
+        "corpus": "govdocs1",
+        "files": 20,
+        "ran": 20,
+        "affected": {
+          "fonts": 20
+        },
+        "results": "corpus/govdocs1/office.json",
+        "size_ratio": {
+          "median": 1.335,
+          "min": 0.391,
+          "max": 2.44
+        }
+      },
+      "generational": false
+    },
+    {
+      "from": "application/vnd.ms-excel",
+      "to": "application/pdf",
+      "from_kind": "Table",
+      "to_kind": "PageLayout",
+      "engine": "libreoffice",
+      "invocation": "soffice --headless --convert-to pdf --outdir OUTDIR IN",
+      "operation": "Project",
+      "loss": {
+        "fonts": "degraded",
+        "precision": "degraded",
+        "text_as_text": "degraded"
+      },
+      "verification": "verified",
+      "specimens": [
+        "corpus/office/figures.xls"
+      ],
+      "measured": {
+        "engine_build": "LibreOffice 24.2.7.2",
+        "note": "A PDF of a spreadsheet keeps what was DISPLAYED, not what was stored.\n\nprecision: the specimen stores 25 values to full double precision and displays\ntwo decimals; none of the stored values survives (0.0). On 16 real\nspreadsheets with enough numbers to measure, a median 97.6% of distinct values\nsurvive exactly, worst 25%: most real spreadsheets display what they store,\nsome do not. Inherent to printing a spreadsheet, not a LibreOffice defect.\n\ntext_as_text: a long text cell beside a filled one is CLIPPED at the\nneighbour's edge. The specimen's glossary cell loses every word after\n\"Glossary: turb\", and those are exactly its missing words (0.67 recall). The\nsame happens on real files: the worst, 490684.xls at 0.70, is a glossary cell.\n\nTwo real .xls files are Excel 4.0 worksheets (BIFF4, no OLE2 container) and\nxls2csv reads nothing from them, so they are not in the real-file figures.\n",
+        "number_recall": 0.0,
+        "real_files": 18,
+        "real_number_recall_median": 0.9758,
+        "real_number_recall_min": 0.251,
+        "real_word_recall_median": 0.9834,
+        "real_word_recall_min": 0.7005,
+        "tool": "tools/measure_office.py",
+        "word_recall": 0.6744
+      },
+      "real_world": {
+        "corpus": "govdocs1",
+        "files": 20,
+        "ran": 20,
+        "affected": {
+          "fonts": 20,
+          "precision": 11
+        },
+        "results": "corpus/govdocs1/office.json",
+        "size_ratio": {
+          "median": 1.368,
+          "min": 0.417,
+          "max": 4.015
+        }
+      },
+      "generational": false
+    },
+    {
+      "from": "application/vnd.ms-powerpoint",
+      "to": "application/pdf",
+      "from_kind": "PageLayout",
+      "to_kind": "PageLayout",
+      "engine": "libreoffice",
+      "invocation": "soffice --headless --convert-to pdf --outdir OUTDIR IN",
+      "operation": "Transcode",
+      "loss": {
+        "fonts": "degraded",
+        "text_as_text": "preserved"
+      },
+      "verification": "verified",
+      "specimens": [
+        "corpus/office/slides.ppt"
+      ],
+      "measured": {
+        "engine_build": "LibreOffice 24.2.7.2",
+        "note": "Slides survive; speaker notes do not, by default (they need the\nExportNotesPages filter option, which is a different invocation).\n\nThe real-file minimum, 300839.ppt at 0.77, is UNRESOLVED: the missing text is\nin the raw file but in neither the slides, the notes, the hidden slides nor\nLibreOffice's own model of the presentation. Possibly PowerPoint fast-save\nresidue, which a PDF should drop. Telling the cases apart needs PowerPoint.\n\ncatppt repeats slide text, which made the first word-recall figures read as\nlow as 0.11 on faithful PDFs; recall is over distinct words (§19).\n",
+        "real_files": 18,
+        "real_word_recall_median": 0.99,
+        "real_word_recall_min": 0.7677,
+        "tool": "tools/measure_office.py",
+        "word_recall": 1.0
+      },
+      "real_world": {
+        "corpus": "govdocs1",
+        "files": 20,
+        "ran": 20,
+        "affected": {
+          "fonts": 20
+        },
+        "results": "corpus/govdocs1/office.json",
+        "size_ratio": {
+          "median": 0.678,
+          "min": 0.133,
+          "max": 7.079
+        }
+      },
+      "generational": false
+    },
+    {
       "from": "image/png",
       "to": "image/jpeg",
       "from_kind": "Raster",
@@ -1039,6 +1803,23 @@
         "ssim_opaque": 0.9933,
         "tool": "core/examples/cross_engine.rs"
       },
+      "real_world": {
+        "corpus": "govdocs1",
+        "files": 39,
+        "ran": 39,
+        "contradicted": 0,
+        "affected": {
+          "alpha": 2,
+          "color_depth": 0,
+          "metadata": 6
+        },
+        "results": "corpus/govdocs1/edges.json",
+        "size_ratio": {
+          "median": 2.114,
+          "min": 0.102,
+          "max": 11.475
+        }
+      },
       "generational": true
     },
     {
@@ -1071,6 +1852,22 @@
         "ssim_photo": 0.8362,
         "tool": "core/examples/libvips_edges.rs; vipsheader for the depth check"
       },
+      "real_world": {
+        "corpus": "govdocs1",
+        "files": 39,
+        "ran": 39,
+        "contradicted": 0,
+        "affected": {
+          "color_depth": 0,
+          "metadata": 6
+        },
+        "results": "corpus/govdocs1/edges.json",
+        "size_ratio": {
+          "median": 1.207,
+          "min": 0.077,
+          "max": 4.12
+        }
+      },
       "generational": true
     },
     {
@@ -1099,6 +1896,21 @@
         "note": "Lossless on every specimen, alpha intact. Uncompressed by default and correspondingly large — 110,830 bytes for a 94,487-byte PNG.",
         "ssim": 1.0,
         "tool": "core/examples/libvips_edges.rs"
+      },
+      "real_world": {
+        "corpus": "govdocs1",
+        "files": 39,
+        "ran": 39,
+        "contradicted": 0,
+        "affected": {
+          "metadata": 6
+        },
+        "results": "corpus/govdocs1/edges.json",
+        "size_ratio": {
+          "median": 25.488,
+          "min": 1.36,
+          "max": 209.778
+        }
       },
       "generational": false
     },
@@ -1134,6 +1946,22 @@
         "ssim_16bit_input": 0.9997,
         "tool": "core/examples/libvips_flags.rs"
       },
+      "real_world": {
+        "corpus": "govdocs1",
+        "files": 39,
+        "ran": 39,
+        "contradicted": 0,
+        "affected": {
+          "color_depth": 0,
+          "metadata": 6
+        },
+        "results": "corpus/govdocs1/edges.json",
+        "size_ratio": {
+          "median": 0.769,
+          "min": 0.438,
+          "max": 0.918
+        }
+      },
       "generational": false
     },
     {
@@ -1168,6 +1996,23 @@
         "ssim_alpha": 0.9855,
         "ssim_opaque": 0.9933,
         "tool": "core/examples/libvips_flags.rs"
+      },
+      "real_world": {
+        "corpus": "govdocs1",
+        "files": 39,
+        "ran": 39,
+        "contradicted": 0,
+        "affected": {
+          "alpha": 2,
+          "color_depth": 0,
+          "metadata": 6
+        },
+        "results": "corpus/govdocs1/edges.json",
+        "size_ratio": {
+          "median": 2.114,
+          "min": 0.102,
+          "max": 11.475
+        }
       },
       "generational": true
     },
@@ -1228,10 +2073,10 @@
       ],
       "measured": {
         "engine_build": "SoX v14.4.2",
-        "note": "DISAGREES WITH FFMPEG, and not only because of dither.\n\n  ffmpeg default            3.8 dB\n  ffmpeg -dither_method 0   3.8 dB   (flag had no visible effect)\n  sox default               5.2 dB\n  sox -D (dither disabled) 11.1 dB\n\nDither explains sox's own 5.9 dB spread — it trades SNR for the removal of\ncorrelated distortion, which is the intended bargain. It does NOT explain the\n7.3 dB gap between sox -D and ffmpeg. That cause is UNKNOWN and deliberately not\nguessed at; see docs/RESEARCH.md §14.5.\n\nThe consequence for the schema is clear even though the cause is not:\n`bit_depth = degraded` is under-specified in exactly the way `alpha = lost` was\nbefore ADR-0012. It needs a policy vocabulary — `dither`, `truncate`, `round`\nare the obvious candidates — and that vocabulary should not be written until\nsomeone can explain the remaining gap, or it will encode a guess.\n\nSpecimen note: measured on QUIET content, where 8-bit quantisation is\ncatastrophic. The same conversion on loud content scores around 50 dB and the\nengines would look identical. A property is only measurable on a specimen that\nexercises it.\n",
+        "note": "DISAGREES WITH FFMPEG, and not only because of dither.\n\n  ffmpeg default            3.8 dB\n  ffmpeg -dither_method 0   3.8 dB   (flag had no visible effect)\n  sox default               5.2 dB\n  sox -D (dither disabled) 11.1 dB\n\nDither explains sox's own 5.9 dB spread — it trades SNR for the removal of\ncorrelated distortion, which is the intended bargain. It does NOT explain the\n7.3 dB gap between sox -D and ffmpeg. That cause is UNKNOWN and deliberately not\nguessed at; see docs/RESEARCH.md §14.5.\n\nThe consequence for the schema is clear even though the cause is not:\n`bit_depth = degraded` is under-specified in exactly the way `alpha = lost` was\nbefore ADR-0012. It needs a policy vocabulary — `dither`, `truncate`, `round`\nare the obvious candidates — and that vocabulary should not be written until\nsomeone can explain the remaining gap, or it will encode a guess.\n\nRESOLVED (this paragraph and the two above are kept as the record): the gap\nwas rounding versus truncation, §14.6, and `policy = \"round\"` now says so. A\nthird engine, GStreamer, rounds as well and with dither off produces samples\nbyte-identical to `sox -D` (§14.7). Re-measured 2026-11-26 with `--dc`: `sox -D`\nreads +0.0014 steps, centred. The dithered SNR moves run to run (5.09 to 5.16 dB\nacross four runs) because SoX's dither is random; 5.09 is one run, not a\nconstant.\n\nSpecimen note: measured on QUIET content, where 8-bit quantisation is\ncatastrophic. The same conversion on loud content scores around 50 dB and the\nengines would look identical. A property is only measurable on a specimen that\nexercises it.\n",
         "snr_db": 5.09,
         "snr_db_nodither": 11.11,
-        "tool": "tools/measure_audio.py --snr"
+        "tool": "tools/measure_audio.py --snr --dc"
       },
       "generational": true
     },
@@ -1256,10 +2101,10 @@
     }
   ],
   "counts": {
-    "formats": 14,
-    "engines": 8,
-    "edges_total": 24,
-    "edges_verified": 23,
+    "formats": 20,
+    "engines": 10,
+    "edges_total": 38,
+    "edges_verified": 37,
     "edges_claimed": 1,
     "edges_refuted": 0
   }

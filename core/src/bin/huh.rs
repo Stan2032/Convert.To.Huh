@@ -25,7 +25,7 @@ fn usage() -> ExitCode {
         "huh — a planner over a typed conversion graph\n\n\
          USAGE:\n  \
            huh detect <file>\n  \
-           huh plan <from> <to> [-k N] [--allow-unverified] [--profile lgpl|gpl]\n  \
+           huh plan <from> <to> [-k N] [--allow-unverified] [--profile lgpl|gpl] [--prefer prop=policy]\n  \
            huh suggest <file> [--allow-unverified]   what can this become, and what does each cost?\n  \
            huh convert <in> <out> [--quality 1-100] [--allow-unverified] [--receipt out.json]\n  \
            huh clean <in> <out> [--dpi N] [--report r.json]   detect, rebuild, report\n  \
@@ -45,9 +45,16 @@ fn opt(args: &[String], name: &str) -> Option<String> {
 }
 
 fn policy_from(args: &[String]) -> planner::Policy {
+    // `--prefer alpha=composite_white`, repeatable: rank routes whose policy
+    // for that property matches above those whose policy differs (ADR-0012).
+    let prefer = args.windows(2)
+        .filter(|w| w[0] == "--prefer")
+        .filter_map(|w| w[1].split_once('=').map(|(k, v)| (k.to_string(), v.to_string())))
+        .collect();
     planner::Policy {
         build_profile: opt(args, "--profile").unwrap_or_else(|| "lgpl".into()),
         allow_unverified: flag(args, "--allow-unverified"),
+        prefer,
     }
 }
 
@@ -106,7 +113,8 @@ fn main() -> ExitCode {
                 for (i, pl) in plans.iter().enumerate() {
                     eprintln!("  [{}] {}", i + 1, pl.intent_label());
                     eprintln!("      route: {}", pl.hops.iter()
-                        .map(|h| h.to.clone()).collect::<Vec<_>>().join(" -> "));
+                        .map(|h| format!("{} --{}--> {}", h.from, h.engine, h.to))
+                        .collect::<Vec<_>>().join("  |  "));
                     eprintln!("      cost:  {:.2}", pl.totals.cost);
                     eprintln!("      {}\n", pl.rationale);
                 }
@@ -160,11 +168,27 @@ fn main() -> ExitCode {
             let pol = policy_from(&args);
             let pl = planner::Planner::new(&reg, &pol);
             let Some(plan) = pl.plan(&d.format, &target) else {
-                eprintln!(
-                    "refused: no route from {} to {target}. Try --allow-unverified \
-                     if you are probing a new edge.",
-                    d.format
-                );
+                // Say WHY when the route exists but is legally out of reach
+                // under this profile (ADR-0007), rather than implying none does.
+                let other = ["lgpl", "gpl"].into_iter()
+                    .filter(|p| *p != pol.build_profile)
+                    .find(|p| {
+                        let alt = planner::Policy { build_profile: (*p).into(), ..policy_from(&args) };
+                        planner::Planner::new(&reg, &alt).plan(&d.format, &target).is_some()
+                    });
+                match other {
+                    Some(p) => eprintln!(
+                        "refused: no route from {} to {target} under the `{}` build profile. \
+                         One exists under `{p}` (--profile {p}); it uses an engine that \
+                         profile allows and this one does not (ADR-0007).",
+                        d.format, pol.build_profile
+                    ),
+                    None => eprintln!(
+                        "refused: no route from {} to {target}. Try --allow-unverified \
+                         if you are probing a new edge.",
+                        d.format
+                    ),
+                }
                 return ExitCode::from(3);
             };
 
@@ -192,6 +216,9 @@ fn main() -> ExitCode {
                     );
                     if let Some(s) = receipt.ssim {
                         eprintln!("SSIM vs original: {s:.4}");
+                    }
+                    if let Some(why) = &receipt.unmeasured {
+                        eprintln!("not measured: {why}");
                     }
                     let bad: Vec<_> = receipt.measurements.iter().filter(|m| m.contradicts).collect();
                     for m in &receipt.measurements {
@@ -378,7 +405,7 @@ fn main() -> ExitCode {
                 let pol = planner::Policy { build_profile: pol_name.into(), ..Default::default() };
                 let verified = planner::Planner::new(&reg, &pol).eligible_count();
                 let pol_all = planner::Policy {
-                    build_profile: pol_name.into(), allow_unverified: true
+                    build_profile: pol_name.into(), allow_unverified: true, ..Default::default()
                 };
                 let all = planner::Planner::new(&reg, &pol_all).eligible_count();
                 println!("  profile {pol_name:<5} {verified} verified edges eligible, {all} including unverified");

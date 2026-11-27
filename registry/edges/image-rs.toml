@@ -61,6 +61,15 @@ And gray16.jpg came out at 197.9% of its PNG input — the JPEG is LARGER. A
 to the worst case for JPEG's DCT. "Convert to JPEG to save space" is not a law
 of nature, and the planner has no cost term that knows this yet."""
 
+[edge.verification.real_world]
+corpus       = "govdocs1"
+files        = 39
+ran          = 39
+contradicted = 0
+affected     = { alpha = 2, color_depth = 0, metadata = 6 }
+results      = "corpus/govdocs1/edges.json"
+size_ratio   = { median = 3.692, min = 0.188, max = 15.593 }
+
 
 [[edge]]
 engine    = "image-rs"
@@ -114,6 +123,16 @@ not bring the transparency back."""
 # GIF -> JPEG route through it rather than needing their own edge.
 # ---------------------------------------------------------------------------
 
+[edge.verification.real_world]
+corpus       = "govdocs1"
+files        = 40
+ran          = 40
+contradicted = 0
+affected     = { metadata = 20 }
+results      = "corpus/govdocs1/edges.json"
+size_ratio   = { median = 5.498, min = 1.412, max = 12.48 }
+
+
 [[edge]]
 engine    = "image-rs"
 op        = "Transcode"
@@ -161,6 +180,15 @@ The cost is size: 110,802 bytes for the specimen WebP stores in 218, also
 losslessly. That is a genuine user-facing trade-off — archival fidelity versus
 file size — and it is the first one in this registry backed by measurement
 rather than intuition."""
+
+[edge.verification.real_world]
+corpus       = "govdocs1"
+files        = 39
+ran          = 39
+contradicted = 0
+affected     = { metadata = 6 }
+results      = "corpus/govdocs1/edges.json"
+size_ratio   = { median = 25.482, min = 1.36, max = 209.771 }
 
 
 [[edge]]
@@ -213,6 +241,15 @@ mislead.
 
 Caveat kept deliberately: four synthetic specimens is not a finding. Widen the
 corpus before treating WebP as the default lossless target."""
+
+[edge.verification.real_world]
+corpus       = "govdocs1"
+files        = 39
+ran          = 39
+contradicted = 0
+affected     = { color_depth = 0, metadata = 6 }
+results      = "corpus/govdocs1/edges.json"
+size_ratio   = { median = 1.205, min = 0.777, max = 2.891 }
 
 
 [[edge]]
@@ -268,6 +305,15 @@ gray16 scores 1.0000 only because a 64x64 greyscale ramp has few enough distinct
 values to survive palettisation — a reminder that a mean over four specimens
 hides more than it shows."""
 
+[edge.verification.real_world]
+corpus       = "govdocs1"
+files        = 39
+ran          = 39
+contradicted = 0
+affected     = { alpha = 1, color_depth = 11, metadata = 6 }
+results      = "corpus/govdocs1/edges.json"
+size_ratio   = { median = 1.065, min = 0.358, max = 2.315 }
+
 
 [[edge]]
 engine    = "image-rs"
@@ -315,6 +361,15 @@ What distinguishes them is size, which the loss vector does not model:
 fidelity alone would treat these as interchangeable. They are not. Recorded as
 a known gap rather than quietly fixed with a fudge factor."""
 
+[edge.verification.real_world]
+corpus       = "govdocs1"
+files        = 39
+ran          = 39
+contradicted = 0
+affected     = { color_depth = 0, metadata = 6 }
+results      = "corpus/govdocs1/edges.json"
+size_ratio   = { median = 25.536, min = 1.362, max = 209.746 }
+
 
 [[edge]]
 engine    = "image-rs"
@@ -356,6 +411,15 @@ without its own edge to each. Lossless with respect to the GIF it decodes; it
 does not recover the colours palettisation destroyed. Composition keeps that
 visible: a PNG -> GIF -> PNG round trip still reports color_depth as lost,
 because `lost` is absorbing."""
+
+[edge.verification.real_world]
+corpus       = "govdocs1"
+files        = 27
+ran          = 27
+contradicted = 0
+affected     = { metadata = 3 }
+results      = "corpus/govdocs1/edges.json"
+size_ratio   = { median = 3.327, min = 0.703, max = 7.843 }
 
 
 [[edge]]

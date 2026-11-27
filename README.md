@@ -11,9 +11,9 @@ losses, per engine and per invocation, as data.
 
 **Dataset:** [`dataset/conversion-loss-registry.json`](dataset/conversion-loss-registry.json) · CC0
 
-**14 formats · 6 engines · 24 conversions (23 verified)**
+**20 formats · 9 engines · 38 conversions (37 verified)**
 
-Images, PDF and audio. Coverage grows only by measurement.
+Images, PDF, audio, office documents and video. Coverage grows only by measurement.
 
 ## The data
 
@@ -65,6 +65,10 @@ effect:  Loses transparency and metadata — transparent areas become black.
          Reduces colour depth and fine detail. Keeps colour accuracy and resolution.
 ```
 
+Where engines lose a property in different ways, say which you want:
+`--prefer alpha=composite_white` picks the route that turns transparency white.
+`huh plan image/png image/jpeg -k 5` lists every distinct choice.
+
 **`huh clean`** — rebuilds a file from its parsed content, discarding metadata,
 hidden chunks, trailing data and active content, and reports what that cost.
 
@@ -99,7 +103,7 @@ conversion run are enough. See [CONTRIBUTING.md](CONTRIBUTING.md).
 |---|---|
 | [`dataset/`](dataset/) | The published dataset and its schema. |
 | [`registry/`](registry/) | Source data: formats, engines, measured conversions. |
-| [`corpus/`](corpus/) | Specimens, committed and reproducible via `corpus/generate*.py`. |
+| [`corpus/`](corpus/) | Synthetic specimens (committed, reproducible via `corpus/generate*.py`) and a real-world tier of 206 Govdocs1 files, fetched by digest. |
 | [`core/`](core/) | Rust: detection, planning, sanitization, export. |
 | [`tools/`](tools/) | Validators and measurement harnesses, run in CI. |
 | [`docs/`](docs/) | Architecture, decision records, research notes. |

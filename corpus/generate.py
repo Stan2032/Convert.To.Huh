@@ -153,6 +153,52 @@ def gen_alpha_hard_edge(w=64, h=64):
     write_png(OUT / "rgba-hard-edge.png", w, h, 8, 6, rows)
 
 
+def gen_png_with_offset(w=117, h=64):
+    """An ordinary image carrying an `oFFs` page offset of (109, 119).
+
+    Reduced from Govdocs1 303329.png, a real file (docs/RESEARCH.md §18).
+    `oFFs` records where the image sits on a printed page and changes nothing
+    about its pixels, so most tools ignore it. ImageMagick does not: `convert
+    IN OUT.gif` writes the offset as the GIF frame position without enlarging
+    the logical screen, which puts the whole frame outside the visible area.
+    Decoders then disagree about what the GIF contains.
+    """
+    rows = []
+    for y in range(h):
+        row = bytearray()
+        for x in range(w):
+            row += bytes((40 + (x * 180) // w, 60 + (y * 160) // h, 200))
+        rows.append(bytes(row))
+    raw = b"".join(b"\x00" + r for r in rows)
+    png = (b"\x89PNG\r\n\x1a\n"
+           + chunk(b"IHDR", struct.pack(">IIBBBBB", w, h, 8, 2, 0, 0, 0))
+           + chunk(b"oFFs", struct.pack(">iiB", 109, 119, 0))  # unit 0 = pixels
+           + chunk(b"IDAT", zlib.compress(raw, 9))
+           + chunk(b"IEND", b""))
+    path = OUT / "png-with-offset.png"
+    path.write_bytes(png)
+    print(f"  {path.name:<28} {len(png):>7} bytes  {w}x{h} (oFFs 109,119)")
+
+
+def gen_palette_256(w=16, h=16):
+    """Exactly 256 distinct opaque colours: a full GIF palette, no more.
+
+    GIF allows 256 palette entries, so this converts to GIF with nothing lost.
+    libvips `gifsave` keeps at most 255 and quantises anything with more
+    (docs/RESEARCH.md §18.3), so on this image it must merge colours; image-rs
+    and ImageMagick keep all 256. Found on four real Govdocs1 PNGs with exactly
+    256 colours, which libvips reduced to 203-238.
+    """
+    rows = []
+    for y in range(h):
+        row = bytearray()
+        for x in range(w):
+            i = y * w + x  # 0..255, one colour each
+            row += bytes((i, (i * 7) % 256, 255 - i))
+        rows.append(bytes(row))
+    write_png(OUT / "palette-256.png", w, h, 8, 2, rows)
+
+
 if __name__ == "__main__":
     OUT.mkdir(parents=True, exist_ok=True)
     print("generating corpus specimens:")
@@ -162,4 +208,6 @@ if __name__ == "__main__":
     gen_opaque_rgba()
     gen_png_with_passengers()
     gen_alpha_hard_edge()
+    gen_png_with_offset()
+    gen_palette_256()
     print("done")

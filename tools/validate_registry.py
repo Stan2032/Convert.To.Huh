@@ -34,6 +34,9 @@ KINDS = {
 # docs/specs/content-model.md §3
 OPS = {"Transcode", "Transform", "Project", "Extract", "Assemble", "Synthesize"}
 
+# The OLE2 compound-file header, shared by .doc, .xls, .ppt and others.
+OLE2_MAGIC = "D0CF11E0A1B11AE1"
+
 # Ops that must NOT change content kind.
 SAME_KIND_OPS = {"Transcode", "Transform"}
 
@@ -130,6 +133,23 @@ def check_formats(formats: dict[str, dict], f: Findings) -> dict[str, dict]:
                 f.error(fname, f"signature[{i}] weight must be one of {sorted(SIGNATURE_WEIGHTS)}")
             if not isinstance(sig.get("offset"), int) or sig.get("offset", -1) < 0:
                 f.error(fname, f"signature[{i}] needs a non-negative integer offset")
+            w = sig.get("within", 0)
+            if not isinstance(w, int) or isinstance(w, bool) or not 0 <= w <= 4096:
+                f.error(fname, f"signature[{i}] `within` must be an integer window of 0-4096 bytes")
+
+        # registry-schema.md: OLE2 formats share one signature, so each must name
+        # the directory stream that identifies it, and only OLE2 formats may.
+        ole2 = doc.get("detection", {}).get("ole2_streams", [])
+        has_ole2_magic = any(sig.get("offset") == 0 and sig.get("magic", "").startswith(OLE2_MAGIC)
+                             for sig in sigs)
+        if ole2 and (not isinstance(ole2, list)
+                     or not all(isinstance(x, str) and x for x in ole2)):
+            f.error(fname, "[detection] ole2_streams must be a list of non-empty stream names")
+        if ole2 and not has_ole2_magic:
+            f.error(fname, f"[detection] ole2_streams needs the OLE2 signature {OLE2_MAGIC} at offset 0")
+        if has_ole2_magic and not ole2:
+            f.error(fname, "OLE2 signature without [detection] ole2_streams: every .doc, .xls "
+                           "and .ppt would match it — name the identifying stream")
 
         # registry-schema.md: undetectable formats must say so in notes.
         notes = doc.get("notes", {}).get("text", "")
@@ -282,6 +302,53 @@ def loss_value_of(entry) -> str | None:
     return None
 
 
+def real_world_problems(rw: dict, loss: dict, status: str | None) -> list[str]:
+    """Rule 14. The comparison behind it, split out so the self-test reaches it."""
+    out = []
+    if status != "verified":
+        out.append("only a verified edge can report real-world behaviour")
+    for key in ("corpus", "results"):
+        if not isinstance(rw.get(key), str) or not rw.get(key):
+            out.append(f"`{key}` must be a non-empty string")
+    nums = {}
+    # `contradicted` is optional: absent means no automated declared-vs-
+    # measured check ran on these files, which is different from zero.
+    for key in ("files", "ran", "contradicted"):
+        v = rw.get(key)
+        if key == "contradicted" and v is None:
+            continue
+        if not isinstance(v, int) or isinstance(v, bool) or v < 0:
+            out.append(f"`{key}` must be a non-negative integer")
+        else:
+            nums[key] = v
+    if {"files", "ran"} <= nums.keys() and nums["ran"] > nums["files"]:
+        out.append("`ran` exceeds `files`")
+    if {"ran", "contradicted"} <= nums.keys() and nums["contradicted"] > nums["ran"]:
+        out.append("`contradicted` exceeds `ran`")
+    for prop, n in (rw.get("affected") or {}).items():
+        declared = loss_value_of(loss.get(prop))
+        if declared is None:
+            out.append(f"`affected.{prop}`: the edge declares no `{prop}` loss")
+        elif declared == "preserved":
+            out.append(f"`affected.{prop}`: `{prop}` is declared preserved, so nothing can be affected")
+        if not isinstance(n, int) or isinstance(n, bool) or n < 0:
+            out.append(f"`affected.{prop}` must be a non-negative integer")
+        elif "ran" in nums and n > nums["ran"]:
+            out.append(f"`affected.{prop}` exceeds `ran`")
+    sr = rw.get("size_ratio")
+    if sr is not None:
+        vals = {k: sr.get(k) for k in ("min", "median", "max")} if isinstance(sr, dict) else {}
+        if not vals or not all(isinstance(v, (int, float)) and not isinstance(v, bool) and v > 0
+                               for v in vals.values()):
+            out.append("`size_ratio` needs positive numbers `min`, `median` and `max`")
+        elif not vals["min"] <= vals["median"] <= vals["max"]:
+            out.append("`size_ratio` must satisfy min <= median <= max")
+    results = rw.get("results")
+    if isinstance(results, str) and results and not (REGISTRY.parent / results).is_file():
+        out.append(f"`results` names `{results}`, which is not in the repository")
+    return out
+
+
 # Rule 7. What may replace a lost property (ADR-0012). Closed per property for
 # the same reason the property list itself is closed: an open set makes two
 # entries incomparable, and a typo becomes a silent new category.
@@ -376,6 +443,48 @@ def tool_artifacts(tool: str) -> list[str]:
         cand = f"core/examples/{m.group(1)}.rs"
         if (REGISTRY.parent / cand).is_file():
             found.append(cand)
+    return found
+
+
+# Rule 15. An engine that claims only `lgpl` must not be measured invoking a
+# component its LGPL build does not contain. The list is ffmpeg's own, from
+# `configure` at n6.1.1: EXTERNAL_LIBRARY_GPL_LIST (as encoder/decoder names)
+# plus every filter whose `_deps` include `gpl`. The measured binary can be a
+# GPL build (Ubuntu's is) and still describe the LGPL build faithfully, but
+# only while every invocation stays inside the LGPL subset (RESEARCH §20.1).
+GPL_ONLY = {
+    "ffmpeg": {
+        "codecs": {"libx264", "libx264rgb", "libx265", "libxvid", "libxavs",
+                   "libxavs2", "libdavs2", "avisynth"},
+        "filters": {"blackframe", "boxblur", "boxblur_opencl", "colormatrix",
+                    "cover_rect", "cropdetect", "delogo", "eq", "find_rect", "fspp",
+                    "histeq", "hqdn3d", "interlace", "kerndeint", "mcdeint",
+                    "mpdecimate", "mptestsrc", "nnedi", "owdenoise", "perspective",
+                    "phase", "pp7", "pp", "pullup", "repeatfields", "sab",
+                    "signature", "smartblur", "spp", "stereo3d", "super2xsai",
+                    "tinterlace", "uspp", "vaguedenoiser", "frei0r", "frei0r_src",
+                    "rubberband", "vidstabdetect", "vidstabtransform"},
+    },
+}
+CODEC_FLAGS = re.compile(r"^-(?:c|codec|vcodec|acodec)(?::[avs](?::\d+)?)?$")
+FILTER_FLAGS = re.compile(r"^-(?:vf|af|lavfi|filter_complex|filter(?::[av])?)$")
+
+
+def gpl_components(engine: str, invocation: str) -> list[str]:
+    """The GPL-only components an invocation names, for rule 15."""
+    table = GPL_ONLY.get(engine)
+    if not table or not invocation:
+        return []
+    toks = invocation.split()
+    found = []
+    for flag, val in zip(toks, toks[1:]):
+        if CODEC_FLAGS.match(flag) and val in table["codecs"]:
+            found.append(f"encoder `{val}`")
+        elif FILTER_FLAGS.match(flag):
+            for f in re.split(r"[,;]", val.strip("'\"")):
+                name = re.sub(r"\[[^\]]*\]", "", f).split("=")[0].strip()
+                if name in table["filters"]:
+                    found.append(f"filter `{name}`")
     return found
 
 
@@ -523,6 +632,22 @@ def check_edges(edge_files: dict[str, dict], formats: dict[str, dict],
                 elif pol not in allowed:
                     f.error(where, f"unknown policy `{pol}` for `{prop}`; expected one of "
                                    f"{sorted(allowed)} — registry-schema.md rule 7")
+
+            # Rule 14: real-world counts must be internally consistent and only
+            # count losses the edge actually declares.
+            rw = (edge.get("verification") or {}).get("real_world")
+            if rw is not None:
+                problems = real_world_problems(rw, edge.get("loss") or {}, status)
+                for p in problems:
+                    f.error(where, f"[real_world] {p} — registry-schema.md rule 14")
+
+            # Rule 15: an lgpl-only engine cannot invoke a GPL-only component.
+            profiles = ((engines.get(engine) or {}).get("license") or {}).get("build_profiles", [])
+            if "gpl" not in profiles:
+                for comp in gpl_components(engine, edge.get("invocation") or ""):
+                    f.error(where, f"invokes GPL-only {comp}, but engine `{engine}` claims "
+                                   f"only {profiles}: the route would not exist in the build "
+                                   f"this entry describes — registry-schema.md rule 15")
 
             # Rule 8: a verified edge for an engine that is invoked as a
             # subprocess must record HOW (ADR-0013). Warning rather than error:
@@ -963,7 +1088,52 @@ def self_test() -> int:
             failures += 1
             print(f"         expected {expect!r}, got: {got!r}")
 
-    total = len(SELF_TESTS) + len(ENGINE_SELF_TESTS) + 1 + 3 + 7
+    # Rule 15: GPL-only components on an lgpl-only engine.
+    for name, inv, expect in [
+        ("libx264 encoder flagged", "ffmpeg -i IN -c:v libx264 -crf 23 OUT", ["encoder `libx264`"]),
+        ("stream-indexed codec flag flagged", "ffmpeg -i IN -c:v:0 libx265 OUT", ["encoder `libx265`"]),
+        ("GPL filter inside a chain flagged", "ffmpeg -i IN -vf scale=640:-2,hqdn3d=4 OUT",
+         ["filter `hqdn3d`"]),
+        ("labelled filtergraph flagged", "ffmpeg -i IN -lavfi [0:v]eq=contrast=2[o] OUT", ["filter `eq`"]),
+        ("LGPL encoders pass", "ffmpeg -i IN -c:v libvpx-vp9 -lossless 1 OUT", []),
+        ("a value that merely looks like a filter name passes", "ffmpeg -i IN -metadata title=eq OUT", []),
+    ]:
+        got = gpl_components("ffmpeg", inv)
+        ok = got == expect
+        print(f"  [{'PASS' if ok else 'FAIL'}] rule 15: {name}")
+        if not ok:
+            failures += 1
+            print(f"         expected {expect!r}, got: {got!r}")
+
+    # Rule 14: real-world counts.
+    loss = {"alpha": "lost", "geometry": "preserved"}
+    good = {"corpus": "govdocs1", "files": 39, "ran": 39, "contradicted": 0,
+            "affected": {"alpha": 2}, "results": "corpus/govdocs1/edges.json"}
+    rw_cases = [
+        ("real-world block that is consistent", good, "verified", None),
+        ("real-world on an unverified edge", good, "claimed", "only a verified edge"),
+        ("affected count on a preserved property", good | {"affected": {"geometry": 3}},
+         "verified", "declared preserved"),
+        ("affected count on an undeclared property", good | {"affected": {"fonts": 1}},
+         "verified", "declares no `fonts` loss"),
+        ("more contradictions than runs", good | {"contradicted": 40}, "verified",
+         "`contradicted` exceeds `ran`"),
+        ("results file that does not exist", good | {"results": "corpus/nope.json"},
+         "verified", "not in the repository"),
+        ("size ratio out of order", good | {"size_ratio": {"min": 2, "median": 1, "max": 3}},
+         "verified", "min <= median <= max"),
+        ("size ratio that is not positive", good | {"size_ratio": {"min": 0, "median": 1, "max": 3}},
+         "verified", "positive numbers"),
+    ]
+    for name, rw, status, expect in rw_cases:
+        got = real_world_problems(rw, loss, status)
+        ok = (not got) if expect is None else any(expect in g for g in got)
+        print(f"  [{'PASS' if ok else 'FAIL'}] {name}")
+        if not ok:
+            failures += 1
+            print(f"         expected {expect!r}, got: {got!r}")
+
+    total = len(SELF_TESTS) + len(ENGINE_SELF_TESTS) + 1 + 3 + 7 + len(rw_cases) + 6
     print(f"\nself-test: {total - failures}/{total} passed")
     return 1 if failures else 0
 

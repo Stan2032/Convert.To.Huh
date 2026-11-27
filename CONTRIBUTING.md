@@ -99,6 +99,18 @@ Nothing is quietly overwritten.
   find a PUID, **leave it empty and say so in `[notes]`** rather than guessing.
   A plausible-looking wrong identifier is worse than an absent one.
 
+## Checking an entry against real files
+
+`corpus/govdocs1/` is a tier of 206 real files from Govdocs1, fetched on
+demand and verified by SHA-256 (`tools/fetch_govdocs.py`), then run through
+`huh` by `tools/run_govdocs.py`. Use it to show whether a loss you measured on
+a synthetic specimen applies to real files, and how often. Both scripts are
+network-bound and not in CI. See `corpus/govdocs1/README.md`.
+
+After a real-file run, `python3 tools/real_world_blocks.py --write` turns the
+results into each edge's `[edge.verification.real_world]` counts
+(registry-schema.md rule 14). Do not write those counts by hand.
+
 ## Adding an engine
 
 Read `docs/specs/engine-manifest.md` and ADR-0003 first. Engines are assumed

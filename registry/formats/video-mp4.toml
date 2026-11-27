@@ -1,0 +1,31 @@
+id         = "video/mp4"
+name       = "MPEG-4 Part 14 (MP4)"
+kinds      = ["VideoStream", "AudioPCM"]
+extensions = ["mp4", "m4v"]
+mime_types = ["video/mp4"]
+puid       = "fmt/199"
+puid_verified = true
+puid_name  = "MPEG-4 Media File"
+spec_url   = "https://www.iso.org/standard/83102.html"
+
+preserves = ["geometry", "time", "signal_fidelity", "audio_channels", "sample_rate", "metadata"]
+
+[[signatures]]
+offset = 4
+magic  = "66747970"   # "ftyp", the file-type box
+weight = "strong"
+
+[detection]
+priority_over = []
+container_of  = []
+
+[notes]
+text = """
+Added 2026-11-26 (docs/RESEARCH.md §20). Detected by the `ftyp` box at
+offset 4. PRONOM's fmt/199 signature also requires an mp4/isom brand and a
+`moov` box; ours is weaker on purpose until a QuickTime (.mov) entry exists
+to be told apart from it, which is why the weight is `strong`, not
+`decisive`.
+
+PRONOM VERIFIED 2026-11-26: fmt/199 "MPEG-4 Media File".
+"""

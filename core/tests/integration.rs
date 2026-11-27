@@ -46,10 +46,10 @@ fn build_profile_prunes_before_search() {
     // proposed and then failing. LibreOffice is gpl-only, so lgpl sees fewer.
     let r = reg();
     let lgpl = Planner::new(&r, &Policy {
-        build_profile: "lgpl".into(), allow_unverified: true
+        build_profile: "lgpl".into(), allow_unverified: true, ..Default::default()
     });
     let gpl = Planner::new(&r, &Policy {
-        build_profile: "gpl".into(), allow_unverified: true
+        build_profile: "gpl".into(), allow_unverified: true, ..Default::default()
     });
     assert_ne!(lgpl.eligible_count(), gpl.eligible_count(),
         "build profiles must actually change the graph");
@@ -268,6 +268,7 @@ fn edge(from: &str, to: &str, loss: &[(&str, LossValue)], ms: u64) -> Edge {
         confidence: None,
         specimens: vec![],
         measured: Default::default(),
+        real_world: None,
     }
 }
 
@@ -363,6 +364,50 @@ fn loss_equivalent_routes_collapse_to_one_choice() {
     let p = Planner::new(&r, &Policy::default());
     let plans = p.plan_ranked("a", "b", 5);
     assert_eq!(plans.len(), 1, "identical loss signatures must deduplicate");
+}
+
+/// ADR-0012: routes that lose the same property but replace it differently
+/// are different choices. PNG to JPEG via composite_black, composite_white and
+/// discard_channel used to collapse into ONE offered route.
+#[test]
+fn routes_differing_only_in_policy_are_separate_choices() {
+    let r = reg();
+    let plans = Planner::new(&r, &Policy::default()).plan_ranked("image/png", "image/jpeg", 6);
+    let policies: std::collections::BTreeSet<_> = plans.iter()
+        .filter_map(|p| p.loss_policy.get("alpha").cloned())
+        .collect();
+    for want in ["composite_black", "composite_white", "discard_channel"] {
+        assert!(policies.contains(want), "{want} missing from offered routes: {policies:?}");
+    }
+}
+
+#[test]
+fn a_stated_preference_ranks_the_matching_policy_first() {
+    let r = reg();
+    let pol = Policy {
+        prefer: [("alpha".to_string(), "composite_white".to_string())].into(),
+        ..Default::default()
+    };
+    let p = Planner::new(&r, &pol);
+    let best = p.plan("image/png", "image/jpeg").expect("route");
+    assert_eq!(best.loss_policy.get("alpha").map(String::as_str), Some("composite_white"));
+    let ranked = p.plan_ranked("image/png", "image/jpeg", 6);
+    assert_eq!(ranked[0].loss_policy.get("alpha").map(String::as_str), Some("composite_white"));
+}
+
+#[test]
+fn a_preference_never_buys_a_route_that_loses_more() {
+    // The cheap route loses alpha WITH the preferred policy; the faithful one
+    // keeps alpha. Preferring how alpha is lost must not make losing it win.
+    let mut r = synthetic();
+    r.edges[0].loss_policy.insert("alpha".into(), "composite_white".into());
+    let pol = Policy {
+        prefer: [("alpha".to_string(), "composite_white".to_string())].into(),
+        ..Default::default()
+    };
+    let best = Planner::new(&r, &pol).plan("a", "b").expect("route");
+    assert_eq!(best.totals.loss.get("alpha"), Some(LossValue::Preserved),
+               "a preference outweighed fidelity");
 }
 
 #[test]
@@ -540,10 +585,265 @@ fn the_engine_that_runs_is_the_engine_that_was_planned() {
     }
 }
 
+/// Audio routes used to fail before any engine ran: execution decoded every
+/// input as an image first, so a WAV got "no image-rs decoder" even though the
+/// plan had chosen ffmpeg. Now the planned engine runs, and the receipt says
+/// the result was not measured in-process instead of implying it was.
+#[test]
+fn audio_routes_run_the_planned_engine_and_say_they_were_not_measured() {
+    let r = reg();
+    let wav = std::fs::read(root().join("corpus/audio/highfreq-mono.wav")).expect("specimen");
+
+    // lgpl picks ffmpeg; gpl excludes ffmpeg's lgpl-only entry and picks
+    // GStreamer, whose invocation uses `location=IN` placeholders.
+    for (profile, program) in [("lgpl", "ffmpeg"), ("gpl", "gst-launch-1.0")] {
+        let pol = Policy { build_profile: profile.into(), ..Default::default() };
+        let plan = Planner::new(&r, &pol).plan("audio/wav", "audio/flac").expect("route exists");
+        let hop = &plan.hops[0];
+        if !engine_present(program) {
+            eprintln!("skipping {profile}: {program} not installed");
+            continue;
+        }
+        let (out, receipt) = execute::execute(&plan, &wav, 85)
+            .unwrap_or_else(|e| panic!("{profile} via {}: {e}", hop.engine));
+        assert_eq!(&out[..4], b"fLaC", "{} did not write FLAC", hop.engine);
+        assert!(receipt.hops[0].starts_with(&hop.engine));
+        assert!(receipt.measurements.is_empty() && receipt.unmeasured.is_some(),
+                "an unmeasured route must say so in the receipt");
+    }
+}
+
+/// ImageMagick writes a PNG's `oFFs` page offset as the GIF frame position
+/// without enlarging the logical screen, so the frame lands entirely outside
+/// the visible area. Found on two real Govdocs1 PNGs (RESEARCH §18.1); the
+/// registry's receipts did not flag it, because no tracked property changed.
+///
+/// A characterisation test: it pins what the engine does, so the registry
+/// note describing it is re-checked on every CI run. If ImageMagick changes
+/// behaviour this fails, and the note must be revised.
+#[test]
+fn imagemagick_moves_an_offset_png_outside_the_gif_screen() {
+    if !engine_present("convert") {
+        eprintln!("skipping: ImageMagick not installed");
+        return;
+    }
+    let dir = std::env::temp_dir().join(format!("huh-offs-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let out = dir.join("out.gif");
+    let st = std::process::Command::new("convert")
+        .arg(root().join("corpus/raster/png-with-offset.png"))
+        .arg(&out)
+        .status()
+        .expect("convert runs");
+    assert!(st.success());
+    let b = std::fs::read(&out).unwrap();
+    std::fs::remove_dir_all(&dir).ok();
+
+    let screen = (u16::from_le_bytes([b[6], b[7]]), u16::from_le_bytes([b[8], b[9]]));
+    let mut i = 13 + if b[10] & 0x80 != 0 { 3 << ((b[10] & 7) + 1) } else { 0 };
+    while b[i] == 0x21 {
+        i += 2;
+        while b[i] != 0 {
+            i += b[i] as usize + 1;
+        }
+        i += 1;
+    }
+    assert_eq!(b[i], 0x2C, "expected an image descriptor");
+    let left = u16::from_le_bytes([b[i + 1], b[i + 2]]);
+    let top = u16::from_le_bytes([b[i + 3], b[i + 4]]);
+    assert_eq!(screen, (117, 64), "logical screen");
+    assert_eq!((left, top), (109, 119), "frame position carries the oFFs offset");
+    // Outside if it starts past the edge on either axis; here top 119 >= height 64.
+    assert!(left >= screen.0 || top >= screen.1, "frame lies wholly outside the screen");
+}
+
+/// `.doc`, `.xls` and `.ppt` share the OLE2 signature. Detection must tell
+/// them apart by content, from the compound file's directory, and must not
+/// need the extension to do it.
+#[test]
+fn binary_office_formats_are_told_apart_by_content() {
+    let r = reg();
+    for (file, want) in [
+        ("report.doc", "application/msword"),
+        ("figures.xls", "application/vnd.ms-excel"),
+        ("slides.ppt", "application/vnd.ms-powerpoint"),
+    ] {
+        let bytes = std::fs::read(root().join("corpus/office").join(file)).expect("specimen");
+        let named = detect::detect(&r, &bytes, Some(file));
+        assert_eq!(named.format, want, "{file}");
+        assert_eq!(named.detected_by, "signature", "{file} must be identified by content");
+        // Misnamed: content still wins, and the mismatch is reported.
+        let wrong = detect::detect(&r, &bytes, Some("renamed.txt"));
+        assert_eq!(wrong.format, want, "{file} renamed");
+        assert!(wrong.extension_mismatch, "{file}: a misleading extension must be flagged");
+    }
+}
+
+/// The LibreOffice edge runs through the executor (the `OUTDIR` placeholder)
+/// and keeps the specimen's text, which is what its loss vector declares.
+#[test]
+fn word_to_pdf_runs_through_libreoffice_and_keeps_the_text() {
+    if !engine_present("soffice") {
+        eprintln!("skipping: LibreOffice not installed");
+        return;
+    }
+    let r = reg();
+    let pol = Policy { build_profile: "gpl".into(), ..Default::default() };
+    let plan = Planner::new(&r, &pol).plan("application/msword", "application/pdf")
+        .expect("route under gpl");
+    assert_eq!(plan.hops[0].engine, "libreoffice");
+    let doc = std::fs::read(root().join("corpus/office/report.doc")).unwrap();
+    let (pdf, receipt) = execute::execute(&plan, &doc, 85).expect("conversion runs");
+    assert_eq!(&pdf[..5], b"%PDF-");
+    assert!(receipt.unmeasured.is_some());
+
+    // The text layer must carry the specimen's words (pdftotext, if present).
+    if engine_present("pdftotext") {
+        let dir = std::env::temp_dir().join(format!("huh-doc-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let p = dir.join("out.pdf");
+        std::fs::write(&p, &pdf).unwrap();
+        let out = std::process::Command::new("pdftotext").arg(&p).arg("-").output().unwrap();
+        std::fs::remove_dir_all(&dir).ok();
+        let text = String::from_utf8_lossy(&out.stdout);
+        assert!(text.contains("Turbidity exceeded the advisory threshold"), "{text}");
+    }
+}
+
+/// A GIF palette holds 256 colours. An image with exactly 256 fits with
+/// nothing lost; image-rs keeps all of them, libvips keeps at most 255 and
+/// quantises the rest (RESEARCH §18.3: four real Govdocs1 PNGs with exactly
+/// 256 colours came back with 203-238). Pins both behaviours.
+#[test]
+fn a_full_256_colour_palette_survives_image_rs_but_not_libvips_gifsave() {
+    use huh_core::engines::{decode, encode, Budget};
+    use std::collections::HashSet;
+    let count = |img: &image::DynamicImage| {
+        img.to_rgba8().pixels().map(|p| p.0).collect::<HashSet<_>>().len()
+    };
+    let b = Budget::default();
+    let src = std::fs::read(root().join("corpus/raster/palette-256.png")).unwrap();
+    let img = decode(&src, "image/png", &b).unwrap();
+    assert_eq!(count(&img), 256, "specimen must have exactly 256 colours");
+
+    let gif = encode(&img, "image/gif", 85).unwrap();
+    assert_eq!(count(&decode(&gif, "image/gif", &b).unwrap()), 256,
+               "image-rs: a palette that fits must survive intact");
+
+    if !engine_present("vips") {
+        eprintln!("skipping libvips half: vips not installed");
+        return;
+    }
+    let dir = std::env::temp_dir().join(format!("huh-pal-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let out = dir.join("out.gif");
+    let st = std::process::Command::new("vips")
+        .arg("gifsave").arg(root().join("corpus/raster/palette-256.png")).arg(&out)
+        .status().unwrap();
+    assert!(st.success());
+    let vgif = std::fs::read(&out).unwrap();
+    std::fs::remove_dir_all(&dir).ok();
+    let n = count(&decode(&vgif, "image/gif", &b).unwrap());
+    assert!(n < 256, "libvips gifsave kept all 256 colours ({n}); revise RESEARCH §18.3");
+}
+
+/// The registry declared ImageMagick PNG->GIF `metadata = lost`; real files
+/// contradicted it (RESEARCH §18.5). ImageMagick carries PNG comment text into
+/// the GIF and drops other keys, so the value is `degraded`. Pins both halves
+/// on the committed specimen, including the comment marked "do-not-share".
+#[test]
+fn imagemagick_carries_png_comments_into_gif() {
+    if !engine_present("convert") {
+        eprintln!("skipping: ImageMagick not installed");
+        return;
+    }
+    let dir = std::env::temp_dir().join(format!("huh-meta-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let out = dir.join("out.gif");
+    let st = std::process::Command::new("convert")
+        .arg(root().join("corpus/raster/png-with-passengers.png"))
+        .arg(&out)
+        .status()
+        .unwrap();
+    assert!(st.success());
+    let gif = std::fs::read(&out).unwrap();
+    std::fs::remove_dir_all(&dir).ok();
+    let has = |s: &[u8]| gif.windows(s.len()).any(|w| w == s);
+    assert!(has(b"internal-doc-id-88213-do-not-share"), "comment no longer carried: revise the registry");
+    assert!(!has(b"Alice Example"), "Author now carried too: revise the registry");
+}
+
 fn engine_present(prog: &str) -> bool {
     std::process::Command::new("which")
         .arg(prog)
         .output()
         .map(|o| o.status.success())
         .unwrap_or(false)
+}
+
+/// Matroska and WebM share the EBML header (`1A45DFA3`); only the DocType a
+/// few bytes in tells them apart (PRONOM's `{0-32}` window). The reference
+/// must detect as Matroska by content, and its WebM output as WebM.
+#[test]
+fn video_containers_are_told_apart_by_doctype() {
+    let r = reg();
+    let mkv = std::fs::read(root().join("corpus/video/reference.mkv")).expect("specimen");
+    let d = detect::detect(&r, &mkv, Some("clip.webm"));
+    assert_eq!(d.format, "video/x-matroska");
+    assert_eq!(d.detected_by, "signature");
+    assert!(d.extension_mismatch, "a .webm name on a Matroska file must be flagged");
+
+    if !engine_present("ffmpeg") {
+        eprintln!("skipping execution: ffmpeg not installed");
+        return;
+    }
+    let plan = Planner::new(&r, &Policy::default())
+        .plan("video/x-matroska", "video/webm")
+        .expect("a verified route");
+    assert_eq!(plan.hops[0].engine, "ffmpeg");
+    // The cheapest route is the lossless control: nothing in it may be degraded.
+    assert!(plan.hops[0].invocation.as_deref().unwrap_or("").contains("-lossless 1"),
+            "planner should prefer the route that loses nothing");
+    let (webm, _receipt) = execute::execute(&plan, &mkv, 85).expect("conversion runs");
+    let d = detect::detect(&r, &webm, None);
+    assert_eq!(d.format, "video/webm", "output must be WebM by content");
+}
+
+/// H.264 and H.265 need a GPL ffmpeg (ADR-0007). Under the lgpl profile those
+/// routes must not exist at all (ground rule 6); under gpl they must, and the
+/// planner must pick the lossless one when nothing is to be lost.
+#[test]
+fn gpl_video_routes_exist_only_under_the_gpl_profile() {
+    let r = reg();
+    let lgpl = Planner::new(&r, &Policy::default());
+    let plans = lgpl.plan_ranked("video/x-matroska", "video/mp4", 10);
+    assert!(!plans.is_empty(), "MPEG-4 Part 2 is an LGPL route to MP4");
+    assert!(plans.iter().all(|p| p.hops.iter().all(|h| h.engine != "ffmpeg-gpl")),
+            "a GPL engine leaked into the lgpl profile");
+
+    let gpl = Planner::new(&r, &Policy { build_profile: "gpl".into(), ..Default::default() });
+    let best = gpl.plan("video/x-matroska", "video/mp4").expect("gpl route");
+    assert_eq!(best.hops[0].engine, "ffmpeg-gpl");
+    assert!(best.hops[0].invocation.as_deref().unwrap_or("").contains("-qp 0"),
+            "with a lossless H.264 route available, nothing should be degraded");
+}
+
+/// The label and the explanation are generated from the same loss vector, so
+/// they must not contradict each other (ground rule 7). A route that only
+/// degrades was once labelled "faithful — nothing tracked is lost", and WAV to
+/// MP3 "stripped — pixels intact".
+#[test]
+fn intent_label_names_degradation_not_just_loss() {
+    let r = reg();
+    let lossy_vp9 = Planner::new(&r, &Policy::default())
+        .plan_ranked("video/x-matroska", "video/webm", 5);
+    let labels: Vec<String> = lossy_vp9.iter().map(|p| p.intent_label()).collect();
+    assert!(labels.iter().any(|l| l.starts_with("faithful")), "{labels:?}");
+    assert!(labels.iter().any(|l| l.starts_with("reduced — degrades") && l.contains("signal_fidelity")),
+            "the lossy VP9 route must say what it degrades: {labels:?}");
+
+    let mp3 = Planner::new(&r, &Policy::default()).plan("audio/wav", "audio/mpeg").unwrap();
+    let l = mp3.intent_label();
+    assert!(!l.contains("pixels") && !l.contains("intact"), "{l}");
+    assert!(l.contains("degrades") && l.contains("signal_fidelity"), "{l}");
 }
